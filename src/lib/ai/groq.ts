@@ -19,6 +19,7 @@ Protocol Types: 'ospf', 'static', 'vlan'
 
 Rules:
 - Assign reasonable IP addresses (e.g., 192.168.x.x, 10.x.x.x).
+- CRITICAL: Ensure EVERY node has a UNIQUE IP address. Never assign the same IP to two devices.
 - Ensure valid subnet masks.
 - Layout nodes (x, y) logically:
   - Routers at top (y: 100)

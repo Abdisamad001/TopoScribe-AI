@@ -8,7 +8,7 @@ interface ConfigPanelProps {
     onUpdateNode: (nodeId: string, data: any) => void;
     allNodes: Node[];
     allEdges: Edge[];
-    onSimulationPath: (path: string[]) => void;
+    onSimulationPath: (result: { path: string[], success: boolean, failureNodeId?: string }) => void;
 }
 
 export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allEdges, onSimulationPath }: ConfigPanelProps) {
@@ -24,9 +24,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
             setIp((selectedNode.data.ip as string) || '');
             setPingResult(null);
             setPingTarget('');
-            onSimulationPath([]);
         }
-    }, [selectedNode, onSimulationPath]);
+    }, [selectedNode?.id]);
 
     const handleSave = () => {
         if (selectedNode) {
@@ -52,7 +51,11 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                 name: n.data.label as string,
                 x: n.position.x,
                 y: n.position.y,
-                interfaces: []
+                interfaces: [{
+                    id: 'eth0',
+                    name: 'Ethernet0',
+                    ipAddress: n.data.ip as string
+                }]
             }));
 
             const simLinks: Link[] = allEdges.map(e => ({
@@ -73,17 +76,26 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
             });
 
             const data = await res.json();
+
             if (data.success) {
-                // Pretty print the path
+                // Success case
                 const pathNames = data.path.map((id: string) => {
                     const n = allNodes.find(an => an.id === id);
                     return n ? n.data.label : id;
                 });
                 setPingResult(`Path: ${pathNames.join(' → ')}`);
-                onSimulationPath(data.path);
+                onSimulationPath({ path: data.path, success: true });
             } else {
-                setPingResult(`${data.message || 'Unknown error'}`);
-                onSimulationPath([]);
+                // Failure case: The API now returns 'path' (partial path), 'failureNodeId', and 'failureReason'
+                const partialPath = data.path || [];
+                const failReason = data.failureReason || data.message || 'Unknown error';
+
+                setPingResult(failReason);
+                onSimulationPath({
+                    path: partialPath,
+                    success: false,
+                    failureNodeId: data.failureNodeId
+                });
             }
 
         } catch (e) {
@@ -214,8 +226,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
                     {pingResult && (
                         <div className={`mt-2 p-3 rounded-lg border text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-2 duration-300 ${pingResult.startsWith('Path')
-                                ? 'bg-teal-500/10 border-teal-500/30 text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.1)]'
-                                : 'bg-red-500/10 border-red-500/30 text-red-300'
+                            ? 'bg-teal-500/10 border-teal-500/30 text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.1)]'
+                            : 'bg-red-500/10 border-red-500/30 text-red-300'
                             }`}>
                             {pingResult.startsWith('Path')
                                 ? <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />

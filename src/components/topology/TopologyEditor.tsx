@@ -120,10 +120,14 @@ export default function TopologyEditor() {
         }));
     }, [setNodes]);
 
-    const onSimulationPath = useCallback((pathNodeIds: string[]) => {
+    const onSimulationPath = useCallback((result: { path: string[], success: boolean, failureNodeId?: string }) => {
+        const { path, success, failureNodeId } = result;
+        const pathNodeIds = path || [];
+
+        // 1. Update Edges
         setEdges((currentEdges) => {
-            // Reset styles if path is cleared or invalid
             if (!pathNodeIds || pathNodeIds.length < 2) {
+                // Reset to default
                 return currentEdges.map(e => ({
                     ...e,
                     animated: false,
@@ -131,25 +135,41 @@ export default function TopologyEditor() {
                 }));
             }
 
-            // Find edges involved in the path using the currentEdges provided by the state updater
             const involvedEdges = new Set<string>();
+            const failureEdges = new Set<string>();
+
             for (let i = 0; i < pathNodeIds.length - 1; i++) {
                 const u = pathNodeIds[i];
                 const v = pathNodeIds[i + 1];
-                // Find edge connecting u and v
                 const edge = currentEdges.find(e =>
                     (e.source === u && e.target === v) ||
                     (e.source === v && e.target === u)
                 );
-                if (edge) involvedEdges.add(edge.id);
+
+                if (edge) {
+                    involvedEdges.add(edge.id);
+                    // If this segment leads to the failure node, mark it
+                    if (!success && failureNodeId && (v === failureNodeId || u === failureNodeId)) {
+                        // Note: graph path is ordered, so v is the next step. If v is failure node, this edge failed.
+                        if (v === failureNodeId) {
+                            failureEdges.add(edge.id);
+                        }
+                    }
+                }
             }
 
             return currentEdges.map(e => {
-                if (involvedEdges.has(e.id)) {
+                if (failureEdges.has(e.id)) {
                     return {
                         ...e,
                         animated: true,
-                        style: { ...e.style, stroke: '#22c55e', strokeWidth: 4, opacity: 1 }
+                        style: { ...e.style, stroke: '#FF6B6B', strokeWidth: 4, opacity: 1 }
+                    };
+                } else if (involvedEdges.has(e.id)) {
+                    return {
+                        ...e,
+                        animated: true,
+                        style: { ...e.style, stroke: success ? '#3DD6B5' : '#4A8FFF', strokeWidth: 4, opacity: 1 } // Green if success, Blue if processing/partial
                     };
                 } else {
                     return {
@@ -160,18 +180,39 @@ export default function TopologyEditor() {
                 }
             });
         });
-    }, [setEdges]);
+
+        // 2. Update Nodes (to show status icons)
+        setNodes((currentNodes) => currentNodes.map(n => {
+            let status = 'idle';
+            if (pathNodeIds.includes(n.id)) {
+                if (n.id === failureNodeId) {
+                    status = 'error';
+                } else {
+                    status = success ? 'success' : 'processing'; // or just 'success' for passed nodes in a failed path? 
+                    // User said: "All subsequent nodes... remain grayed out". 
+                    // Nodes in partial path should probably look roughly successful or 'visited'.
+                    // Let's use 'success' for visited nodes even in failed path, except the fail one.
+                    status = 'success';
+                }
+            }
+            return {
+                ...n,
+                data: { ...n.data, simulationStatus: status }
+            };
+        }));
+
+    }, [setEdges, setNodes]);
 
     // Reset simulation when clicking pane
     const onPaneClick = useCallback(() => {
         setSelectedNodeId(null);
-        onSimulationPath([]); // Clear simulation
+        onSimulationPath({ path: [], success: true }); // Clear simulation
     }, [onSimulationPath]);
 
     const onTopologyGenerated = useCallback((newTopology: any) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
-        onSimulationPath([]);
+        onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
 

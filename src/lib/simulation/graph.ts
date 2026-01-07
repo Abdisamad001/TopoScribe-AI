@@ -7,9 +7,11 @@ export interface GraphNode {
 
 export class NetworkGraph {
     private adjacencyList: Map<string, string[]>;
+    private nodesMap: Map<string, NetworkNode>;
 
-    constructor() {
+    constructor(nodes: NetworkNode[]) {
         this.adjacencyList = new Map();
+        this.nodesMap = new Map(nodes.map(n => [n.id, n]));
     }
 
     addNode(nodeId: string) {
@@ -20,13 +22,11 @@ export class NetworkGraph {
 
     addEdge(sourceId: string, targetId: string) {
         this.adjacencyList.get(sourceId)?.push(targetId);
-        this.adjacencyList.get(targetId)?.push(sourceId); // Undirected for physical link, though routing is directed. 
-        // For simple L2/L3 reachability we assume bidirectional links for now.
+        this.adjacencyList.get(targetId)?.push(sourceId);
     }
 
-    // Build graph from topology data
     static fromTopology(nodes: NetworkNode[], links: Link[]): NetworkGraph {
-        const graph = new NetworkGraph();
+        const graph = new NetworkGraph(nodes);
 
         nodes.forEach(node => graph.addNode(node.id));
         links.forEach(link => graph.addEdge(link.sourceNodeId, link.targetNodeId));
@@ -34,31 +34,94 @@ export class NetworkGraph {
         return graph;
     }
 
-    // Simple BFS for reachability
-    findPath(startNodeId: string, endNodeId: string): string[] | null {
-        const queue: string[][] = [[startNodeId]];
-        const visited = new Set<string>();
+    // Check for duplicate IPs globally across the network
+    private validateUniqueIps(): { valid: boolean; duplicateIp?: string; nodes?: string[] } {
+        const ipMap = new Map<string, string[]>();
 
-        visited.add(startNodeId);
-
-        while (queue.length > 0) {
-            const path = queue.shift()!;
-            const node = path[path.length - 1];
-
-            if (node === endNodeId) {
-                return path;
-            }
-
-            const neighbors = this.adjacencyList.get(node) || [];
-            for (const neighbor of neighbors) {
-                if (!visited.has(neighbor)) {
-                    visited.add(neighbor);
-                    const newPath = [...path, neighbor];
-                    queue.push(newPath);
+        for (const node of this.nodesMap.values()) {
+            if (node.type === 'router' || node.type === 'host') {
+                for (const iface of node.interfaces) {
+                    const ip = iface.ipAddress?.trim();
+                    if (ip) {
+                        if (!ipMap.has(ip)) {
+                            ipMap.set(ip, []);
+                        }
+                        ipMap.get(ip)!.push(node.name);
+                    }
                 }
             }
         }
 
-        return null;
+        for (const [ip, nodes] of ipMap.entries()) {
+            if (nodes.length > 1) {
+                return { valid: false, duplicateIp: ip, nodes };
+            }
+        }
+
+        return { valid: true };
+    }
+
+    // Enhanced BFS for reachability with Validation
+    findPath(startNodeId: string, endNodeId: string): { success: boolean; path: string[]; failureNodeId?: string; failureReason?: string } {
+        // 0. Global Check: Duplicate IPs
+        const ipCheck = this.validateUniqueIps();
+        if (!ipCheck.valid) {
+            return {
+                success: false,
+                path: [],
+                failureReason: `Network Configuration Error: Duplicate IP Address ${ipCheck.duplicateIp} detected on devices: ${ipCheck.nodes?.join(', ')}`
+            };
+        }
+
+        const queue: { path: string[] }[] = [{ path: [startNodeId] }];
+        const visited = new Set<string>();
+        visited.add(startNodeId);
+
+        while (queue.length > 0) {
+            const { path } = queue.shift()!;
+            const currentNodeId = path[path.length - 1];
+            const currentNode = this.nodesMap.get(currentNodeId);
+
+            // --- VALIDATION LOGIC ---
+            // If the node is L3 (Router/Host) it MUST have an IP address configured
+            if (currentNode && (currentNode.type === 'router' || currentNode.type === 'host')) {
+                const hasIp = currentNode.interfaces.some(i => i.ipAddress && i.ipAddress.trim() !== '');
+                if (!hasIp) {
+                    return {
+                        success: false,
+                        path: path, // Path up to failure
+                        failureNodeId: currentNodeId,
+                        failureReason: `Packet Lost at ${currentNode.name}! Missing IP Configuration.`
+                    };
+                }
+
+                // Basic check for valid IP format (simplified)
+                const ip = currentNode.interfaces.find(i => i.ipAddress)?.ipAddress;
+                if (ip && !/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+                    return {
+                        success: false,
+                        path: path,
+                        failureNodeId: currentNodeId,
+                        failureReason: `Packet Lost at ${currentNode.name}! Invalid IP Format: ${ip}`
+                    };
+                }
+            }
+            // ------------------------
+
+            if (currentNodeId === endNodeId) {
+                // Check destination constraints if any (e.g. correct subnet relative to source - simplified)
+                return { success: true, path };
+            }
+
+            const neighbors = this.adjacencyList.get(currentNodeId) || [];
+            for (const neighbor of neighbors) {
+                if (!visited.has(neighbor)) {
+                    visited.add(neighbor);
+                    queue.push({ path: [...path, neighbor] });
+                }
+            }
+        }
+
+        return { success: false, path: [], failureReason: 'No physical path found.' };
     }
 }

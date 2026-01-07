@@ -12,13 +12,9 @@ export async function POST(req: NextRequest) {
         }
 
         const graph = NetworkGraph.fromTopology(nodes as NetworkNode[], links as Link[]);
-        const path = graph.findPath(sourceId, targetId);
+        const result = graph.findPath(sourceId, targetId);
 
-        if (path) {
-            return NextResponse.json({ success: true, path });
-        } else {
-            return NextResponse.json({ success: false, message: 'No path found' });
-        }
+        return NextResponse.json(result);
     } catch (error) {
         console.error('Simulation error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
