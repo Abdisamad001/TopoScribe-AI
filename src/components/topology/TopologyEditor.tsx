@@ -216,6 +216,13 @@ export default function TopologyEditor() {
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
 
+    const onDeleteNode = useCallback((nodeId: string) => {
+        setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+        setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+        setSelectedNodeId(null);
+        onSimulationPath({ path: [], success: true });
+    }, [setNodes, setEdges, onSimulationPath]);
+
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
     return (
@@ -254,7 +261,14 @@ export default function TopologyEditor() {
                 </ReactFlow>
                 <ChatInterface onTopologyGenerated={onTopologyGenerated} />
             </div>
-            <ConfigPanel selectedNode={selectedNode} onUpdateNode={onUpdateNode} allNodes={nodes} allEdges={edges} onSimulationPath={onSimulationPath} />
+            <ConfigPanel
+                selectedNode={selectedNode}
+                onUpdateNode={onUpdateNode}
+                allNodes={nodes}
+                allEdges={edges}
+                onSimulationPath={onSimulationPath}
+                onDeleteNode={onDeleteNode}
+            />
 
             <ReportModal
                 isOpen={isReportOpen}

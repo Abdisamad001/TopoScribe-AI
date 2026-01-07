@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 interface ChatInterfaceProps {
     onTopologyGenerated: (topology: any) => void;
@@ -40,34 +41,40 @@ export default function ChatInterface({ onTopologyGenerated }: ChatInterfaceProp
 
     return (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4 z-50">
-            <form onSubmit={handleSubmit} className="relative shadow-2xl rounded-xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-gray-200 dark:border-zinc-700 p-2 flex gap-2">
-                <input
-                    type="text"
-                    className="flex-grow bg-transparent border-none outline-none p-3 text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400"
-                    placeholder="Describe your network... (e.g., '2 routers connected to a switch with 3 PCs')"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    disabled={loading}
-                />
-                <button
-                    type="submit"
-                    disabled={loading || !prompt}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2"
-                >
-                    {loading ? (
-                        <>
-                            <span className="animate-spin">⏳</span> Generating...
-                        </>
-                    ) : (
-                        <>
-                            <span>✨</span> Generate
-                        </>
-                    )}
-                </button>
-            </form>
+            <div className="relative rounded-2xl bg-[#1C2F45]/90 backdrop-blur-md border border-[#3DD6B5]/15 p-5 shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
+                <form onSubmit={handleSubmit} className="relative w-full">
+                    <input
+                        type="text"
+                        className="w-full bg-[#142338] border border-[#3DD6B5]/20 rounded-xl py-3.5 pl-4 pr-[140px] text-sm text-white placeholder-[#6B7A8F] focus:outline-none focus:border-[#3DD6B5] focus:ring-[3px] focus:ring-[#3DD6B5]/15 transition-all duration-300 min-h-[48px]"
+                        placeholder="Describe your network... (e.g., 2 routers connected to a switch with 3 PCs)"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        disabled={loading}
+                    />
+
+                    <button
+                        type="submit"
+                        disabled={loading || !prompt}
+                        className={`absolute right-1.5 top-1/2 transform -translate-y-1/2 bg-gradient-to-br from-[#3DD6B5] to-[#2BC4A3] text-white font-semibold text-sm px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all duration-300 hover:-translate-y-[calc(50%+2px)] hover:shadow-[0_8px_20px_rgba(61,214,181,0.4)] hover:brightness-110 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-[-50%] disabled:hover:shadow-none`}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 size={18} className="animate-spin" />
+                                <span>Generating...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles size={18} />
+                                <span>Generate</span>
+                            </>
+                        )}
+                    </button>
+                </form>
+            </div>
+
             {error && (
-                <div className="absolute bottom-full mb-2 left-0 w-full text-center">
-                    <span className="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full border border-red-200 shadow-sm">
+                <div className="absolute bottom-full mb-4 left-0 w-full text-center">
+                    <span className="bg-red-500/10 text-red-300 text-xs px-4 py-2 rounded-full border border-red-500/20 shadow-lg backdrop-blur-sm">
                         {error}
                     </span>
                 </div>

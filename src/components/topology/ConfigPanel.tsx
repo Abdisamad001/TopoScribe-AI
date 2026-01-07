@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { NetworkNode, Link } from '@/types/network';
-import { Share2, CheckCircle, Activity, Save, Monitor, Shield, Globe } from 'lucide-react';
+import { Share2, CheckCircle, Activity, Save, Monitor, Shield, Globe, Trash2 } from 'lucide-react';
 
 interface ConfigPanelProps {
     selectedNode: Node | null;
@@ -9,9 +9,10 @@ interface ConfigPanelProps {
     allNodes: Node[];
     allEdges: Edge[];
     onSimulationPath: (result: { path: string[], success: boolean, failureNodeId?: string }) => void;
+    onDeleteNode: (nodeId: string) => void;
 }
 
-export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allEdges, onSimulationPath }: ConfigPanelProps) {
+export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allEdges, onSimulationPath, onDeleteNode }: ConfigPanelProps) {
     const [label, setLabel] = useState('');
     const [ip, setIp] = useState('');
     const [pingTarget, setPingTarget] = useState('');
@@ -237,6 +238,19 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                         </div>
                     )}
                 </div>
+            </div>
+
+            <div className="mt-8 px-1">
+                <button
+                    onClick={() => {
+                        if (confirm('Are you sure you want to delete this device?')) {
+                            onDeleteNode(selectedNode.id);
+                        }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2 rounded-lg transition-all text-xs font-semibold"
+                >
+                    <Trash2 size={14} /> Delete Device
+                </button>
             </div>
 
             <div className="mt-auto pt-6 text-[10px] text-slate-600 text-center border-t border-teal-500/5">
