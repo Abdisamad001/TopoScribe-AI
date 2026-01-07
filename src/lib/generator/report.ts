@@ -30,7 +30,7 @@ export function generateMarkdownReport(topology: Topology): string {
     topology.nodes.forEach(node => {
         if (node.type === 'router' || node.type === 'switch') {
             md += `### ${node.name} (${node.type.toUpperCase()})\n`;
-            md += `\`\`\`text\n`;
+            md += `\`\`\`cisco-cli\n`;
             md += generateCiscoConfig(node, topology.nodes, topology.links, topology.protocols);
             md += `\`\`\`\n\n`;
         }
