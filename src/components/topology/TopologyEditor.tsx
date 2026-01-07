@@ -64,6 +64,7 @@ export default function TopologyEditor() {
     const [edges, setEdges, onEdgesChange] = useEdgesState(convertEdges(initialTopology.links));
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
     const [isReportOpen, setIsReportOpen] = React.useState(false);
+    const [isMetricsOpen, setIsMetricsOpen] = React.useState(false);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -195,7 +196,13 @@ export default function TopologyEditor() {
                     <MiniMap />
                     <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
 
-                    <div className="absolute top-4 right-4 z-50">
+                    <div className="absolute top-4 right-4 z-50 flex gap-2">
+                        <button
+                            onClick={() => setIsMetricsOpen(!isMetricsOpen)}
+                            className={`px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2 ${isMetricsOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 dark:bg-zinc-800 dark:text-gray-200'}`}
+                        >
+                            📊 Metrics
+                        </button>
                         <button
                             onClick={() => setIsReportOpen(true)}
                             className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
@@ -214,7 +221,7 @@ export default function TopologyEditor() {
                 topology={{
                     nodes: convertNodesToDomain(nodes),
                     links: convertEdgesToDomain(edges),
-                    protocols: initialTopology.protocols, // Simplified: use initial protocols for now
+                    protocols: initialTopology.protocols,
                     name: "My Generated Network",
                     id: "topo-gen-1",
                     version: 1,
@@ -222,7 +229,7 @@ export default function TopologyEditor() {
                 }}
             />
 
-            <MetricsDashboard />
+            {isMetricsOpen && <MetricsDashboard />}
         </div>
     );
 }
