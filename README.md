@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TopoScribe AI - Agentic Network Design System
 
-## Getting Started
+## 🚀 Overview
+**TopoScribe AI** is an intelligent, web-based platform that allows network architects to design, simulate, and document network topologies using natural language and interactive visual tools.
 
-First, run the development server:
+It combines a **React Flow** frontend with a **Next.js** backend, powered by **Groq LLaMA 3** for AI orchestration.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Key Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🧠 AI-Powered Design
+- **Natural Language Input**: "Create a redundancy network with 2 routers and OSPF."
+- **Auto-Layout**: Intelligently places routers, switches, and hosts.
+- **Smart Configuration**: Automatically assigns IP schemas and subnets.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🎨 Visual Topology Editor
+- **Drag & Drop**: Manually refine designs with custom nodes.
+- **Interactive**: Click to configure node properties (Hostname, IP).
+- **Responsive**: Smooth zooming and panning with MiniMap controls.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### ⚡ Logical Simulation Engine
+- **Reachability Testing**: Real-time graph-based ping simulation.
+- **Visual Feedback**: Success/Failure paths are highlighted on the canvas (Green/Red).
+- **Path Visualization**: See the exact hop-by-hop path taken by packets.
 
-## Learn More
+### 📄 Documentation Generator
+- **Auto-Reports**: Generates professional Markdown PDF-ready reports.
+- **Cisco CLI**: Automatically generates `IOS` configuration blocks for all devices.
+- **Export**: Copy to clipboard or download as `.md` files.
 
-To learn more about Next.js, take a look at the following resources:
+### 📊 Metrics Dashboard
+- **Live Analytics**: Tracks time saved vs manual configuration.
+- **Efficiency Score**: Real-time feedback on design complexity.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠 Technology Stack
+- **Frontend**: Next.js 14, React, Tailwind CSS, React Flow
+- **Backend**: Next.js API Routes (Serverless)
+- **AI**: Groq SDK (LLaMA 3-70b)
+- **Language**: TypeScript
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🏁 Getting Started
 
-## Deploy on Vercel
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Set API Key**
+   Create a `.env.local` file and add your Groq API Key:
+   ```env
+   GROQ_API_KEY=gsk_...
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for Production**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+## 📝 License
+MIT
