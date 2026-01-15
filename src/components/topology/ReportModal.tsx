@@ -78,7 +78,7 @@ const CiscoTerminalWindow = ({ code }: { code: string }) => {
                 </div> */}
 
                 {code.split('\n').map((line, i) => (
-                    <div key={i} className="whitespace-pre">
+                    <div key={i} className="whitespace-pre-wrap break-words">
                         <SyntaxHighlighter line={line} />
                     </div>
                 ))}
@@ -220,16 +220,18 @@ export default function ReportModal({ isOpen, onClose, topology }: ReportModalPr
                             thead: ({ node, ...props }) => <thead className="bg-[#1C2F45] text-teal-400 font-semibold" {...props} />,
                             th: ({ node, ...props }) => <th className="p-4 border-b border-[#3DD6B5]/10" {...props} />,
                             td: ({ node, ...props }) => <td className="p-4 border-b border-[#3DD6B5]/5 text-slate-300" {...props} />,
+                            // ...
                             code: ({ node, className, children, ...props }) => {
-                                const match = /language-(\w+)/.exec(className || '');
+                                const match = /language-([\w-]+)/.exec(className || '');
                                 const isCisco = match && match[1] === 'cisco-cli';
 
                                 if (isCisco) {
                                     return <CiscoTerminalWindow code={String(children).replace(/\n$/, '')} />;
                                 }
 
-                                return <code className="bg-[#1C2F45] px-1.5 py-0.5 rounded text-xs font-mono text-teal-200 border border-teal-500/10" {...props}>{children}</code>;
+                                return <code className="bg-[#1C2F45] px-1.5 py-0.5 rounded text-xs font-mono text-teal-200 border border-teal-500/10 whitespace-pre-wrap break-all" {...props}>{children}</code>;
                             },
+                            // ...
                             pre: ({ node, children, ...props }) => <div className="my-4">{children}</div>,
                         }}
                     >

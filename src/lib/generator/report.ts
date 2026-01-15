@@ -17,8 +17,17 @@ export function generateMarkdownReport(topology: Topology): string {
 
     topology.nodes.forEach(node => {
         node.interfaces.forEach(iface => {
-            if (iface.ipAddress) {
-                md += `| ${node.name} | ${iface.name} | ${iface.ipAddress} | ${iface.subnetMask || '-'} |\n`;
+            if (iface.ipAddress && iface.ipAddress !== 'no ip address') {
+                let mask = iface.subnetMask;
+                if (!mask) {
+                    // Auto-detect mask based on IP class/usage if missing
+                    if (iface.ipAddress.startsWith('10.')) {
+                        mask = '255.255.255.252'; // Assume /30 for 10.x block (WAN)
+                    } else {
+                        mask = '255.255.255.0';   // Assume /24 for others
+                    }
+                }
+                md += `| ${node.name} | ${iface.name} | ${iface.ipAddress} | ${mask} |\n`;
             }
         });
     });
@@ -31,6 +40,11 @@ export function generateMarkdownReport(topology: Topology): string {
         if (node.type === 'router' || node.type === 'switch') {
             md += `### ${node.name} (${node.type.toUpperCase()})\n`;
             md += `\`\`\`cisco-cli\n`;
+            md += generateCiscoConfig(node, topology.nodes, topology.links, topology.protocols);
+            md += `\`\`\`\n\n`;
+        } else if (node.type === 'host') {
+            md += `### ${node.name} (HOST)\n`;
+            md += `\`\`\`text\n`;
             md += generateCiscoConfig(node, topology.nodes, topology.links, topology.protocols);
             md += `\`\`\`\n\n`;
         }

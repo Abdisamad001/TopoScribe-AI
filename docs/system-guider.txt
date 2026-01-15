@@ -1,6 +1,6 @@
 📘 PROJECT IMPLEMENTATION GUIDE
 Agentic AI System for Natural Language–Driven Network Design, Configuration, and Simulation
-🎯 Project Goal (Put This at the Top in Cursor)
+🎯 Project Goal 
 
 Build a web-based agentic AI system that allows users to describe a computer network using natural language.
 The system automatically generates a network topology, device configurations, logically simulates connectivity, allows conversational modification, and produces a professional deployment-ready report.
