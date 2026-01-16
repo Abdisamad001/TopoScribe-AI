@@ -26,6 +26,8 @@ import ConfigPanel from './ConfigPanel';
 import ChatInterface from './ChatInterface';
 import ReportModal from './ReportModal';
 import MetricsDashboard from './MetricsDashboard';
+import ImmersiveChatPanel from './ImmersiveChatPanel';
+import { clarifyRequirements } from '@/lib/api';
 import { initialTopology } from '@/data/initialTopology';
 import { NetworkNode, Link } from '@/types/network';
 
@@ -37,23 +39,33 @@ const nodeTypes: NodeTypes = {
 };
 
 // Converters
-const convertNodes = (netNodes: NetworkNode[]): Node[] => {
-    return netNodes.map((n) => ({
-        id: n.id,
-        type: n.type,
-        position: { x: n.x, y: n.y },
-        data: {
-            label: n.name,
-            ip: n.interfaces.find(i => i.ipAddress)?.ipAddress // Grab first IP for display
-        },
-    }));
+const convertNodes = (netNodes: any[]): Node[] => {
+    return netNodes.map((n) => {
+        // Handle IP address from backend (ip_address) or frontend (ipAddress)
+        let displayIp = '';
+        const iface = n.interfaces && n.interfaces.length > 0 ? n.interfaces[0] : null;
+        if (iface) {
+            displayIp = iface.ipAddress || iface.ip_address || iface.ip || '';
+        }
+
+        return {
+            id: n.id,
+            type: n.type,
+            position: { x: n.x ?? 0, y: n.y ?? 0 },
+            data: {
+                label: n.name || n.label, // Handle both name and label
+                ip: displayIp
+            },
+        };
+    });
 };
 
-const convertEdges = (netLinks: Link[]): Edge[] => {
+const convertEdges = (netLinks: any[]): Edge[] => {
     return netLinks.map((l) => ({
         id: l.id,
-        source: l.sourceNodeId,
-        target: l.targetNodeId,
+        // Handle source/target from backend vs sourceNodeId/targetNodeId from frontend
+        source: l.sourceNodeId || l.source,
+        target: l.targetNodeId || l.target,
         animated: true,
         style: { stroke: '#b1b1b7', strokeWidth: 2 },
     }));
@@ -66,13 +78,16 @@ export default function TopologyEditor() {
     const [isReportOpen, setIsReportOpen] = React.useState(false);
     const [isMetricsOpen, setIsMetricsOpen] = React.useState(false);
 
+    // Chat State
+    const [isChatOpen, setIsChatOpen] = React.useState(false);
+    const [chatMessages, setChatMessages] = React.useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+    const [chatLoading, setChatLoading] = React.useState(false);
+    const [currentPrompt, setCurrentPrompt] = React.useState('');
+
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
         [setEdges],
     );
-
-    // ... (keep existing DnD handlers)
-
 
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
@@ -88,10 +103,8 @@ export default function TopologyEditor() {
                 return;
             }
 
-            // Check if the drop target is valid (in this case, just the react flow wrapper)
-            // We can improve this coordinate calculation later
             const position = {
-                x: event.clientX - 300, // Approximate offset for sidebar
+                x: event.clientX - 300,
                 y: event.clientY - 100
             };
 
@@ -124,10 +137,8 @@ export default function TopologyEditor() {
         const { path, success, failureNodeId } = result;
         const pathNodeIds = path || [];
 
-        // 1. Update Edges
         setEdges((currentEdges) => {
             if (!pathNodeIds || pathNodeIds.length < 2) {
-                // Reset to default
                 return currentEdges.map(e => ({
                     ...e,
                     animated: false,
@@ -148,9 +159,7 @@ export default function TopologyEditor() {
 
                 if (edge) {
                     involvedEdges.add(edge.id);
-                    // If this segment leads to the failure node, mark it
                     if (!success && failureNodeId && (v === failureNodeId || u === failureNodeId)) {
-                        // Note: graph path is ordered, so v is the next step. If v is failure node, this edge failed.
                         if (v === failureNodeId) {
                             failureEdges.add(edge.id);
                         }
@@ -169,7 +178,7 @@ export default function TopologyEditor() {
                     return {
                         ...e,
                         animated: true,
-                        style: { ...e.style, stroke: success ? '#3DD6B5' : '#4A8FFF', strokeWidth: 4, opacity: 1 } // Green if success, Blue if processing/partial
+                        style: { ...e.style, stroke: success ? '#3DD6B5' : '#4A8FFF', strokeWidth: 4, opacity: 1 }
                     };
                 } else {
                     return {
@@ -181,17 +190,12 @@ export default function TopologyEditor() {
             });
         });
 
-        // 2. Update Nodes (to show status icons)
         setNodes((currentNodes) => currentNodes.map(n => {
             let status = 'idle';
             if (pathNodeIds.includes(n.id)) {
                 if (n.id === failureNodeId) {
                     status = 'error';
                 } else {
-                    status = success ? 'success' : 'processing'; // or just 'success' for passed nodes in a failed path? 
-                    // User said: "All subsequent nodes... remain grayed out". 
-                    // Nodes in partial path should probably look roughly successful or 'visited'.
-                    // Let's use 'success' for visited nodes even in failed path, except the fail one.
                     status = 'success';
                 }
             }
@@ -203,10 +207,9 @@ export default function TopologyEditor() {
 
     }, [setEdges, setNodes]);
 
-    // Reset simulation when clicking pane
     const onPaneClick = useCallback(() => {
         setSelectedNodeId(null);
-        onSimulationPath({ path: [], success: true }); // Clear simulation
+        onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
     const onTopologyGenerated = useCallback((newTopology: any) => {
@@ -222,6 +225,39 @@ export default function TopologyEditor() {
         setSelectedNodeId(null);
         onSimulationPath({ path: [], success: true });
     }, [setNodes, setEdges, onSimulationPath]);
+
+    const handleClarificationRequest = useCallback((prompt: string, questions: string[]) => {
+        setCurrentPrompt(prompt);
+        setChatMessages([
+            { role: 'user', content: prompt },
+            { role: 'assistant', content: questions.join('\n\n') }
+        ]);
+        setIsChatOpen(true);
+    }, []);
+
+    const onChatSendMessage = async (message: string) => {
+        const newHistory = [...chatMessages, { role: 'user' as const, content: message }];
+        setChatMessages(newHistory);
+        setChatLoading(true);
+
+        try {
+            const data = await clarifyRequirements(currentPrompt, newHistory);
+
+            if (data.status === 'complete' && data.topology) {
+                onTopologyGenerated(data.topology);
+                setIsChatOpen(false);
+            } else if (data.status === 'needs_clarification') {
+                const q = data.questions ? data.questions.join('\n\n') : 'Please clarify.';
+                setChatMessages(prev => [...prev, { role: 'assistant', content: q }]);
+            } else {
+                setChatMessages(prev => [...prev, { role: 'assistant', content: "Failed to generate design." }]);
+            }
+        } catch (error) {
+            setChatMessages(prev => [...prev, { role: 'assistant', content: "Error communicating with agent." }]);
+        } finally {
+            setChatLoading(false);
+        }
+    };
 
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
@@ -259,7 +295,19 @@ export default function TopologyEditor() {
                         </button>
                     </div>
                 </ReactFlow>
-                <ChatInterface onTopologyGenerated={onTopologyGenerated} />
+
+                <ImmersiveChatPanel
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    messages={chatMessages}
+                    onSendMessage={onChatSendMessage}
+                    loading={chatLoading}
+                />
+
+                <ChatInterface
+                    onTopologyGenerated={onTopologyGenerated}
+                    onRequestClarification={handleClarificationRequest}
+                />
             </div>
             <ConfigPanel
                 selectedNode={selectedNode}
@@ -289,7 +337,7 @@ export default function TopologyEditor() {
     );
 }
 
-// Helper to convert back to domain model (duplicate logic from ConfigPanel - should be refactored)
+// Helper to convert back to domain model
 const convertNodesToDomain = (nodes: Node[]): NetworkNode[] => {
     return nodes.map(n => ({
         id: n.id,
@@ -297,7 +345,7 @@ const convertNodesToDomain = (nodes: Node[]): NetworkNode[] => {
         name: n.data.label as string,
         x: n.position.x,
         y: n.position.y,
-        interfaces: [{ id: 'eth0', name: 'Ethernet0', ipAddress: n.data.ip as string }] // Simplified
+        interfaces: [{ id: 'eth0', name: 'Ethernet0', ipAddress: n.data.ip as string }]
     }));
 };
 

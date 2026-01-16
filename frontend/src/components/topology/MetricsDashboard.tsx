@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+interface Metrics {
+    simulationsRun: number;
+    successfulPings: number;
+    nodescreated: number;
+    manualTimeSaved: number;
+}
+
 export default function MetricsDashboard() {
     // Mock data for demonstration - in a real app, this would be fetched from backend analytics
-    const [metrics, setMetrics] = useState({
+    const [metrics, setMetrics] = useState<Metrics>({
         simulationsRun: 0,
         successfulPings: 0,
         nodescreated: 0,
@@ -13,7 +20,7 @@ export default function MetricsDashboard() {
         // Simulate fetching metrics or aggregating from local session storage
         // For now, let's just make up some dynamic looking numbers based on session time or random
         const interval = setInterval(() => {
-            setMetrics(prev => ({
+            setMetrics((prev: Metrics) => ({
                 ...prev,
                 simulationsRun: prev.simulationsRun + Math.floor(Math.random() * 2),
                 successfulPings: prev.successfulPings + Math.floor(Math.random() * 1),

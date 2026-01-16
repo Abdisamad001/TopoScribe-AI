@@ -209,19 +209,19 @@ export default function ReportModal({ isOpen, onClose, topology }: ReportModalPr
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold text-white mb-6 pb-2 border-b border-[#3DD6B5]/20 flex items-center gap-2" {...props} />,
-                            h2: ({ node, ...props }) => <h2 className="text-lg font-semibold text-teal-400 mt-8 mb-4 flex items-center gap-2" {...props} />,
-                            h3: ({ node, ...props }) => <h3 className="text-md font-medium text-slate-200 mt-6 mb-2" {...props} />,
-                            p: ({ node, ...props }) => <p className="mb-4 text-sm leading-7 text-slate-300" {...props} />,
-                            ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2 text-sm text-slate-300 marker:text-teal-500" {...props} />,
-                            li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-                            blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-teal-500/50 pl-4 py-1 my-4 bg-teal-900/10 text-slate-400 italic" {...props} />,
-                            table: ({ node, ...props }) => <div className="overflow-x-auto my-6 rounded-lg border border-[#3DD6B5]/10"><table className="w-full text-left border-collapse text-sm" {...props} /></div>,
-                            thead: ({ node, ...props }) => <thead className="bg-[#1C2F45] text-teal-400 font-semibold" {...props} />,
-                            th: ({ node, ...props }) => <th className="p-4 border-b border-[#3DD6B5]/10" {...props} />,
-                            td: ({ node, ...props }) => <td className="p-4 border-b border-[#3DD6B5]/5 text-slate-300" {...props} />,
+                            h1: ({ node, ...props }: any) => <h1 className="text-2xl font-bold text-white mb-6 pb-2 border-b border-[#3DD6B5]/20 flex items-center gap-2" {...props} />,
+                            h2: ({ node, ...props }: any) => <h2 className="text-lg font-semibold text-teal-400 mt-8 mb-4 flex items-center gap-2" {...props} />,
+                            h3: ({ node, ...props }: any) => <h3 className="text-md font-medium text-slate-200 mt-6 mb-2" {...props} />,
+                            p: ({ node, ...props }: any) => <p className="mb-4 text-sm leading-7 text-slate-300" {...props} />,
+                            ul: ({ node, ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-2 text-sm text-slate-300 marker:text-teal-500" {...props} />,
+                            li: ({ node, ...props }: any) => <li className="pl-1" {...props} />,
+                            blockquote: ({ node, ...props }: any) => <blockquote className="border-l-4 border-teal-500/50 pl-4 py-1 my-4 bg-teal-900/10 text-slate-400 italic" {...props} />,
+                            table: ({ node, ...props }: any) => <div className="overflow-x-auto my-6 rounded-lg border border-[#3DD6B5]/10"><table className="w-full text-left border-collapse text-sm" {...props} /></div>,
+                            thead: ({ node, ...props }: any) => <thead className="bg-[#1C2F45] text-teal-400 font-semibold" {...props} />,
+                            th: ({ node, ...props }: any) => <th className="p-4 border-b border-[#3DD6B5]/10" {...props} />,
+                            td: ({ node, ...props }: any) => <td className="p-4 border-b border-[#3DD6B5]/5 text-slate-300" {...props} />,
                             // ...
-                            code: ({ node, className, children, ...props }) => {
+                            code: ({ node, className, children, ...props }: any) => {
                                 const match = /language-([\w-]+)/.exec(className || '');
                                 const isCisco = match && match[1] === 'cisco-cli';
 
@@ -232,7 +232,7 @@ export default function ReportModal({ isOpen, onClose, topology }: ReportModalPr
                                 return <code className="bg-[#1C2F45] px-1.5 py-0.5 rounded text-xs font-mono text-teal-200 border border-teal-500/10 whitespace-pre-wrap break-all" {...props}>{children}</code>;
                             },
                             // ...
-                            pre: ({ node, children, ...props }) => <div className="my-4">{children}</div>,
+                            pre: ({ node, children, ...props }: any) => <div className="my-4">{children}</div>,
                         }}
                     >
                         {report}

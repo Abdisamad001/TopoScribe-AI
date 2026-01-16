@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { generateDesign } from '@/lib/api';
 
 interface ChatInterfaceProps {
     onTopologyGenerated: (topology: any) => void;
+    onRequestClarification: (prompt: string, questions: string[]) => void;
 }
 
-export default function ChatInterface({ onTopologyGenerated }: ChatInterfaceProps) {
+export default function ChatInterface({ onTopologyGenerated, onRequestClarification }: ChatInterfaceProps) {
     const [prompt, setPrompt] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -18,22 +20,19 @@ export default function ChatInterface({ onTopologyGenerated }: ChatInterfaceProp
         setError(null);
 
         try {
-            const res = await fetch('/api/ai/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
-            });
+            const data = await generateDesign(prompt);
 
-            const data = await res.json();
-
-            if (data.success) {
+            if (data.status === 'complete' && data.topology) {
                 onTopologyGenerated(data.topology);
                 setPrompt(''); // Clear input on success
+            } else if (data.status === 'needs_clarification') {
+                onRequestClarification(prompt, data.questions || []);
+                setPrompt('');
             } else {
-                setError(data.error || 'Failed to generate topology');
+                setError('Failed to generate topology');
             }
         } catch (err) {
-            setError('Network error occurred.');
+            setError(err instanceof Error ? err.message : 'Network error occurred.');
         } finally {
             setLoading(false);
         }
