@@ -1,5 +1,5 @@
 import { Topology } from '@/types/network';
-import { generateCiscoConfig } from './cisco';
+import { generateCiscoConfig, isRouterType, isSwitchType } from './cisco';
 
 export function generateMarkdownReport(topology: Topology): string {
     const date = new Date().toLocaleDateString();
@@ -37,7 +37,7 @@ export function generateMarkdownReport(topology: Topology): string {
     md += `The following configurations are generated for Cisco IOS devices.\n\n`;
 
     topology.nodes.forEach(node => {
-        if (node.type === 'router' || node.type === 'switch') {
+        if (isRouterType(node.type) || isSwitchType(node.type)) {
             md += `### ${node.name} (${node.type.toUpperCase()})\n`;
             md += `\`\`\`cisco-cli\n`;
             md += generateCiscoConfig(node, topology.nodes, topology.links, topology.protocols);

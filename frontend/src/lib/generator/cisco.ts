@@ -1,9 +1,43 @@
 import { NetworkNode, Link, ProtocolConfig } from '@/types/network';
 
+/** Department VLANs aligned with backend / campus design (HR, IT, Finance). */
+const DEPT_VLANS: { id: number; name: string }[] = [
+    { id: 10, name: 'HR' },
+    { id: 20, name: 'IT' },
+    { id: 30, name: 'Finance' },
+];
+
+export function isRouterType(t: string): boolean {
+    const x = t.toLowerCase();
+    return x.includes('router') || x.includes('gateway') || (x.includes('firewall') && !x.includes('switch'));
+}
+
+export function isSwitchType(t: string): boolean {
+    const x = t.toLowerCase();
+    return x === 'switch' || x.includes('switch') || x.includes('catalyst') || x.includes('hub') || x.includes('2960');
+}
+
+function vlanFromHostIp(ip: string | undefined): number | null {
+    if (!ip || ip === 'no ip address' || ip === '0.0.0.0') return null;
+    const parts = ip.split('.');
+    if (parts.length < 3) return null;
+    const o = parseInt(parts[2], 10);
+    if (o === 10 || o === 20 || o === 30) return o;
+    return null;
+}
+
+function vlanFromText(...parts: string[]): number | null {
+    const text = parts.filter(Boolean).join(' ').toLowerCase();
+    if (/\b(hr|human[\s_-]?resources)\b/.test(text)) return 10;
+    if (/\b(it|information[\s_-]?technology|help[\s_-]?desk|infotech)\b/.test(text)) return 20;
+    if (/\b(finance|accounting|accounts)\b/.test(text)) return 30;
+    return null;
+}
+
 export function generateCiscoConfig(node: NetworkNode, allNodes: NetworkNode[], links: Link[], protocols: ProtocolConfig[]): string {
-    if (node.type === 'router') {
+    if (node.type === 'router' || isRouterType(node.type)) {
         return generateRouterConfig(node, allNodes, links, protocols);
-    } else if (node.type === 'switch') {
+    } else if (node.type === 'switch' || isSwitchType(node.type)) {
         return generateSwitchConfig(node, allNodes, links, protocols);
     } else if (node.type === 'host') {
         return generateHostConfig(node, allNodes, links);
@@ -96,6 +130,37 @@ function generateRouterConfig(node: NetworkNode, allNodes: NetworkNode[], links:
     return config;
 }
 
+type SwitchPortJob = { ifaceName: string; peer: NetworkNode | undefined };
+
+function buildSwitchPortJobs(node: NetworkNode, links: Link[], allNodes: NetworkNode[]): SwitchPortJob[] {
+    const jobs: SwitchPortJob[] = [];
+    const physicalIfaces = (node.interfaces || []).filter(i => !i.name.toLowerCase().startsWith('vlan'));
+
+    if (physicalIfaces.length > 0) {
+        for (const iface of physicalIfaces) {
+            const link = links.find(
+                l =>
+                    (l.sourceNodeId === node.id && (l.sourceInterfaceId === iface.id || !l.sourceInterfaceId)) ||
+                    (l.targetNodeId === node.id && (l.targetInterfaceId === iface.id || !l.targetInterfaceId))
+            );
+            let peer: NetworkNode | undefined;
+            if (link) {
+                const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
+                peer = allNodes.find(n => n.id === peerId);
+            }
+            jobs.push({ ifaceName: iface.name, peer });
+        }
+    } else {
+        const nodeLinks = links.filter(l => l.sourceNodeId === node.id || l.targetNodeId === node.id);
+        nodeLinks.forEach((link, idx) => {
+            const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
+            const peer = allNodes.find(n => n.id === peerId);
+            jobs.push({ ifaceName: `FastEthernet0/${idx + 1}`, peer });
+        });
+    }
+    return jobs;
+}
+
 function generateSwitchConfig(node: NetworkNode, allNodes: NetworkNode[], links: Link[], protocols: ProtocolConfig[]): string {
     const prompt = `${node.name}#`;
     let config = `${prompt} show running-config\n`;
@@ -110,29 +175,47 @@ function generateSwitchConfig(node: NetworkNode, allNodes: NetworkNode[], links:
     config += `boot-start-marker\nboot-end-marker\n!\n`;
     config += `enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0\n!\n`;
 
-    // Physical Interfaces - assuming they are switchports
-    // We look for interfaces that are NOT Vlan
-    node.interfaces.forEach(iface => {
-        if (iface.name.toLowerCase().startsWith('vlan')) return;
+    // VLAN database (must match department segmentation: 10=HR, 20=IT, 30=Finance)
+    for (const v of DEPT_VLANS) {
+        config += `vlan ${v.id}\n`;
+        config += ` name ${v.name}\n`;
+        config += `!\n`;
+    }
 
-        config += `interface ${iface.name}\n`;
+    const portJobs = buildSwitchPortJobs(node, links, allNodes);
+    let rr = 0;
 
-        // Find description
-        const link = links.find(l =>
-            (l.sourceNodeId === node.id && (l.sourceInterfaceId === iface.id || !l.sourceInterfaceId)) ||
-            (l.targetNodeId === node.id && (l.targetInterfaceId === iface.id || !l.targetInterfaceId))
-        );
-        if (link) {
-            const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
-            const peer = allNodes.find(n => n.id === peerId);
-            if (peer) config += ` description Link to ${peer.name}\n`;
+    for (const job of portJobs) {
+        config += `interface ${job.ifaceName}\n`;
+
+        const peer = job.peer;
+        if (peer) {
+            config += ` description Link to ${peer.name}\n`;
         }
 
-        config += ` switchport mode access\n`;
-        config += ` switchport access vlan 1\n`; // Default to vlan 1
+        if (peer && (isRouterType(peer.type) || isSwitchType(peer.type))) {
+            config += ` switchport mode trunk\n`;
+            config += ` switchport trunk encapsulation dot1q\n`;
+            config += ` switchport trunk allowed vlan 10,20,30\n`;
+        } else if (peer) {
+            const hostIp = peer.interfaces?.[0]?.ipAddress;
+            let vid =
+                vlanFromHostIp(hostIp) ??
+                vlanFromText(peer.name, peer.id) ??
+                vlanFromText(node.name, node.id);
+            if (vid === null) {
+                vid = [10, 20, 30][rr % 3];
+                rr += 1;
+            }
+            config += ` switchport mode access\n`;
+            config += ` switchport access vlan ${vid}\n`;
+        } else {
+            config += ` switchport mode access\n`;
+            config += ` switchport access vlan 1\n`;
+        }
         config += ` no shutdown\n`;
         config += `!\n`;
-    });
+    }
 
     // VLAN Interface (Management)
     // Robust logic: Find Vlan1 explicit interface OR fallback to any interface that has a valid IP

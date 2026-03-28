@@ -18,6 +18,8 @@ Design plan:
 
 Generate a network topology with:
 - Routers, switches, hosts as needed
+- If the design plan describes a SINGLE site / single campus, use exactly ONE router (one logical L3 device). Do not add separate "Edge Router" and "Core Router" pairs for a single-site design.
+- For multi-department VLAN campus designs (e.g. HR, IT, Finance), place hosts on subnets 192.168.10.0/24, 192.168.20.0/24, and 192.168.30.0/24 respectively (third octet 10, 20, 30) and connect each department's hosts to that department's access switch.
 - Proper connections between devices
 - Hierarchical spatial layout:
     - Routers at the top (y=0 to y=100)
