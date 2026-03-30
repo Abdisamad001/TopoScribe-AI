@@ -42,6 +42,11 @@ export interface ProtocolConfig {
   settings: Record<string, any>; // Protocol specific settings (e.g. Area ID for OSPF)
 }
 
+/** Optional data from backend / topology agent (VLAN catalog, etc.) */
+export interface TopologyMetadata {
+  vlans?: Array<{ id: number; name: string }>;
+}
+
 export interface Topology {
   id: string;
   name: string;
@@ -50,4 +55,5 @@ export interface Topology {
   protocols: ProtocolConfig[];
   version: number;
   lastUpdated: string; // ISO Date
+  metadata?: TopologyMetadata;
 }

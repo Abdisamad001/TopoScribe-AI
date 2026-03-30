@@ -1,8 +1,68 @@
 from app.graph.state import NetworkDesignState
 from app.models.network import Topology
 from app.utils.llm import get_llm_response
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Tuple
 import json
+
+def _norm_vlan_item(item: Any) -> Optional[Tuple[int, str]]:
+    if not isinstance(item, dict):
+        return None
+    vid = item.get("id")
+    if vid is None:
+        vid = item.get("vlan_id")
+    if vid is None:
+        return None
+    try:
+        v = int(vid)
+    except (TypeError, ValueError):
+        return None
+    if v < 2 or v > 4094:
+        return None
+    name = item.get("name") or item.get("vlan_name") or f"VLAN_{v}"
+    return (v, str(name).strip()[:64])
+
+def merge_vlan_metadata(design_plan: Dict[str, Any], topology_dict: Dict[str, Any]) -> None:
+    """
+    Ensure topology.metadata.vlans exists from design_plan when the LLM omitted it.
+    """
+    md = topology_dict.setdefault("metadata", {})
+    raw = md.get("vlans")
+    if isinstance(raw, list) and len(raw) > 0:
+        return
+    if not isinstance(design_plan, dict):
+        return
+    out: List[Dict[str, Any]] = []
+    seen = set()
+
+    def add(vid: int, name: str) -> None:
+        if vid in seen:
+            return
+        seen.add(vid)
+        out.append({"id": vid, "name": name})
+
+    dpv = design_plan.get("vlans")
+    if isinstance(dpv, list):
+        for item in dpv:
+            n = _norm_vlan_item(item)
+            if n:
+                add(n[0], n[1])
+    depts = design_plan.get("departments")
+    if isinstance(depts, list):
+        for i, d in enumerate(depts):
+            if not isinstance(d, dict):
+                continue
+            name = d.get("name") or d.get("department") or f"DEPT{i + 1}"
+            vid = d.get("vlan_id")
+            if vid is None:
+                vid = 100 + i * 10
+            try:
+                vi = int(vid)
+            except (TypeError, ValueError):
+                continue
+            if 2 <= vi <= 4094:
+                add(vi, str(name))
+    if out:
+        md["vlans"] = out
 
 def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     """
@@ -19,7 +79,10 @@ Design plan:
 Generate a network topology with:
 - Routers, switches, hosts as needed
 - If the design plan describes a SINGLE site / single campus, use exactly ONE router (one logical L3 device). Do not add separate "Edge Router" and "Core Router" pairs for a single-site design.
-- For multi-department VLAN campus designs (e.g. HR, IT, Finance), place hosts on subnets 192.168.10.0/24, 192.168.20.0/24, and 192.168.30.0/24 respectively (third octet 10, 20, 30) and connect each department's hosts to that department's access switch.
+- VLANs MUST match the design plan: use the same VLAN IDs and department names as in design_plan.vlans or design_plan.departments (if present). If the plan lists N departments, create N access VLANs with those ids/names and assign each department's hosts and access switch accordingly.
+- On each host node, set "config": {{"vlan_id": <number>, "vlan_name": "<same as catalog>"}} matching that host's department VLAN.
+- Put the full VLAN catalog in metadata.vlans as [{{"id": <int 2-4094>, "name": "<string>"}}, ...] covering every department VLAN in the design.
+- Use distinct private IPv4 subnets per VLAN (e.g. 192.168.<vlan_id>.0/24 or another consistent scheme) on hosts; routers use subinterfaces toward switches (do not rely on a fixed 10/20/30 scheme unless the user asked for it).
 - Proper connections between devices
 - Hierarchical spatial layout:
     - Routers at the top (y=0 to y=100)
@@ -61,7 +124,11 @@ Output a JSON object matching this schema:
       "parameters": {{"area": 0}}
     }}
   ],
-  "metadata": {{}}
+  "metadata": {{
+    "vlans": [
+      {{"id": 100, "name": "ExampleDept"}}
+    ]
+  }}
 }}
 
 Output ONLY valid JSON, no markdown.
@@ -73,6 +140,8 @@ Output ONLY valid JSON, no markdown.
     try:
         clean_text = response_text.replace("```json", "").replace("```", "").strip()
         topology_dict = json.loads(clean_text)
+
+        merge_vlan_metadata(design_plan or {}, topology_dict)
         
         # Apply deterministic layout
         nodes = topology_dict.get("nodes", [])

@@ -54,7 +54,9 @@ const convertNodes = (netNodes: any[]): Node[] => {
             position: { x: n.x ?? 0, y: n.y ?? 0 },
             data: {
                 label: n.name || n.label, // Handle both name and label
-                ip: displayIp
+                ip: displayIp,
+                // Preserve backend VLAN mapping for report generation
+                config: n.config || {},
             },
         };
     });
@@ -77,6 +79,7 @@ export default function TopologyEditor() {
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
     const [isReportOpen, setIsReportOpen] = React.useState(false);
     const [isMetricsOpen, setIsMetricsOpen] = React.useState(false);
+    const [topologyMeta, setTopologyMeta] = React.useState(initialTopology.metadata);
 
     // Chat State
     const [isChatOpen, setIsChatOpen] = React.useState(false);
@@ -215,6 +218,7 @@ export default function TopologyEditor() {
     const onTopologyGenerated = useCallback((newTopology: any) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
+        setTopologyMeta(newTopology.metadata || initialTopology.metadata);
         onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
@@ -325,6 +329,7 @@ export default function TopologyEditor() {
                     nodes: convertNodesToDomain(nodes),
                     links: convertEdgesToDomain(edges),
                     protocols: initialTopology.protocols,
+                    metadata: topologyMeta,
                     name: "My Generated Network",
                     id: "topo-gen-1",
                     version: 1,
@@ -345,7 +350,8 @@ const convertNodesToDomain = (nodes: Node[]): NetworkNode[] => {
         name: n.data.label as string,
         x: n.position.x,
         y: n.position.y,
-        interfaces: [{ id: 'eth0', name: 'Ethernet0', ipAddress: n.data.ip as string }]
+        interfaces: [{ id: 'eth0', name: 'Ethernet0', ipAddress: n.data.ip as string }],
+        config: (n.data as any).config || {},
     }));
 };
 

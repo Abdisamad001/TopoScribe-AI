@@ -42,9 +42,17 @@ If ALL information is present, output:
     "users_per_site": X,
     "protocols": ["ospf"],
     "security": ["firewall", "vlans"],
+    "departments": [
+      {{"name": "DepartmentName", "users": 0, "vlan_id": 100}}
+    ],
+    "vlans": [
+      {{"id": 100, "name": "DepartmentName"}}
+    ],
     ...
   }}
 }}
+
+When the user specifies departments or VLAN segmentation, you MUST include "departments" (name + user count per department + unique vlan_id 2-4094 for each) and matching "vlans" (same ids and names). If the user does not give VLAN numbers, assign distinct ids (e.g. 100, 110, 120 for three departments, or any valid scheme). Use one row per department.
 
 Output ONLY valid JSON, no other text.
 """
@@ -84,9 +92,17 @@ If complete, output:
     "sites": [...],
     "users_per_site": X,
     "protocols": ["ospf"],
+    "departments": [
+      {{"name": "DepartmentName", "users": 0, "vlan_id": 100}}
+    ],
+    "vlans": [
+      {{"id": 100, "name": "DepartmentName"}}
+    ],
     ...
   }}
 }}
+
+When the user specifies departments or VLANs, include "departments" and "vlans" as above with unique vlan_id per department (2-4094).
 
 Output ONLY valid JSON.
 """

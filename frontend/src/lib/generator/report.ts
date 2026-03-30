@@ -40,12 +40,12 @@ export function generateMarkdownReport(topology: Topology): string {
         if (isRouterType(node.type) || isSwitchType(node.type)) {
             md += `### ${node.name} (${node.type.toUpperCase()})\n`;
             md += `\`\`\`cisco-cli\n`;
-            md += generateCiscoConfig(node, topology.nodes, topology.links, topology.protocols);
+            md += generateCiscoConfig(node, topology);
             md += `\`\`\`\n\n`;
         } else if (node.type === 'host') {
             md += `### ${node.name} (HOST)\n`;
             md += `\`\`\`text\n`;
-            md += generateCiscoConfig(node, topology.nodes, topology.links, topology.protocols);
+            md += generateCiscoConfig(node, topology);
             md += `\`\`\`\n\n`;
         }
     });

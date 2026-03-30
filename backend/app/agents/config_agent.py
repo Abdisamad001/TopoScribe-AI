@@ -1,18 +1,9 @@
 from app.graph.state import NetworkDesignState
 from typing import Dict, Any, List, Optional, Tuple
 import re
-
-# Department VLANs (must match topology_agent / SME scope)
-_DEPARTMENT_VLANS: Tuple[Tuple[int, str], ...] = (
-    (10, "HR"),
-    (20, "IT"),
-    (30, "Finance"),
-)
-_VID_BY_NAME = {name: vid for vid, name in _DEPARTMENT_VLANS}
-_VIDS_ORDER = [vid for vid, _ in _DEPARTMENT_VLANS]
+import ipaddress
 
 def _is_switch(node_type: str) -> bool:
-    """Match topology_agent grouping: switch, hub, catalyst, and common vendor tokens."""
     t = (node_type or "").lower()
     if not t:
         return False
@@ -35,19 +26,24 @@ def _neighbor_ids(topology, node_id: str) -> List[str]:
             out.append(link.source)
     return out
 
-def _department_vlan_from_node(node) -> Optional[int]:
-    """Map HR / IT / Finance from label or id; returns None if unknown."""
-    text = f"{getattr(node, 'label', None) or ''} {getattr(node, 'id', None) or ''}".lower()
-    if re.search(r"\b(hr|human[\s_-]?resources)\b", text):
-        return _VID_BY_NAME["HR"]
-    if re.search(r"\b(it|information[\s_-]?technology|help[\s_-]?desk|infotech)\b", text):
-        return _VID_BY_NAME["IT"]
-    if re.search(r"\b(finance|accounting|accounts)\b", text):
-        return _VID_BY_NAME["Finance"]
-    return None
+def _normalize_vlan_entry(raw: Any) -> Optional[Tuple[int, str]]:
+    if not isinstance(raw, dict):
+        return None
+    vid = raw.get("id")
+    if vid is None:
+        vid = raw.get("vlan_id")
+    if vid is None:
+        return None
+    try:
+        vid_i = int(vid)
+    except (TypeError, ValueError):
+        return None
+    if vid_i < 2 or vid_i > 4094:
+        return None
+    name = raw.get("name") or raw.get("vlan_name") or f"VLAN_{vid_i}"
+    return (vid_i, str(name).strip()[:64] or f"VLAN_{vid_i}")
 
 def _primary_ip(node) -> Optional[str]:
-    """First usable IPv4 on node interfaces (topology often uses 192.168.{10|20|30}.x)."""
     for iface in getattr(node, "interfaces", None) or []:
         ip = getattr(iface, "ip_address", None) or getattr(iface, "ip", None)
         if not ip:
@@ -57,24 +53,120 @@ def _primary_ip(node) -> Optional[str]:
             return s
     return None
 
-def _vlan_from_subnet(ip: str) -> Optional[int]:
-    """192.168.10.x -> VLAN 10; 20 -> 20; 30 -> 30 (department /24 scheme)."""
-    parts = ip.strip().split(".")
-    if len(parts) < 3:
+def vlan_catalog_from_state(topology, design_plan: Optional[dict]) -> List[Dict[str, Any]]:
+    """
+    Ordered VLAN catalog: from topology.metadata.vlans, then design_plan, then node hints.
+    """
+    seen: set = set()
+    out: List[Dict[str, Any]] = []
+
+    def add(vid: int, name: str) -> None:
+        if vid in seen:
+            return
+        seen.add(vid)
+        out.append({"id": vid, "name": name})
+
+    md = (topology.metadata or {}) if topology else {}
+    raw_vlans = md.get("vlans")
+    if isinstance(raw_vlans, list):
+        for item in raw_vlans:
+            n = _normalize_vlan_entry(item)
+            if n:
+                add(n[0], n[1])
+
+    if isinstance(design_plan, dict):
+        if not out:
+            dpv = design_plan.get("vlans")
+            if isinstance(dpv, list):
+                for item in dpv:
+                    n = _normalize_vlan_entry(item)
+                    if n:
+                        add(n[0], n[1])
+        if not out:
+            depts = design_plan.get("departments")
+            if isinstance(depts, list) and depts:
+                for i, d in enumerate(depts):
+                    if not isinstance(d, dict):
+                        continue
+                    name = d.get("name") or d.get("department") or f"DEPT{i + 1}"
+                    vid = d.get("vlan_id")
+                    if vid is None:
+                        vid = 100 + i * 10
+                    try:
+                        vid_i = int(vid)
+                    except (TypeError, ValueError):
+                        continue
+                    if 2 <= vid_i <= 4094:
+                        add(vid_i, str(name))
+
+    if not out:
+        for n in topology.nodes:
+            cfg = getattr(n, "config", None) or {}
+            if isinstance(cfg, dict) and cfg.get("vlan_id") is not None:
+                try:
+                    vid_i = int(cfg["vlan_id"])
+                except (TypeError, ValueError):
+                    continue
+                if 2 <= vid_i <= 4094:
+                    nm = cfg.get("vlan_name") or f"VLAN_{vid_i}"
+                    add(vid_i, str(nm))
+
+    if not out:
+        # Infer VLAN ids from host IPv4 third octet (e.g. 192.168.100.10 -> VLAN 100)
+        for n in topology.nodes:
+            nt = (n.type or "").lower()
+            if _is_router(nt) or _is_switch(nt):
+                continue
+            ip = _primary_ip(n)
+            if not ip:
+                continue
+            parts = ip.split(".")
+            if len(parts) < 3:
+                continue
+            try:
+                c = int(parts[2])
+            except ValueError:
+                continue
+            if 2 <= c <= 4094:
+                add(c, f"VLAN_{c}")
+
+    return out
+
+def _catalog_id_set(catalog: List[Dict[str, Any]]) -> set:
+    return {int(v["id"]) for v in catalog}
+
+def _match_vlan_name_in_text(text: str, catalog: List[Dict[str, Any]]) -> Optional[int]:
+    t = (text or "").lower()
+    if not t:
+        return None
+    best: Optional[Tuple[int, int]] = None  # (score, vid)
+    for v in catalog:
+        name = str(v.get("name", "")).lower().strip()
+        if not name:
+            continue
+        if name in t or name.replace(" ", "_") in t:
+            score = len(name)
+            if best is None or score > best[0]:
+                best = (score, int(v["id"]))
+        tokens = re.split(r"[\s_/\-]+", name)
+        for tok in tokens:
+            if len(tok) >= 2 and tok in t:
+                score = len(tok)
+                if best is None or score > best[0]:
+                    best = (score, int(v["id"]))
+    return best[1] if best else None
+
+def _host_config_vlan(node) -> Optional[int]:
+    cfg = getattr(node, "config", None) or {}
+    if not isinstance(cfg, dict) or cfg.get("vlan_id") is None:
         return None
     try:
-        third = int(parts[2])
-        if third in (10, 20, 30):
-            return third
-    except ValueError:
-        pass
-    return None
+        v = int(cfg["vlan_id"])
+        return v if 2 <= v <= 4094 else None
+    except (TypeError, ValueError):
+        return None
 
 def _access_end_devices(topology, switch_id: str) -> List[Any]:
-    """
-    Neighbors that should get access ports: not router uplink, not another L2/L3 switch.
-    Catches host/pc/server and LLM variants (workstation, desktop, end, etc.).
-    """
     out: List[Any] = []
     for nid in _neighbor_ids(topology, switch_id):
         n = next((x for x in topology.nodes if x.id == nid), None)
@@ -88,98 +180,279 @@ def _access_end_devices(topology, switch_id: str) -> List[Any]:
         out.append(n)
     return out
 
-def _build_vlan_plan_for_switch(topology, switch_id: str) -> Dict[str, Any]:
-    """
-    Always define VLANs 10=HR, 20=IT, 30=Finance on the switch.
-    Assign each access (end-device) port using:
-    1) host IP third octet (192.168.10.x -> VLAN 10),
-    2) host/switch label keywords,
-    3) access-switch departmental name (e.g. 'Access Switch HR' -> all hosts VLAN 10),
-    4) round-robin 10/20/30.
-    """
-    vlans = [{"id": vid, "name": name} for vid, name in _DEPARTMENT_VLANS]
+def _resolve_vlan_for_host(
+    host,
+    switch_node,
+    catalog: List[Dict[str, Any]],
+    rr_counter: List[int],
+) -> int:
+    ids = _catalog_id_set(catalog)
+    if not ids:
+        ip = _primary_ip(host)
+        if ip:
+            parts = ip.split(".")
+            if len(parts) >= 3:
+                try:
+                    c = int(parts[2])
+                    if 2 <= c <= 4094:
+                        return c
+                except ValueError:
+                    pass
+        return 1
 
+    v = _host_config_vlan(host)
+    if v is not None and v in ids:
+        return v
+
+    v = _match_vlan_name_in_text(
+        f"{getattr(host, 'label', '')} {getattr(host, 'id', '')}", catalog
+    )
+    if v is not None:
+        return v
+
+    if switch_node:
+        v = _match_vlan_name_in_text(
+            f"{getattr(switch_node, 'label', '')} {getattr(switch_node, 'id', '')}",
+            catalog,
+        )
+        if v is not None:
+            return v
+
+    # Round-robin across catalog order
+    order = [int(x["id"]) for x in catalog]
+    idx = rr_counter[0] % len(order)
+    rr_counter[0] += 1
+    return order[idx]
+
+def _vlan_rows_for_ids(used_ids: List[int], catalog: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    by_id = {int(v["id"]): v["name"] for v in catalog}
+    rows = []
+    for vid in sorted(set(used_ids)):
+        name = by_id.get(vid, f"VLAN_{vid}")
+        rows.append({"id": vid, "name": name})
+    return rows
+
+def _allowed_vlans_csv(catalog: List[Dict[str, Any]]) -> str:
+    return ",".join(str(int(v["id"])) for v in catalog)
+
+def _build_switch_vlan_plan(
+    topology, switch_id: str, catalog: List[Dict[str, Any]]
+) -> Dict[str, Any]:
     sw = next((x for x in topology.nodes if x.id == switch_id), None)
-    sw_dept_vlan = _department_vlan_from_node(sw) if sw else None
+    neighbors = _neighbor_ids(topology, switch_id)
+    neighbors.sort()
 
-    end_nodes = _access_end_devices(topology, switch_id)
-    # Stable order for Fa0/1, Fa0/2, ...
-    end_nodes.sort(key=lambda n: n.id)
+    ports: List[Dict[str, Any]] = []
+    used_vlan_ids: List[int] = []
+    rr = [0]
+    port_idx = 1
 
-    assignments: List[Dict[str, Any]] = []
-    rr = 0
-    for n in end_nodes:
-        vid: Optional[int] = None
-        pip = _primary_ip(n)
-        if pip:
-            vid = _vlan_from_subnet(pip)
-        if vid is None:
-            vid = _department_vlan_from_node(n)
-        if vid is None and sw_dept_vlan is not None:
-            vid = sw_dept_vlan
-        if vid is None:
-            vid = _VIDS_ORDER[rr % len(_VIDS_ORDER)]
-            rr += 1
-        assignments.append({"neighbor_node_id": n.id, "vlan_id": int(vid)})
+    for nid in neighbors:
+        peer = next((x for x in topology.nodes if x.id == nid), None)
+        if not peer:
+            continue
+        nt = peer.type or ""
+        ifname = f"FastEthernet0/{port_idx}"
+        port_idx += 1
 
-    return {
-        "vlans": vlans,
-        "access_assignments": assignments,
-    }
+        if _is_router(nt) or _is_switch(nt):
+            ports.append(
+                {
+                    "interface": ifname,
+                    "mode": "trunk",
+                    "allowed_vlans_csv": _allowed_vlans_csv(catalog) if catalog else "1",
+                }
+            )
+            continue
+
+        vid = _resolve_vlan_for_host(peer, sw, catalog, rr)
+        used_vlan_ids.append(vid)
+        ports.append(
+            {
+                "interface": ifname,
+                "mode": "access",
+                "vlan_id": vid,
+            }
+        )
+
+    # Trunks may carry the full catalog; VLAN DB on the switch must list every id allowed on trunks
+    vlan_union = set(used_vlan_ids)
+    if catalog and any(p.get("mode") == "trunk" for p in ports):
+        for v in catalog:
+            vlan_union.add(int(v["id"]))
+    vlan_rows = (
+        _vlan_rows_for_ids(sorted(vlan_union), catalog)
+        if vlan_union
+        else (list(catalog) if catalog else [])
+    )
+
+    return {"vlans": vlan_rows, "ports": ports}
+
+def _router_trunk_parent(router_node) -> str:
+    ifaces = getattr(router_node, "interfaces", None) or []
+    if ifaces:
+        return getattr(ifaces[0], "name", None) or "GigabitEthernet0/0"
+    return "GigabitEthernet0/0"
+
+def _compute_vlan_gateways(
+    topology, catalog: List[Dict[str, Any]]
+) -> Dict[int, Tuple[str, str]]:
+    """
+    vlan_id -> (gateway_ip, mask).
+    We MUST NOT derive IP octets from vlan_id directly (vlan_id may be 300+).
+    
+    Subnet scheme:
+    - For VLAN catalog order index i, use subnet 192.168.(10 + i*10).0/24
+    - Gateway is .1
+    """
+    mask = "255.255.255.0"
+    ids = []
+    for v in catalog:
+        try:
+            ids.append(int(v["id"]))
+        except (TypeError, ValueError, KeyError):
+            continue
+
+    gw: Dict[int, Tuple[str, str]] = {}
+    for idx, vid in enumerate(ids):
+        # Keep it in valid 1..255 range.
+        third = 10 + (idx % 25) * 10  # 10,20,...,250 then wrap
+        gw_ip = f"192.168.{third}.1"
+        gw[vid] = (gw_ip, mask)
+
+    return gw
 
 def config_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Configuration Agent: Assigns IPs and protocol parameters.
-    """
-    
     topology = state["topology"]
-    
-    # IP assignment logic (can use LLM or deterministic algorithm)
-    # For simplicity, use deterministic approach:
-    
-    configurations = {}
+    design_plan = state.get("design_plan") or {}
+
+    catalog = vlan_catalog_from_state(topology, design_plan if isinstance(design_plan, dict) else {})
+
+    # Ensure frontend has the VLAN catalog (names/ids) even if topology_agent omitted metadata merge.
+    if isinstance(topology.metadata, dict):
+        topology.metadata["vlans"] = [{"id": int(v["id"]), "name": str(v["name"])} for v in (catalog or [])]
+    else:
+        topology.metadata = {"vlans": [{"id": int(v["id"]), "name": str(v["name"])} for v in (catalog or [])]}
+
+    # Assign each host to a VLAN id and a VALID /24 subnet based on VLAN catalog order.
+    vlan_name_by_id: Dict[int, str] = {}
+    vlan_ids_in_order: List[int] = []
+    for i, v in enumerate(catalog or []):
+        try:
+            vid = int(v["id"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        vlan_ids_in_order.append(vid)
+        vlan_name_by_id[vid] = str(v.get("name") or f"VLAN_{vid}")
+
+    mask = "255.255.255.0"
+    # Hosts that don't match anything will be assigned in deterministic RR order.
+    rr = [0]
+    host_nodes: List[Any] = []
+    for n in topology.nodes:
+        nt = (n.type or "").lower()
+        if _is_router(nt) or _is_switch(nt):
+            continue
+        host_nodes.append(n)
+
+    # Map VLAN id -> hosts
+    hosts_by_vlan: Dict[int, List[Any]] = {}
+    # First assign VLAN membership + vlan config on each host.
+    for h in host_nodes:
+        connected_switch = None
+        for nid in _neighbor_ids(topology, h.id):
+            sn = next((x for x in topology.nodes if x.id == nid), None)
+            if sn and _is_switch(sn.type or ""):
+                connected_switch = sn
+                break
+        vid = _resolve_vlan_for_host(h, connected_switch, catalog or [], rr)
+        # Write back host config for downstream generators (frontend report + VLAN name lookups)
+        h.config = {
+            "vlan_id": int(vid),
+            "vlan_name": vlan_name_by_id.get(int(vid), f"VLAN_{int(vid)}"),
+        }
+        hosts_by_vlan.setdefault(int(vid), []).append(h)
+
+    # Now assign valid IPs: 192.168.(10 + idx*10).<10..>.x
+    for vlan_idx, vid in enumerate(vlan_ids_in_order):
+        third = 10 + (vlan_idx % 25) * 10
+        vlan_hosts = hosts_by_vlan.get(vid) or []
+        vlan_hosts.sort(key=lambda x: x.id)
+        for i, h in enumerate(vlan_hosts):
+            host_octet = 10 + i
+            if host_octet > 254:
+                host_octet = 10 + (i % 245)
+            ip = f"192.168.{third}.{host_octet}"
+            if getattr(h, "interfaces", None):
+                if len(h.interfaces) > 0:
+                    h.interfaces[0].ip_address = ip
+                    h.interfaces[0].subnet_mask = mask
+            else:
+                # Extremely defensive: topology_agent should provide interfaces.
+                h.interfaces = [{"name": "eth0", "ip": ip, "mask": mask}]
+
+    configurations: Dict[str, Any] = {}
     subnet_base = "192.168"
     subnet_counter = 1
-    
+
     for node in topology.nodes:
         if node.type == "router":
-            # Assign IPs to router interfaces
-            # Note: This is an internal representation of config, not updating the topology model itself directly here unless we want to.
-            # But the 'configurations' dict is separate in state.
-            
             node_interfaces = []
             for idx, interface in enumerate(node.interfaces):
-                # Updating the interface object in place if needed, but here generating config dict
                 ip = f"{subnet_base}.{subnet_counter}.{idx + 1}"
                 mask = "255.255.255.0"
-                
-                # Also update topology model for consistency if we can (Pydantic models are mutable)
                 interface.ip_address = ip
                 interface.subnet_mask = mask
-                
-                node_interfaces.append({
-                    "name": interface.name,
-                    "ip": ip,
-                    "mask": mask
-                })
-            
-            configurations[node.id] = {
-                "hostname": node.label or node.id,
-                "interfaces": node_interfaces
-            }
+                node_interfaces.append(
+                    {"name": interface.name, "ip": ip, "mask": mask}
+                )
+            parent = _router_trunk_parent(node)
+            subinterfaces = []
+            trunk_interfaces = []
+            if catalog:
+                gateways = _compute_vlan_gateways(topology, catalog)
+                trunk_interfaces.append(
+                    {
+                        "name": parent,
+                        "allowed_vlans_csv": _allowed_vlans_csv(catalog),
+                    }
+                )
+                for v in catalog:
+                    vid = int(v["id"])
+                    ip_g, m = gateways.get(vid, (f"10.0.{vid % 256}.1", "255.255.255.0"))
+                    subinterfaces.append(
+                        {
+                            "parent": parent,
+                            "vlan_id": vid,
+                            "ip": ip_g,
+                            "mask": m,
+                        }
+                    )
+                configurations[node.id] = {
+                    "hostname": node.label or node.id,
+                    "trunk_interfaces": trunk_interfaces,
+                    "subinterfaces": subinterfaces,
+                    "interfaces": [],
+                }
+            else:
+                configurations[node.id] = {
+                    "hostname": node.label or node.id,
+                    "interfaces": node_interfaces,
+                    "trunk_interfaces": [],
+                    "subinterfaces": [],
+                }
             subnet_counter += 1
 
-    # VLAN segmentation: one plan per switch (access layer)
     for node in topology.nodes:
         if not _is_switch(node.type or ""):
             continue
         configurations[node.id] = {
             "hostname": node.label or node.id,
-            "vlan_plan": _build_vlan_plan_for_switch(topology, node.id),
+            "vlan_plan": _build_switch_vlan_plan(topology, node.id, catalog),
         }
-    
+
     return {
         "configurations": configurations,
-        "topology": topology, # Return updated topology with IPs
-        "conversation_history": [{"role": "assistant", "content": "Configuration complete."}]
+        "topology": topology,
+        "conversation_history": [{"role": "assistant", "content": "Configuration complete."}],
     }

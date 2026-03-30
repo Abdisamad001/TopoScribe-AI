@@ -1,11 +1,4 @@
-import { NetworkNode, Link, ProtocolConfig } from '@/types/network';
-
-/** Department VLANs aligned with backend / campus design (HR, IT, Finance). */
-const DEPT_VLANS: { id: number; name: string }[] = [
-    { id: 10, name: 'HR' },
-    { id: 20, name: 'IT' },
-    { id: 30, name: 'Finance' },
-];
+import { NetworkNode, Link, Topology, TopologyMetadata } from '@/types/network';
 
 export function isRouterType(t: string): boolean {
     const x = t.toLowerCase();
@@ -17,42 +10,144 @@ export function isSwitchType(t: string): boolean {
     return x === 'switch' || x.includes('switch') || x.includes('catalyst') || x.includes('hub') || x.includes('2960');
 }
 
+function getVlanCatalog(topology: Pick<Topology, 'nodes' | 'metadata'>): { id: number; name: string }[] {
+    const md = topology.metadata as TopologyMetadata | undefined;
+    if (md?.vlans?.length) {
+        return md.vlans
+            .map((v) => ({
+                id: Number(v.id),
+                name: String(v.name || `VLAN_${v.id}`),
+            }))
+            .filter((v) => v.id >= 2 && v.id <= 4094);
+    }
+    const fromConfig = new Map<number, string>();
+    for (const n of topology.nodes) {
+        const vid = n.config?.vlan_id;
+        if (typeof vid === 'number' && vid >= 2 && vid <= 4094) {
+            fromConfig.set(vid, String(n.config?.vlan_name || `VLAN_${vid}`));
+        }
+    }
+    if (fromConfig.size > 0) {
+        return [...fromConfig.entries()]
+            .sort((a, b) => a[0] - b[0])
+            .map(([id, name]) => ({ id, name }));
+    }
+    const seen = new Map<number, string>();
+    for (const n of topology.nodes) {
+        if (n.type !== 'host') continue;
+        const ip = n.interfaces?.[0]?.ipAddress;
+        if (!ip) continue;
+        const p = ip.split('.');
+        if (p.length < 3) continue;
+        const o = parseInt(p[2], 10);
+        if (o >= 2 && o <= 4094 && !seen.has(o)) {
+            seen.set(o, `VLAN_${o}`);
+        }
+    }
+    return [...seen.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([id, name]) => ({ id, name }));
+}
+
+function allowedVlansCsv(catalog: { id: number; name: string }[]): string {
+    return catalog.map((v) => v.id).join(',');
+}
+
+function matchVlanFromCatalog(text: string, catalog: { id: number; name: string }[]): number | null {
+    const t = text.toLowerCase();
+    if (!t) return null;
+    let best: { score: number; id: number } | null = null;
+    for (const v of catalog) {
+        const name = v.name.toLowerCase();
+        if (!name) continue;
+        if (t.includes(name) || t.includes(name.replace(/\s+/g, '_'))) {
+            const score = name.length;
+            if (!best || score > best.score) best = { score, id: v.id };
+        }
+        for (const tok of name.split(/[\s_/\-]+/)) {
+            if (tok.length >= 2 && t.includes(tok)) {
+                const score = tok.length;
+                if (!best || score > best.score) best = { score, id: v.id };
+            }
+        }
+    }
+    return best ? best.id : null;
+}
+
 function vlanFromHostIp(ip: string | undefined): number | null {
     if (!ip || ip === 'no ip address' || ip === '0.0.0.0') return null;
     const parts = ip.split('.');
     if (parts.length < 3) return null;
     const o = parseInt(parts[2], 10);
-    if (o === 10 || o === 20 || o === 30) return o;
+    if (o >= 2 && o <= 4094) return o;
     return null;
 }
 
-function vlanFromText(...parts: string[]): number | null {
-    const text = parts.filter(Boolean).join(' ').toLowerCase();
-    if (/\b(hr|human[\s_-]?resources)\b/.test(text)) return 10;
-    if (/\b(it|information[\s_-]?technology|help[\s_-]?desk|infotech)\b/.test(text)) return 20;
-    if (/\b(finance|accounting|accounts)\b/.test(text)) return 30;
-    return null;
+function resolveAccessVlan(
+    host: NetworkNode,
+    switchNode: NetworkNode | undefined,
+    catalog: { id: number; name: string }[],
+    rr: { n: number }
+): number {
+    const ids = new Set(catalog.map((c) => c.id));
+    if (ids.size === 0) {
+        const fromIp = vlanFromHostIp(host.interfaces?.[0]?.ipAddress);
+        return fromIp ?? 1;
+    }
+    const cfgVid = host.config?.vlan_id;
+    if (typeof cfgVid === 'number' && ids.has(cfgVid)) return cfgVid;
+
+    const m =
+        matchVlanFromCatalog(`${host.name} ${host.id}`, catalog) ??
+        (switchNode ? matchVlanFromCatalog(`${switchNode.name} ${switchNode.id}`, catalog) : null);
+    if (m !== null && ids.has(m)) return m;
+
+    const fromIp = vlanFromHostIp(host.interfaces?.[0]?.ipAddress);
+    if (fromIp !== null && ids.has(fromIp)) return fromIp;
+
+    const order = [...ids].sort((a, b) => a - b);
+    const v = order[rr.n % order.length];
+    rr.n += 1;
+    return v;
 }
 
-export function generateCiscoConfig(node: NetworkNode, allNodes: NetworkNode[], links: Link[], protocols: ProtocolConfig[]): string {
+function gatewayForVlan(vlanId: number, nodes: NetworkNode[]): string {
+    for (const n of nodes) {
+        if (n.type !== 'host') continue;
+        const ip = n.interfaces?.[0]?.ipAddress;
+        if (!ip) continue;
+        const parts = ip.split('.');
+        if (parts.length < 4) continue;
+        const third = parseInt(parts[2], 10);
+        const cfg = n.config?.vlan_id;
+        if (cfg === vlanId || third === vlanId) {
+            return `${parts[0]}.${parts[1]}.${parts[2]}.1`;
+        }
+    }
+    if (vlanId <= 255) return `192.168.${vlanId}.1`;
+    return `10.${(vlanId >> 8) & 255}.${vlanId & 255}.1`;
+}
+
+export function generateCiscoConfig(node: NetworkNode, topology: Topology): string {
     if (node.type === 'router' || isRouterType(node.type)) {
-        return generateRouterConfig(node, allNodes, links, protocols);
+        return generateRouterConfig(node, topology);
     } else if (node.type === 'switch' || isSwitchType(node.type)) {
-        return generateSwitchConfig(node, allNodes, links, protocols);
+        return generateSwitchConfig(node, topology);
     } else if (node.type === 'host') {
-        return generateHostConfig(node, allNodes, links);
+        return generateHostConfig(node, topology.nodes);
     }
     return '! Unknown device type\n';
 }
 
-function generateRouterConfig(node: NetworkNode, allNodes: NetworkNode[], links: Link[], protocols: ProtocolConfig[]): string {
+function generateRouterConfig(node: NetworkNode, topology: Topology): string {
+    const { nodes, links, protocols } = topology;
+    const catalog = getVlanCatalog(topology);
     const prompt = `${node.name}#`;
     let config = `${prompt} show running-config\n`;
     config += `Building configuration...\n\n`;
     config += `Current configuration : 2048 bytes\n`;
     config += `!\n! Cisco IOS Configuration for ${node.name}\n! Generated by TopoScribe AI\n!\n`;
 
-    // Standard Boilerplate
     config += `version 15.1\n`;
     config += `service timestamps debug datetime msec\n`;
     config += `service timestamps log datetime msec\n`;
@@ -62,64 +157,84 @@ function generateRouterConfig(node: NetworkNode, allNodes: NetworkNode[], links:
     config += `enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0\n!\n`;
     config += `no ip domain lookup\nip domain name toposcribe.local\n!\n`;
 
-    // Interfaces
-    node.interfaces.forEach(iface => {
-        config += `interface ${iface.name}\n`;
-
-        // Find connected device for description
-        const link = links.find(l =>
-            (l.sourceNodeId === node.id && (l.sourceInterfaceId === iface.id || !l.sourceInterfaceId)) ||
-            (l.targetNodeId === node.id && (l.targetInterfaceId === iface.id || !l.targetInterfaceId))
-        );
-
-        if (link) {
-            const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
-            const peer = allNodes.find(n => n.id === peerId);
-            if (peer) config += ` description Link to ${peer.name}\n`;
-        }
-
-        if (iface.ipAddress && iface.ipAddress !== 'no ip address') {
-            const mask = iface.subnetMask || '255.255.255.0';
-            config += ` ip address ${iface.ipAddress} ${mask}\n`;
-        } else {
-            // Check if it's meant to be unnumbered or L2 (unlikely for router unless bridge)
-            // If prompt generated NO IP, we might want to suggest one, but strictly we print what we have.
-            // However, for purpose of "correction", if it's "Ethernet0" and has no IP, user complained.
-            // But we rely on the NEW prompt to generate correct IPs.
-            config += ` no ip address\n`;
-        }
-
+    if (catalog.length > 0) {
+        const parent = node.interfaces[0]?.name || 'GigabitEthernet0/0';
+        config += `interface ${parent}\n`;
+        config += ` description Trunk to switching infrastructure\n`;
+        config += ` no ip address\n`;
         config += ` no shutdown\n`;
-        if (node.type === 'router' && (!iface.ipAddress || iface.ipAddress === '0.0.0.0')) {
-            // Maybe add 'duplex auto' 'speed auto' for Ethernet
-            config += ` duplex auto\n speed auto\n`;
-        }
+        config += ` duplex auto\n speed auto\n`;
         config += `!\n`;
-    });
 
-    // OSPF
-    const ospf = protocols.find(p => p.type === 'ospf');
-    // Default to enabled OSPF 1 if not explicitly disabled, as user requested robust routing.
-    // Or strictly follow protocol list. User said "Option A: Dynamic Routing (OSPF)".
-    // Let's assume we want to enable OSPF area 0 for all connected networks if OSPF is present OR if we want to be smart.
-    // The prompt generator adds protocols.
-    if (ospf || true) { // Force enable OSPF for now as per user request "Add Routing Configuration"
-        config += `router ospf 1\n`;
-        config += ` router-id ${findRouterId(node)}\n`;
-        // Advertise networks
-        node.interfaces.forEach(iface => {
-            if (iface.ipAddress && iface.ipAddress !== '0.0.0.0') {
-                // Calculate wildcard (naive /24 -> 0.0.0.255, /30 -> 0.0.0.3)
-                const mask = iface.subnetMask || '255.255.255.0';
+        for (const v of catalog) {
+            const gw = gatewayForVlan(v.id, nodes);
+            const mask = '255.255.255.0';
+            config += `interface ${parent}.${v.id}\n`;
+            config += ` encapsulation dot1Q ${v.id}\n`;
+            config += ` ip address ${gw} ${mask}\n`;
+            config += ` no shutdown\n`;
+            config += `!\n`;
+        }
+
+        const ospf = protocols.find((p) => p.type === 'ospf');
+        if (ospf || true) {
+            config += `router ospf 1\n`;
+            config += ` router-id ${findRouterIdFromCatalog(catalog, nodes)}\n`;
+            for (const v of catalog) {
+                const gw = gatewayForVlan(v.id, nodes);
+                const mask = '255.255.255.0';
                 const wildcard = calculateWildcard(mask);
-                const network = getNetworkAddress(iface.ipAddress, mask);
+                const network = getNetworkAddress(gw, mask);
                 config += ` network ${network} ${wildcard} area 0\n`;
             }
+            config += `!\n`;
+        }
+    } else {
+        node.interfaces.forEach((iface) => {
+            config += `interface ${iface.name}\n`;
+
+            const link = links.find(
+                (l) =>
+                    (l.sourceNodeId === node.id && (l.sourceInterfaceId === iface.id || !l.sourceInterfaceId)) ||
+                    (l.targetNodeId === node.id && (l.targetInterfaceId === iface.id || !l.targetInterfaceId))
+            );
+
+            if (link) {
+                const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
+                const peer = nodes.find((n) => n.id === peerId);
+                if (peer) config += ` description Link to ${peer.name}\n`;
+            }
+
+            if (iface.ipAddress && iface.ipAddress !== 'no ip address') {
+                const mask = iface.subnetMask || '255.255.255.0';
+                config += ` ip address ${iface.ipAddress} ${mask}\n`;
+            } else {
+                config += ` no ip address\n`;
+            }
+
+            config += ` no shutdown\n`;
+            if (node.type === 'router' && (!iface.ipAddress || iface.ipAddress === '0.0.0.0')) {
+                config += ` duplex auto\n speed auto\n`;
+            }
+            config += `!\n`;
         });
-        config += `!\n`;
+
+        const ospf = protocols.find((p) => p.type === 'ospf');
+        if (ospf || true) {
+            config += `router ospf 1\n`;
+            config += ` router-id ${findRouterId(node)}\n`;
+            node.interfaces.forEach((iface) => {
+                if (iface.ipAddress && iface.ipAddress !== '0.0.0.0') {
+                    const mask = iface.subnetMask || '255.255.255.0';
+                    const wildcard = calculateWildcard(mask);
+                    const network = getNetworkAddress(iface.ipAddress, mask);
+                    config += ` network ${network} ${wildcard} area 0\n`;
+                }
+            });
+            config += `!\n`;
+        }
     }
 
-    // Console & VTY
     config += `line con 0\n password 7 0822455D0A16\n login\n logging synchronous\n!\n`;
     config += `line vty 0 4\n password 7 0822455D0A16\n login\n transport input ssh\n!\n`;
 
@@ -133,35 +248,26 @@ function generateRouterConfig(node: NetworkNode, allNodes: NetworkNode[], links:
 type SwitchPortJob = { ifaceName: string; peer: NetworkNode | undefined };
 
 function buildSwitchPortJobs(node: NetworkNode, links: Link[], allNodes: NetworkNode[]): SwitchPortJob[] {
+    // For report generation we must create one access port per connected host.
+    // The canvas may only store a single interface on each switch, so we ignore node.interfaces
+    // and instead derive ports from topology links.
     const jobs: SwitchPortJob[] = [];
-    const physicalIfaces = (node.interfaces || []).filter(i => !i.name.toLowerCase().startsWith('vlan'));
+    const connectedLinks = links
+        .filter((l) => l.sourceNodeId === node.id || l.targetNodeId === node.id)
+        .sort((a, b) => a.id.localeCompare(b.id));
 
-    if (physicalIfaces.length > 0) {
-        for (const iface of physicalIfaces) {
-            const link = links.find(
-                l =>
-                    (l.sourceNodeId === node.id && (l.sourceInterfaceId === iface.id || !l.sourceInterfaceId)) ||
-                    (l.targetNodeId === node.id && (l.targetInterfaceId === iface.id || !l.targetInterfaceId))
-            );
-            let peer: NetworkNode | undefined;
-            if (link) {
-                const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
-                peer = allNodes.find(n => n.id === peerId);
-            }
-            jobs.push({ ifaceName: iface.name, peer });
-        }
-    } else {
-        const nodeLinks = links.filter(l => l.sourceNodeId === node.id || l.targetNodeId === node.id);
-        nodeLinks.forEach((link, idx) => {
-            const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
-            const peer = allNodes.find(n => n.id === peerId);
-            jobs.push({ ifaceName: `FastEthernet0/${idx + 1}`, peer });
-        });
-    }
+    connectedLinks.forEach((link, idx) => {
+        const peerId = link.sourceNodeId === node.id ? link.targetNodeId : link.sourceNodeId;
+        const peer = allNodes.find((n) => n.id === peerId);
+        jobs.push({ ifaceName: `FastEthernet0/${idx + 1}`, peer });
+    });
+
     return jobs;
 }
 
-function generateSwitchConfig(node: NetworkNode, allNodes: NetworkNode[], links: Link[], protocols: ProtocolConfig[]): string {
+function generateSwitchConfig(node: NetworkNode, topology: Topology): string {
+    const { nodes, links } = topology;
+    const catalog = getVlanCatalog(topology);
     const prompt = `${node.name}#`;
     let config = `${prompt} show running-config\n`;
     config += `Building configuration...\n\n`;
@@ -175,37 +281,35 @@ function generateSwitchConfig(node: NetworkNode, allNodes: NetworkNode[], links:
     config += `boot-start-marker\nboot-end-marker\n!\n`;
     config += `enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0\n!\n`;
 
-    // VLAN database (must match department segmentation: 10=HR, 20=IT, 30=Finance)
-    for (const v of DEPT_VLANS) {
-        config += `vlan ${v.id}\n`;
-        config += ` name ${v.name}\n`;
-        config += `!\n`;
+    const vlanUnion = new Map<number, string>();
+    for (const v of catalog) {
+        vlanUnion.set(v.id, v.name);
     }
 
-    const portJobs = buildSwitchPortJobs(node, links, allNodes);
-    let rr = 0;
+    const portJobs = buildSwitchPortJobs(node, links, nodes);
+    const rr = { n: 0 };
+    const accessVlans: number[] = [];
 
     for (const job of portJobs) {
         config += `interface ${job.ifaceName}\n`;
-
         const peer = job.peer;
         if (peer) {
             config += ` description Link to ${peer.name}\n`;
         }
 
         if (peer && (isRouterType(peer.type) || isSwitchType(peer.type))) {
+            const csv = catalog.length > 0 ? allowedVlansCsv(catalog) : '1';
+            for (const v of catalog) {
+                vlanUnion.set(v.id, v.name);
+            }
             config += ` switchport mode trunk\n`;
             config += ` switchport trunk encapsulation dot1q\n`;
-            config += ` switchport trunk allowed vlan 10,20,30\n`;
+            config += ` switchport trunk allowed vlan ${csv}\n`;
         } else if (peer) {
-            const hostIp = peer.interfaces?.[0]?.ipAddress;
-            let vid =
-                vlanFromHostIp(hostIp) ??
-                vlanFromText(peer.name, peer.id) ??
-                vlanFromText(node.name, node.id);
-            if (vid === null) {
-                vid = [10, 20, 30][rr % 3];
-                rr += 1;
+            const vid = resolveAccessVlan(peer, node, catalog, rr);
+            accessVlans.push(vid);
+            if (!vlanUnion.has(vid)) {
+                vlanUnion.set(vid, `VLAN_${vid}`);
             }
             config += ` switchport mode access\n`;
             config += ` switchport access vlan ${vid}\n`;
@@ -217,28 +321,43 @@ function generateSwitchConfig(node: NetworkNode, allNodes: NetworkNode[], links:
         config += `!\n`;
     }
 
-    // VLAN Interface (Management)
-    // Robust logic: Find Vlan1 explicit interface OR fallback to any interface that has a valid IP
-    let vlanIface = node.interfaces.find(i => i.name.toLowerCase().startsWith('vlan'));
-    if (!vlanIface) {
-        // Fallback: Check if AI assigned IP to a physical port erroneously
-        vlanIface = node.interfaces.find(i => i.ipAddress && i.ipAddress !== 'no ip address' && i.ipAddress !== '0.0.0.0');
+    for (const vid of accessVlans) {
+        vlanUnion.set(vid, vlanUnion.get(vid) || `VLAN_${vid}`);
     }
 
-    if (vlanIface && (vlanIface.ipAddress && vlanIface.ipAddress !== 'no ip address')) {
-        config += `interface Vlan1\n`; // Always use Vlan1 for management
+    const vlanBlock = [...vlanUnion.entries()]
+        .filter(([id]) => id >= 2 && id <= 4094)
+        .sort((a, b) => a[0] - b[0]);
+
+    let vlanSection = '';
+    for (const [id, name] of vlanBlock) {
+        vlanSection += `vlan ${id}\n`;
+        vlanSection += ` name ${name}\n`;
+        vlanSection += `!\n`;
+    }
+    config = config.replace(
+        /(boot-end-marker\n!\n)/,
+        `$1${vlanSection}`
+    );
+
+    let vlanIface = node.interfaces.find((i) => i.name.toLowerCase().startsWith('vlan'));
+    if (!vlanIface) {
+        vlanIface = node.interfaces.find(
+            (i) => i.ipAddress && i.ipAddress !== 'no ip address' && i.ipAddress !== '0.0.0.0'
+        );
+    }
+
+    if (vlanIface && vlanIface.ipAddress && vlanIface.ipAddress !== 'no ip address') {
+        config += `interface Vlan1\n`;
         config += ` description Management Interface\n`;
         config += ` ip address ${vlanIface.ipAddress} ${vlanIface.subnetMask || '255.255.255.0'}\n`;
         config += ` no shutdown\n`;
         config += `!\n`;
     }
 
-    // Default Gateway (Naive: try to find a router in the links)
-    // Or use the gateway property if we added one (we didn't yet).
-    // Let's guess: if Vlan1 is 192.168.1.2, gateway is likely 192.168.1.1
     if (vlanIface && vlanIface.ipAddress) {
         const parts = vlanIface.ipAddress.split('.');
-        parts[3] = '1'; // Assumption
+        parts[3] = '1';
         config += `ip default-gateway ${parts.join('.')}\n!\n`;
     }
 
@@ -252,14 +371,11 @@ function generateSwitchConfig(node: NetworkNode, allNodes: NetworkNode[], links:
     return config;
 }
 
-function generateHostConfig(node: NetworkNode, allNodes: NetworkNode[], links: Link[]): string {
-    // Plain text format
-    // Find IP
+function generateHostConfig(node: NetworkNode, _allNodes: NetworkNode[]): string {
     const iface = node.interfaces[0];
     const ip = iface?.ipAddress || 'DHCP';
     const mask = iface?.subnetMask || '255.255.255.0';
 
-    // Guess Gateway
     let gateway = 'Unknown';
     if (ip !== 'DHCP' && ip) {
         const parts = ip.split('.');
@@ -277,16 +393,21 @@ DNS Server      : 8.8.8.8
 `;
 }
 
-// Helpers
 function findRouterId(node: NetworkNode): string {
-    // Use loopback or highest IP
-    const validIface = node.interfaces.find(i => i.ipAddress && i.ipAddress !== '0.0.0.0');
+    const validIface = node.interfaces.find((i) => i.ipAddress && i.ipAddress !== '0.0.0.0');
     return validIface ? validIface.ipAddress! : '1.1.1.1';
+}
+
+function findRouterIdFromCatalog(catalog: { id: number; name: string }[], nodes: NetworkNode[]): string {
+    if (catalog.length > 0) {
+        return gatewayForVlan(catalog[0].id, nodes);
+    }
+    return '1.1.1.1';
 }
 
 function calculateWildcard(mask: string): string {
     const parts = mask.split('.').map(Number);
-    const wildcardParts = parts.map(p => 255 - p);
+    const wildcardParts = parts.map((p) => 255 - p);
     return wildcardParts.join('.');
 }
 
@@ -296,4 +417,3 @@ function getNetworkAddress(ip: string, mask: string): string {
     const netParts = ipParts.map((p, i) => p & maskParts[i]);
     return netParts.join('.');
 }
-
