@@ -235,6 +235,80 @@ def _vlan_rows_for_ids(used_ids: List[int], catalog: List[Dict[str, Any]]) -> Li
 def _allowed_vlans_csv(catalog: List[Dict[str, Any]]) -> str:
     return ",".join(str(int(v["id"])) for v in catalog)
 
+
+def _users_by_vlan_from_plan(design_plan: Optional[dict]) -> Dict[int, int]:
+    """Map vlan_id -> users from design_plan.departments (max if duplicate ids)."""
+    out: Dict[int, int] = {}
+    if not isinstance(design_plan, dict):
+        return out
+    depts = design_plan.get("departments")
+    if not isinstance(depts, list):
+        return out
+    for d in depts:
+        if not isinstance(d, dict):
+            continue
+        vid = d.get("vlan_id")
+        if vid is None:
+            continue
+        try:
+            vid_i = int(vid)
+        except (TypeError, ValueError):
+            continue
+        raw = d.get("users")
+        if raw is None:
+            continue
+        try:
+            u = int(raw)
+        except (TypeError, ValueError):
+            continue
+        prev = out.get(vid_i, 0)
+        out[vid_i] = max(prev, u)
+    return out
+
+
+def _prefix_len_for_department_users(users: Optional[int]) -> int:
+    """
+    Subnet size from planned user count per department:
+    ≤14 → /28, ≤30 → /26, ≤62 → /25, ≤126 → /25, else → /24.
+    Missing/invalid user count defaults to /24.
+    """
+    if users is None or users < 0:
+        return 24
+    u = int(users)
+    if u <= 14:
+        return 28
+    if u <= 30:
+        return 26
+    if u <= 126:
+        return 25
+    return 24
+
+
+def _next_subnet_start(addr: ipaddress.IPv4Address, prefix_len: int) -> ipaddress.IPv4Address:
+    """First network address at or after `addr` for the given prefix (align up if needed)."""
+    net = ipaddress.IPv4Network((addr, prefix_len), strict=False)
+    if addr == net.network_address:
+        return addr
+    return net.broadcast_address + 1
+
+
+def _allocate_vlan_networks(
+    vlan_ids: List[int],
+    users_by_vlan: Dict[int, int],
+) -> Dict[int, ipaddress.IPv4Network]:
+    """Sequential non-overlapping 192.168.x.x blocks per VLAN catalog order."""
+    out: Dict[int, ipaddress.IPv4Network] = {}
+    cursor = ipaddress.IPv4Address("192.168.10.0")
+    for vid in vlan_ids:
+        u = users_by_vlan.get(vid)
+        pl = _prefix_len_for_department_users(u if u is not None and u >= 0 else None)
+        start = _next_subnet_start(cursor, pl)
+        net = ipaddress.IPv4Network((start, pl), strict=False)
+        out[vid] = net
+        cursor = net.broadcast_address + 1
+    return out
+
+
 def _build_switch_vlan_plan(
     topology, switch_id: str, catalog: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
@@ -295,31 +369,12 @@ def _router_trunk_parent(router_node) -> str:
     return "GigabitEthernet0/0"
 
 def _compute_vlan_gateways(
-    topology, catalog: List[Dict[str, Any]]
+    vlan_networks: Dict[int, ipaddress.IPv4Network],
 ) -> Dict[int, Tuple[str, str]]:
-    """
-    vlan_id -> (gateway_ip, mask).
-    We MUST NOT derive IP octets from vlan_id directly (vlan_id may be 300+).
-    
-    Subnet scheme:
-    - For VLAN catalog order index i, use subnet 192.168.(10 + i*10).0/24
-    - Gateway is .1
-    """
-    mask = "255.255.255.0"
-    ids = []
-    for v in catalog:
-        try:
-            ids.append(int(v["id"]))
-        except (TypeError, ValueError, KeyError):
-            continue
-
+    """vlan_id -> (gateway_ip, mask) from allocated per-VLAN networks (gateway = first host)."""
     gw: Dict[int, Tuple[str, str]] = {}
-    for idx, vid in enumerate(ids):
-        # Keep it in valid 1..255 range.
-        third = 10 + (idx % 25) * 10  # 10,20,...,250 then wrap
-        gw_ip = f"192.168.{third}.1"
-        gw[vid] = (gw_ip, mask)
-
+    for vid, net in vlan_networks.items():
+        gw[vid] = (str(net[1]), str(net.netmask))
     return gw
 
 def config_node(state: NetworkDesignState) -> Dict[str, Any]:
@@ -334,7 +389,7 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
     else:
         topology.metadata = {"vlans": [{"id": int(v["id"]), "name": str(v["name"])} for v in (catalog or [])]}
 
-    # Assign each host to a VLAN id and a VALID /24 subnet based on VLAN catalog order.
+    # Assign each host to a VLAN id and a valid subnet sized from design_plan users per department.
     vlan_name_by_id: Dict[int, str] = {}
     vlan_ids_in_order: List[int] = []
     for i, v in enumerate(catalog or []):
@@ -345,7 +400,9 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
         vlan_ids_in_order.append(vid)
         vlan_name_by_id[vid] = str(v.get("name") or f"VLAN_{vid}")
 
-    mask = "255.255.255.0"
+    plan_dict = design_plan if isinstance(design_plan, dict) else {}
+    users_by_vlan = _users_by_vlan_from_plan(plan_dict)
+    vlan_networks = _allocate_vlan_networks(vlan_ids_in_order, users_by_vlan)
     # Hosts that don't match anything will be assigned in deterministic RR order.
     rr = [0]
     host_nodes: List[Any] = []
@@ -373,22 +430,28 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
         }
         hosts_by_vlan.setdefault(int(vid), []).append(h)
 
-    # Now assign valid IPs: 192.168.(10 + idx*10).<10..>.x
-    for vlan_idx, vid in enumerate(vlan_ids_in_order):
-        third = 10 + (vlan_idx % 25) * 10
+    # Host IPs: gateway is net[1]; assign hosts from remaining usable addresses in order.
+    for vid in vlan_ids_in_order:
+        net = vlan_networks.get(vid)
+        if not net:
+            continue
+        mask = str(net.netmask)
+        usable = list(net.hosts())
+        if len(usable) < 2:
+            continue
+        host_addrs = usable[1:]
         vlan_hosts = hosts_by_vlan.get(vid) or []
         vlan_hosts.sort(key=lambda x: x.id)
         for i, h in enumerate(vlan_hosts):
-            host_octet = 10 + i
-            if host_octet > 254:
-                host_octet = 10 + (i % 245)
-            ip = f"192.168.{third}.{host_octet}"
+            if i < len(host_addrs):
+                ip = str(host_addrs[i])
+            else:
+                ip = str(host_addrs[i % len(host_addrs)])
             if getattr(h, "interfaces", None):
                 if len(h.interfaces) > 0:
                     h.interfaces[0].ip_address = ip
                     h.interfaces[0].subnet_mask = mask
             else:
-                # Extremely defensive: topology_agent should provide interfaces.
                 h.interfaces = [{"name": "eth0", "ip": ip, "mask": mask}]
 
     configurations: Dict[str, Any] = {}
@@ -410,7 +473,7 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
             subinterfaces = []
             trunk_interfaces = []
             if catalog:
-                gateways = _compute_vlan_gateways(topology, catalog)
+                gateways = _compute_vlan_gateways(vlan_networks)
                 trunk_interfaces.append(
                     {
                         "name": parent,
