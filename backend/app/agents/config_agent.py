@@ -284,28 +284,22 @@ def _prefix_len_for_department_users(users: Optional[int]) -> int:
     return 24
 
 
-def _next_subnet_start(addr: ipaddress.IPv4Address, prefix_len: int) -> ipaddress.IPv4Address:
-    """First network address at or after `addr` for the given prefix (align up if needed)."""
-    net = ipaddress.IPv4Network((addr, prefix_len), strict=False)
-    if addr == net.network_address:
-        return addr
-    return net.broadcast_address + 1
-
-
 def _allocate_vlan_networks(
     vlan_ids: List[int],
     users_by_vlan: Dict[int, int],
 ) -> Dict[int, ipaddress.IPv4Network]:
-    """Sequential non-overlapping 192.168.x.x blocks per VLAN catalog order."""
+    """
+    Per VLAN catalog index i: network 192.168.(10 + i*10).0/<prefix>.
+    Third octet steps by 10 (10, 20, 30, ...) so VLANs are separated; wraps at 25 VLANs.
+    """
     out: Dict[int, ipaddress.IPv4Network] = {}
-    cursor = ipaddress.IPv4Address("192.168.10.0")
-    for vid in vlan_ids:
+    for i, vid in enumerate(vlan_ids):
         u = users_by_vlan.get(vid)
         pl = _prefix_len_for_department_users(u if u is not None and u >= 0 else None)
-        start = _next_subnet_start(cursor, pl)
+        third = 10 + (i % 25) * 10
+        start = ipaddress.IPv4Address(f"192.168.{third}.0")
         net = ipaddress.IPv4Network((start, pl), strict=False)
         out[vid] = net
-        cursor = net.broadcast_address + 1
     return out
 
 
@@ -368,15 +362,6 @@ def _router_trunk_parent(router_node) -> str:
         return getattr(ifaces[0], "name", None) or "GigabitEthernet0/0"
     return "GigabitEthernet0/0"
 
-def _compute_vlan_gateways(
-    vlan_networks: Dict[int, ipaddress.IPv4Network],
-) -> Dict[int, Tuple[str, str]]:
-    """vlan_id -> (gateway_ip, mask) from allocated per-VLAN networks (gateway = first host)."""
-    gw: Dict[int, Tuple[str, str]] = {}
-    for vid, net in vlan_networks.items():
-        gw[vid] = (str(net[1]), str(net.netmask))
-    return gw
-
 def config_node(state: NetworkDesignState) -> Dict[str, Any]:
     topology = state["topology"]
     design_plan = state.get("design_plan") or {}
@@ -403,6 +388,16 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
     plan_dict = design_plan if isinstance(design_plan, dict) else {}
     users_by_vlan = _users_by_vlan_from_plan(plan_dict)
     vlan_networks = _allocate_vlan_networks(vlan_ids_in_order, users_by_vlan)
+    if isinstance(topology.metadata, dict):
+        topology.metadata["vlan_gateways"] = [
+            {
+                "vlan_id": int(vid),
+                "gateway": str(vlan_networks[vid][1]),
+                "mask": str(vlan_networks[vid].netmask),
+            }
+            for vid in vlan_ids_in_order
+            if vid in vlan_networks
+        ]
     # Hosts that don't match anything will be assigned in deterministic RR order.
     rr = [0]
     host_nodes: List[Any] = []
@@ -473,22 +468,24 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
             subinterfaces = []
             trunk_interfaces = []
             if catalog:
-                gateways = _compute_vlan_gateways(vlan_networks)
                 trunk_interfaces.append(
                     {
                         "name": parent,
                         "allowed_vlans_csv": _allowed_vlans_csv(catalog),
                     }
                 )
-                for v in catalog:
-                    vid = int(v["id"])
-                    ip_g, m = gateways.get(vid, (f"10.0.{vid % 256}.1", "255.255.255.0"))
+                # Same iteration order as _allocate_vlan_networks (vlan_ids_in_order); use
+                # vlan_networks[vid] so each subinterface matches that VLAN's gateway + mask.
+                for vid in vlan_ids_in_order:
+                    net = vlan_networks.get(vid)
+                    if not net:
+                        continue
                     subinterfaces.append(
                         {
                             "parent": parent,
-                            "vlan_id": vid,
-                            "ip": ip_g,
-                            "mask": m,
+                            "vlan_id": int(vid),
+                            "ip": str(net[1]),
+                            "mask": str(net.netmask),
                         }
                     )
                 configurations[node.id] = {

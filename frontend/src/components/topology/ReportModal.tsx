@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Copy, Download, X, FileText, Terminal, Check } from 'lucide-react';
-import { NetworkNode, Link, ProtocolConfig } from '@/types/network';
+import { NetworkNode, Link, ProtocolConfig, TopologyMetadata } from '@/types/network';
 import { generateMarkdownReport } from '@/lib/generator/report';
 
 interface ReportModalProps {
@@ -16,6 +16,7 @@ interface ReportModalProps {
         id: string;
         version: number;
         lastUpdated: string;
+        metadata?: TopologyMetadata;
     };
 }
 

@@ -45,6 +45,8 @@ export interface ProtocolConfig {
 /** Optional data from backend / topology agent (VLAN catalog, etc.) */
 export interface TopologyMetadata {
   vlans?: Array<{ id: number; name: string }>;
+  /** Per-VLAN default gateway + mask (aligned with config_agent subnet allocation). */
+  vlan_gateways?: Array<{ vlan_id: number; gateway: string; mask: string }>;
 }
 
 export interface Topology {

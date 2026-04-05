@@ -1,5 +1,56 @@
 import { NetworkNode, Link, Topology, TopologyMetadata } from '@/types/network';
 
+/** First usable host in subnet (matches Python IPv4Network[1] / config_agent gateway). */
+function firstHostInNetwork(ip: string, mask: string): string {
+    const ipParts = ip.split('.').map(Number);
+    const maskParts = mask.split('.').map(Number);
+    if (ipParts.length < 4 || maskParts.length < 4) return ip;
+    const netParts = ipParts.map((p, i) => p & maskParts[i]);
+    let n = (netParts[0] << 24) + (netParts[1] << 16) + (netParts[2] << 8) + netParts[3];
+    n += 1;
+    return `${(n >>> 24) & 255}.${(n >> 16) & 255}.${(n >> 8) & 255}.${n & 255}`;
+}
+
+function ifaceIp(iface: NetworkNode['interfaces'][0] | undefined): string | undefined {
+    if (!iface) return undefined;
+    return iface.ipAddress || (iface as { ip_address?: string }).ip_address || (iface as { ip?: string }).ip;
+}
+
+function ifaceMask(iface: NetworkNode['interfaces'][0] | undefined): string | undefined {
+    if (!iface) return undefined;
+    return iface.subnetMask || (iface as { subnet_mask?: string }).subnet_mask || (iface as { mask?: string }).mask;
+}
+
+function gatewayAndMaskForVlan(
+    vlanId: number,
+    nodes: NetworkNode[],
+    metadata?: TopologyMetadata
+): { gw: string; mask: string } {
+    const rows = metadata?.vlan_gateways;
+    if (rows?.length) {
+        const row = rows.find((r) => Number(r.vlan_id) === vlanId);
+        if (row?.gateway && row?.mask) return { gw: row.gateway, mask: row.mask };
+    }
+    for (const n of nodes) {
+        if (n.type !== 'host') continue;
+        const cfg = n.config?.vlan_id;
+        if (cfg !== vlanId) continue;
+        const ip = ifaceIp(n.interfaces?.[0]);
+        const mask = ifaceMask(n.interfaces?.[0]);
+        if (ip && mask) return { gw: firstHostInNetwork(ip, mask), mask };
+        if (ip) {
+            const parts = ip.split('.');
+            if (parts.length >= 4) return { gw: `${parts[0]}.${parts[1]}.${parts[2]}.1`, mask: '255.255.255.0' };
+        }
+    }
+    if (vlanId <= 255) return { gw: `192.168.${vlanId}.1`, mask: '255.255.255.0' };
+    return { gw: `10.${(vlanId >> 8) & 255}.${vlanId & 255}.1`, mask: '255.255.255.0' };
+}
+
+function gatewayForVlan(vlanId: number, nodes: NetworkNode[], metadata?: TopologyMetadata): string {
+    return gatewayAndMaskForVlan(vlanId, nodes, metadata).gw;
+}
+
 export function isRouterType(t: string): boolean {
     const x = t.toLowerCase();
     return x.includes('router') || x.includes('gateway') || (x.includes('firewall') && !x.includes('switch'));
@@ -111,23 +162,6 @@ function resolveAccessVlan(
     return v;
 }
 
-function gatewayForVlan(vlanId: number, nodes: NetworkNode[]): string {
-    for (const n of nodes) {
-        if (n.type !== 'host') continue;
-        const ip = n.interfaces?.[0]?.ipAddress;
-        if (!ip) continue;
-        const parts = ip.split('.');
-        if (parts.length < 4) continue;
-        const third = parseInt(parts[2], 10);
-        const cfg = n.config?.vlan_id;
-        if (cfg === vlanId || third === vlanId) {
-            return `${parts[0]}.${parts[1]}.${parts[2]}.1`;
-        }
-    }
-    if (vlanId <= 255) return `192.168.${vlanId}.1`;
-    return `10.${(vlanId >> 8) & 255}.${vlanId & 255}.1`;
-}
-
 export function generateCiscoConfig(node: NetworkNode, topology: Topology): string {
     if (node.type === 'router' || isRouterType(node.type)) {
         return generateRouterConfig(node, topology);
@@ -140,7 +174,7 @@ export function generateCiscoConfig(node: NetworkNode, topology: Topology): stri
 }
 
 function generateRouterConfig(node: NetworkNode, topology: Topology): string {
-    const { nodes, links, protocols } = topology;
+    const { nodes, links, protocols, metadata } = topology;
     const catalog = getVlanCatalog(topology);
     const prompt = `${node.name}#`;
     let config = `${prompt} show running-config\n`;
@@ -167,8 +201,7 @@ function generateRouterConfig(node: NetworkNode, topology: Topology): string {
         config += `!\n`;
 
         for (const v of catalog) {
-            const gw = gatewayForVlan(v.id, nodes);
-            const mask = '255.255.255.0';
+            const { gw, mask } = gatewayAndMaskForVlan(v.id, nodes, metadata);
             config += `interface ${parent}.${v.id}\n`;
             config += ` encapsulation dot1Q ${v.id}\n`;
             config += ` ip address ${gw} ${mask}\n`;
@@ -179,10 +212,9 @@ function generateRouterConfig(node: NetworkNode, topology: Topology): string {
         const ospf = protocols.find((p) => p.type === 'ospf');
         if (ospf || true) {
             config += `router ospf 1\n`;
-            config += ` router-id ${findRouterIdFromCatalog(catalog, nodes)}\n`;
+            config += ` router-id ${findRouterIdFromCatalog(catalog, nodes, metadata)}\n`;
             for (const v of catalog) {
-                const gw = gatewayForVlan(v.id, nodes);
-                const mask = '255.255.255.0';
+                const { gw, mask } = gatewayAndMaskForVlan(v.id, nodes, metadata);
                 const wildcard = calculateWildcard(mask);
                 const network = getNetworkAddress(gw, mask);
                 config += ` network ${network} ${wildcard} area 0\n`;
@@ -373,14 +405,12 @@ function generateSwitchConfig(node: NetworkNode, topology: Topology): string {
 
 function generateHostConfig(node: NetworkNode, _allNodes: NetworkNode[]): string {
     const iface = node.interfaces[0];
-    const ip = iface?.ipAddress || 'DHCP';
-    const mask = iface?.subnetMask || '255.255.255.0';
+    const ip = ifaceIp(iface) || 'DHCP';
+    const mask = ifaceMask(iface) || '255.255.255.0';
 
     let gateway = 'Unknown';
     if (ip !== 'DHCP' && ip) {
-        const parts = ip.split('.');
-        parts[3] = '1';
-        gateway = parts.join('.');
+        gateway = firstHostInNetwork(ip, mask);
     }
 
     return `Host Configuration for ${node.name}:
@@ -398,9 +428,13 @@ function findRouterId(node: NetworkNode): string {
     return validIface ? validIface.ipAddress! : '1.1.1.1';
 }
 
-function findRouterIdFromCatalog(catalog: { id: number; name: string }[], nodes: NetworkNode[]): string {
+function findRouterIdFromCatalog(
+    catalog: { id: number; name: string }[],
+    nodes: NetworkNode[],
+    metadata?: TopologyMetadata
+): string {
     if (catalog.length > 0) {
-        return gatewayForVlan(catalog[0].id, nodes);
+        return gatewayForVlan(catalog[0].id, nodes, metadata);
     }
     return '1.1.1.1';
 }

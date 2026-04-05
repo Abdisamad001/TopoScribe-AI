@@ -17,17 +17,21 @@ export function generateMarkdownReport(topology: Topology): string {
 
     topology.nodes.forEach(node => {
         node.interfaces.forEach(iface => {
-            if (iface.ipAddress && iface.ipAddress !== 'no ip address') {
-                let mask = iface.subnetMask;
+            const ip = iface.ipAddress || (iface as { ip_address?: string }).ip_address;
+            if (ip && ip !== 'no ip address') {
+                let mask =
+                    iface.subnetMask ||
+                    (iface as { subnet_mask?: string }).subnet_mask ||
+                    (iface as { mask?: string }).mask;
                 if (!mask) {
                     // Auto-detect mask based on IP class/usage if missing
-                    if (iface.ipAddress.startsWith('10.')) {
+                    if (ip.startsWith('10.')) {
                         mask = '255.255.255.252'; // Assume /30 for 10.x block (WAN)
                     } else {
                         mask = '255.255.255.0';   // Assume /24 for others
                     }
                 }
-                md += `| ${node.name} | ${iface.name} | ${iface.ipAddress} | ${mask} |\n`;
+                md += `| ${node.name} | ${iface.name} | ${ip} | ${mask} |\n`;
             }
         });
     });

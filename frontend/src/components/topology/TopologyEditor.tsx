@@ -43,9 +43,11 @@ const convertNodes = (netNodes: any[]): Node[] => {
     return netNodes.map((n) => {
         // Handle IP address from backend (ip_address) or frontend (ipAddress)
         let displayIp = '';
+        let subnetMask = '';
         const iface = n.interfaces && n.interfaces.length > 0 ? n.interfaces[0] : null;
         if (iface) {
             displayIp = iface.ipAddress || iface.ip_address || iface.ip || '';
+            subnetMask = iface.subnetMask || iface.subnet_mask || iface.mask || '';
         }
 
         return {
@@ -55,6 +57,7 @@ const convertNodes = (netNodes: any[]): Node[] => {
             data: {
                 label: n.name || n.label, // Handle both name and label
                 ip: displayIp,
+                subnetMask,
                 // Preserve backend VLAN mapping for report generation
                 config: n.config || {},
             },
@@ -350,7 +353,14 @@ const convertNodesToDomain = (nodes: Node[]): NetworkNode[] => {
         name: n.data.label as string,
         x: n.position.x,
         y: n.position.y,
-        interfaces: [{ id: 'eth0', name: 'Ethernet0', ipAddress: n.data.ip as string }],
+        interfaces: [
+            {
+                id: 'eth0',
+                name: 'Ethernet0',
+                ipAddress: (n.data.ip as string) || '',
+                subnetMask: (n.data as { subnetMask?: string }).subnetMask || undefined,
+            },
+        ],
         config: (n.data as any).config || {},
     }));
 };
