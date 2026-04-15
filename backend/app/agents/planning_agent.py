@@ -1,7 +1,107 @@
 from app.graph.state import NetworkDesignState
 from app.utils.llm import get_llm_response
-from typing import Dict, Any
+from typing import Dict, Any, List
 import json
+import re
+
+
+def _extract_department_names(text: str) -> List[str]:
+    """
+    Heuristic extraction of department names from free text.
+    Supports patterns like:
+    - departments: HR, IT, Finance
+    - department HR, IT and Finance
+    """
+    if not text:
+        return []
+    m = re.search(r"departments?\s*[:\-]?\s*([^\n\.]+)", text, flags=re.IGNORECASE)
+    if not m:
+        return []
+    raw = m.group(1)
+    parts = re.split(r",|\band\b|/|\|", raw, flags=re.IGNORECASE)
+    out: List[str] = []
+    for p in parts:
+        name = p.strip(" \"'[](){}")
+        if name:
+            out.append(name)
+    # Deduplicate while preserving order
+    seen = set()
+    uniq: List[str] = []
+    for n in out:
+        k = n.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        uniq.append(n)
+    return uniq
+
+
+def _apply_sme_defaults(plan: Dict[str, Any], user_input: str, history: List[dict]) -> Dict[str, Any]:
+    """
+    Enforce SME campus defaults and keep scope to Cisco 1941 + 2960, IPv4, VLAN, OSPF area 0.
+    """
+    p = dict(plan or {})
+    all_text = " ".join(
+        [user_input or ""] + [str((m or {}).get("content", "")) for m in (history or [])]
+    )
+
+    # Sites default
+    sites = p.get("sites")
+    if not isinstance(sites, list) or not sites:
+        p["sites"] = ["Main Site"]
+
+    # Department defaults if missing users/vlan_id
+    depts = p.get("departments")
+    if isinstance(depts, list):
+        normalized = []
+        for i, d in enumerate(depts):
+            if not isinstance(d, dict):
+                continue
+            name = str(d.get("name") or d.get("department") or f"Department {i + 1}")
+            users = d.get("users", 20)
+            try:
+                users_i = int(users)
+            except (TypeError, ValueError):
+                users_i = 20
+            vlan_id = d.get("vlan_id")
+            try:
+                vlan_i = int(vlan_id) if vlan_id is not None else (10 * (i + 1))
+            except (TypeError, ValueError):
+                vlan_i = 10 * (i + 1)
+            normalized.append({"name": name, "users": users_i, "vlan_id": vlan_i})
+        p["departments"] = normalized
+    else:
+        p["departments"] = []
+
+    # If LLM missed departments but user listed them explicitly, infer them.
+    if not p["departments"]:
+        inferred = _extract_department_names(all_text)
+        if inferred:
+            p["departments"] = [
+                {"name": n, "users": 20, "vlan_id": 10 * (i + 1)} for i, n in enumerate(inferred)
+            ]
+
+    # VLAN catalog (always mirror departments)
+    p["vlans"] = [{"id": int(d["vlan_id"]), "name": str(d["name"])} for d in p["departments"]]
+
+    # Fixed SME defaults/scope
+    p["users_per_site"] = p.get("users_per_site", 20)
+    p["protocols"] = ["ospf"]
+    p["ospf"] = {"area": 0}
+    p["connectivity"] = p.get("connectivity", "Internal campus connectivity with internet gateway")
+    p["security"] = ["vlans"]
+    p["devices"] = {
+        "router": "Cisco 1941",
+        "switch": "Catalyst 2960",
+        "addressing": "IPv4 private",
+    }
+
+    # Remove out-of-scope fields if present
+    p.pop("vpn", None)
+    p.pop("firewall", None)
+    p.pop("services", None)
+    p.pop("external_services", None)
+    return p
 
 def planning_node(state: NetworkDesignState) -> Dict[str, Any]:
     """
@@ -11,100 +111,73 @@ def planning_node(state: NetworkDesignState) -> Dict[str, Any]:
     user_input = state["user_input"]
     history = state.get("conversation_history", [])
     
-    # Build context for LLM
-    if not history:
-        # First interaction
-        prompt = f"""You are a network design planning agent.
+    conversation_text = "\n".join([
+        f"Assistant: {msg.get('content', '')}" if msg.get('role') == 'assistant' else f"User: {msg.get('content', '')}"
+        for msg in history
+    ])
 
-User request: "{user_input}"
+    prompt = f"""You are the Planning Agent for an SME Campus Network generator.
 
-Analyze this request and determine if you have enough information to create a network design.
+STRICT SCOPE (do not ask about anything outside this):
+- Router: Cisco 1941
+- Switches: Catalyst 2960
+- Addressing: private IPv4
+- Segmentation: VLANs
+- Routing: OSPF area 0
 
-Required information:
-- Number of sites/offices/locations
-- Number of users per site
-- Connectivity requirements (internet, VPN, inter-site)
-- Routing protocol preference (or recommend if unsure)
-- Security requirements (firewall, VLANs, etc.)
-- Any special services (web servers, databases, etc.)
-
-If ANY required information is missing, output:
-{{
-  "requirements_clear": false,
-  "clarifying_questions": ["question 1", "question 2", ...]
-}}
-
-If ALL information is present, output:
-{{
-  "requirements_clear": true,
-  "design_plan": {{
-    "sites": [...],
-    "users_per_site": X,
-    "protocols": ["ospf"],
-    "security": ["firewall", "vlans"],
-    "departments": [
-      {{"name": "DepartmentName", "users": 0, "vlan_id": 100}}
-    ],
-    "vlans": [
-      {{"id": 100, "name": "DepartmentName"}}
-    ],
-    ...
-  }}
-}}
-
-When the user specifies departments or VLAN segmentation, you MUST include "departments" (name + user count per department + unique vlan_id 2-4094 for each) and matching "vlans" (same ids and names). If the user does not give VLAN numbers, assign distinct ids (e.g. 100, 110, 120 for three departments, or any valid scheme). Use one row per department.
-
-Output ONLY valid JSON, no other text.
-"""
-    else:
-        # Follow-up: user has answered questions
-        conversation_text = "\n".join([
-            f"Assistant: {msg.get('content', '')}" if msg.get('role') == 'assistant' else f"User: {msg.get('content', '')}"
-            for msg in history
-        ])
-        
-        prompt = f"""You are a network design planning agent.
-
+Input context:
 Previous conversation:
 {conversation_text}
 
-Latest user input: "{user_input}"
+Latest user input:
+"{user_input}"
 
-Based on the complete conversation, do you now have enough information?
+Clarification policy:
+1) Fatal gaps (ask ONLY these):
+   - Missing departments/organizational VLAN groups.
+2) Inference gaps (DO NOT ask):
+   - sites, users, connectivity, protocols, vlan ids.
+   Infer with SME defaults.
+3) If departments are provided, set requirements_clear=true immediately.
 
-Required information:
-- Number of sites/offices/locations
-- Number of users per site
-- Connectivity requirements
-- Routing protocols
-- Security requirements
+Defaults to apply when missing:
+- sites: 1 site
+- users per department: 20
+- connectivity: internal campus + internet gateway
+- protocol: ospf (area 0)
+- vlan ids: auto assign 10,20,30...
 
-If still missing information, output:
+NEVER ask about VPNs, firewalls, databases, web servers, or external services.
+
+Return ONLY valid JSON:
+- If fatal gap exists:
 {{
   "requirements_clear": false,
-  "clarifying_questions": ["specific question about missing info"]
+  "clarifying_questions": ["single concise question asking for departments"]
 }}
-
-If complete, output:
+- Otherwise:
 {{
   "requirements_clear": true,
   "design_plan": {{
-    "sites": [...],
-    "users_per_site": X,
+    "sites": ["Main Site"],
+    "users_per_site": 20,
+    "connectivity": "Internal campus connectivity with internet gateway",
     "protocols": ["ospf"],
+    "ospf": {{"area": 0}},
     "departments": [
-      {{"name": "DepartmentName", "users": 0, "vlan_id": 100}}
+      {{"name": "HR", "users": 20, "vlan_id": 10}}
     ],
     "vlans": [
-      {{"id": 100, "name": "DepartmentName"}}
+      {{"id": 10, "name": "HR"}}
     ],
-    ...
+    "security": ["vlans"],
+    "devices": {{
+      "router": "Cisco 1941",
+      "switch": "Catalyst 2960",
+      "addressing": "IPv4 private"
+    }}
   }}
 }}
-
-When the user specifies departments or VLANs, include "departments" and "vlans" as above with unique vlan_id per department (2-4094).
-
-Output ONLY valid JSON.
 """
     
     # Call LLM (Groq)
@@ -133,15 +206,22 @@ Output ONLY valid JSON.
             "conversation_history": [{"role": "assistant", "content": f"Error: {str(e)}"}]
         }
     
-    # Update state
+    plan = _apply_sme_defaults(response_json.get("design_plan") or {}, user_input, history)
+    has_departments = bool(plan.get("departments"))
+
+    # Enforce fatal-gap behavior: only departments can block progression.
+    requirements_clear = bool(response_json.get("requirements_clear", False)) and has_departments
+    if has_departments:
+        requirements_clear = True
+
     updates = {
-        "requirements_clear": response_json.get("requirements_clear", False),
+        "requirements_clear": requirements_clear,
         "conversation_history": [{"role": "assistant", "content": response_text}]
     }
-    
-    if response_json.get("requirements_clear"):
-        updates["design_plan"] = response_json.get("design_plan")
+
+    if requirements_clear:
+        updates["design_plan"] = plan
     else:
-        updates["clarifying_questions"] = response_json.get("clarifying_questions", [])
+        updates["clarifying_questions"] = ["Please list your departments (e.g., HR, IT, Finance)."]
     
     return updates

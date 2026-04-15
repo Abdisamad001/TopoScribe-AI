@@ -22,7 +22,7 @@ export default function Home() {
         <div className="flex items-center gap-4 text-sm font-medium text-slate-400">
           <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-full text-xs font-semibold uppercase tracking-wider shadow-[0_0_10px_rgba(61,214,181,0.1)]">
             <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-            System Online
+            Simulating...
           </span>
           <span className="text-xs opacity-50 font-mono">v1.0.0</span>
         </div>
