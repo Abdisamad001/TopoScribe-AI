@@ -363,7 +363,18 @@ def _router_trunk_parent(router_node) -> str:
     return "GigabitEthernet0/0"
 
 def config_node(state: NetworkDesignState) -> Dict[str, Any]:
-    topology = state["topology"]
+    topology = state.get("topology")
+    if topology is None:
+        return {
+            "errors": ["Configuration skipped: topology is missing from state."],
+            "conversation_history": [
+                {
+                    "role": "assistant",
+                    "content": "Configuration skipped because topology generation did not produce a topology.",
+                }
+            ],
+        }
+
     design_plan = state.get("design_plan") or {}
 
     catalog = vlan_catalog_from_state(topology, design_plan if isinstance(design_plan, dict) else {})

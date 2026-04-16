@@ -3,6 +3,7 @@ import { generateCiscoConfig, isRouterType, isSwitchType } from './cisco';
 
 export function generateMarkdownReport(topology: Topology): string {
     const date = new Date().toLocaleDateString();
+    const runtime = topology.runtime;
 
     let md = `# Network Design Report\n`;
     md += `**Project:** ${topology.name}\n`;
@@ -11,7 +12,17 @@ export function generateMarkdownReport(topology: Topology): string {
     md += `## 1. Executive Summary\n`;
     md += `This document details the logical network design for ${topology.name}. The network consists of ${topology.nodes.length} devices and ${topology.links.length} connections.\n\n`;
 
-    md += `## 2. IP Addressing Schema\n`;
+    md += `## 2. Topology Generation Runtime\n`;
+    if (runtime?.elapsed_ms !== undefined || runtime?.elapsed_seconds !== undefined || runtime?.started_at_utc) {
+        if (runtime?.started_at_utc) md += `- Start Time (UTC): ${runtime.started_at_utc}\n`;
+        if (runtime?.elapsed_ms !== undefined) md += `- Runtime (ms): ${runtime.elapsed_ms}\n`;
+        if (runtime?.elapsed_seconds !== undefined) md += `- Runtime (seconds): ${runtime.elapsed_seconds}\n`;
+    } else {
+        md += `- Runtime not available for this generation.\n`;
+    }
+    md += `\n`;
+
+    md += `## 3. IP Addressing Schema\n`;
     md += `| Device | Interface | IP Address | Subnet Mask |\n`;
     md += `| :--- | :--- | :--- | :--- |\n`;
 
@@ -37,7 +48,7 @@ export function generateMarkdownReport(topology: Topology): string {
     });
     md += `\n`;
 
-    md += `## 3. Device Configurations\n`;
+    md += `## 4. Device Configurations\n`;
     md += `The following configurations are generated for Cisco IOS devices.\n\n`;
 
     topology.nodes.forEach(node => {

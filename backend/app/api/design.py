@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from app.graph.workflow import app as workflow_app
 from app.graph.state import NetworkDesignState
 from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
+import time
 
 router = APIRouter()
 
@@ -16,6 +18,9 @@ async def generate_design(request: DesignRequest):
     Initiates the LangGraph workflow.
     """
     try:
+        started_at = datetime.now(timezone.utc).isoformat()
+        t0 = time.perf_counter()
+
         initial_state: NetworkDesignState = {
             "user_input": request.description,
             "conversation_history": request.conversation_history,
@@ -32,13 +37,20 @@ async def generate_design(request: DesignRequest):
         
         # Invoke LangGraph workflow
         result = await workflow_app.ainvoke(initial_state)
+        runtime_ms = round((time.perf_counter() - t0) * 1000, 2)
+        runtime_seconds = round(runtime_ms / 1000, 3)
         
         # Check if planning needs more info
         if not result.get("requirements_clear"):
             return {
                 "status": "needs_clarification",
                 "questions": result.get("clarifying_questions", []),
-                "conversation_history": result.get("conversation_history", [])
+                "conversation_history": result.get("conversation_history", []),
+                "runtime": {
+                    "started_at_utc": started_at,
+                    "elapsed_ms": runtime_ms,
+                    "elapsed_seconds": runtime_seconds,
+                },
             }
         
         # Planning complete, return results
@@ -47,7 +59,12 @@ async def generate_design(request: DesignRequest):
             "topology": result.get("topology").dict() if result.get("topology") else None,
             "configurations": result.get("configurations"),
             "cisco_configs": result.get("cisco_configs"),
-            "validation_result": result.get("validation_result")
+            "validation_result": result.get("validation_result"),
+            "runtime": {
+                "started_at_utc": started_at,
+                "elapsed_ms": runtime_ms,
+                "elapsed_seconds": runtime_seconds,
+            },
         }
         
     except Exception as e:

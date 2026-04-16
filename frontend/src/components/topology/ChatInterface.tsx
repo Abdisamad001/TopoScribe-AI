@@ -3,7 +3,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { generateDesign } from '@/lib/api';
 
 interface ChatInterfaceProps {
-    onTopologyGenerated: (topology: any) => void;
+    onTopologyGenerated: (topology: any, runtime?: any) => void;
     onRequestClarification: (prompt: string, questions: string[]) => void;
 }
 
@@ -23,7 +23,7 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
             const data = await generateDesign(prompt);
 
             if (data.status === 'complete' && data.topology) {
-                onTopologyGenerated(data.topology);
+                onTopologyGenerated(data.topology, data.runtime);
                 setPrompt(''); // Clear input on success
             } else if (data.status === 'needs_clarification') {
                 onRequestClarification(prompt, data.questions || []);

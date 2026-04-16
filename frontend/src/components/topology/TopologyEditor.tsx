@@ -29,7 +29,7 @@ import MetricsDashboard from './MetricsDashboard';
 import ImmersiveChatPanel from './ImmersiveChatPanel';
 import { clarifyRequirements } from '@/lib/api';
 import { initialTopology } from '@/data/initialTopology';
-import { NetworkNode, Link } from '@/types/network';
+import { NetworkNode, Link, GenerationRuntime } from '@/types/network';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -83,6 +83,7 @@ export default function TopologyEditor() {
     const [isReportOpen, setIsReportOpen] = React.useState(false);
     const [isMetricsOpen, setIsMetricsOpen] = React.useState(false);
     const [topologyMeta, setTopologyMeta] = React.useState(initialTopology.metadata);
+    const [generationRuntime, setGenerationRuntime] = React.useState<GenerationRuntime | undefined>(undefined);
 
     // Chat State
     const [isChatOpen, setIsChatOpen] = React.useState(false);
@@ -218,10 +219,11 @@ export default function TopologyEditor() {
         onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
-    const onTopologyGenerated = useCallback((newTopology: any) => {
+    const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
         setTopologyMeta(newTopology.metadata || initialTopology.metadata);
+        setGenerationRuntime(runtime);
         onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
@@ -251,7 +253,7 @@ export default function TopologyEditor() {
             const data = await clarifyRequirements(currentPrompt, newHistory);
 
             if (data.status === 'complete' && data.topology) {
-                onTopologyGenerated(data.topology);
+                onTopologyGenerated(data.topology, data.runtime);
                 setIsChatOpen(false);
             } else if (data.status === 'needs_clarification') {
                 const q = data.questions ? data.questions.join('\n\n') : 'Please clarify.';
@@ -333,6 +335,7 @@ export default function TopologyEditor() {
                     links: convertEdgesToDomain(edges),
                     protocols: initialTopology.protocols,
                     metadata: topologyMeta,
+                    runtime: generationRuntime,
                     name: "My Generated Network",
                     id: "topo-gen-1",
                     version: 1,

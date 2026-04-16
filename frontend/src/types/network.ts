@@ -49,6 +49,12 @@ export interface TopologyMetadata {
   vlan_gateways?: Array<{ vlan_id: number; gateway: string; mask: string }>;
 }
 
+export interface GenerationRuntime {
+  started_at_utc?: string;
+  elapsed_ms?: number;
+  elapsed_seconds?: number;
+}
+
 export interface Topology {
   id: string;
   name: string;
@@ -58,4 +64,5 @@ export interface Topology {
   version: number;
   lastUpdated: string; // ISO Date
   metadata?: TopologyMetadata;
+  runtime?: GenerationRuntime;
 }
