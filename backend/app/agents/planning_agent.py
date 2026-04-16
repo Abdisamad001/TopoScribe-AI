@@ -142,7 +142,7 @@ Clarification policy:
 
 Defaults to apply when missing:
 - sites: 1 site
-- users per department: 20
+- users per department: 12
 - connectivity: internal campus + internet gateway
 - protocol: ospf (area 0)
 - vlan ids: auto assign 10,20,30...
