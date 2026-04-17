@@ -7,8 +7,22 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
     Validation Agent: Validates and generates final configs.
     """
     
-    topology = state["topology"]
-    configurations = state["configurations"]
+    topology = state.get("topology")
+    configurations = state.get("configurations")
+
+    if topology is None or configurations is None:
+        missing = []
+        if topology is None:
+            missing.append("topology")
+        if configurations is None:
+            missing.append("configurations")
+        msg = f"Validation skipped: missing {', '.join(missing)}."
+        return {
+            "errors": [msg],
+            "validation_result": {"status": "failed_fatal", "errors": [msg]},
+            "retry_count": int(state.get("retry_count", 0)),
+            "conversation_history": [{"role": "assistant", "content": msg}],
+        }
     
     # Validation checks
     errors = []
@@ -91,9 +105,11 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
                 errors.append(f"VLAN plan {node_id}: unknown port mode {mode!r}")
     
     if errors:
+        retries = int(state.get("retry_count", 0)) + 1
         return {
             "errors": errors,
-            "validation_result": {"status": "failed", "errors": errors}
+            "validation_result": {"status": "failed", "errors": errors},
+            "retry_count": retries,
         }
     
     # Generate Cisco configs
@@ -111,5 +127,6 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
     return {
         "cisco_configs": cisco_configs,
         "validation_result": {"status": "passed"},
+        "retry_count": int(state.get("retry_count", 0)),
         "conversation_history": [{"role": "assistant", "content": "Validation passed. Configs ready."}]
     }

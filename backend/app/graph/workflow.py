@@ -31,6 +31,9 @@ def should_end_or_continue(state: NetworkDesignState) -> str:
         - "end" → Success, output ready
         - "config" → Errors found, retry configuration
     """
+    validation = state.get("validation_result") or {}
+    if isinstance(validation, dict) and validation.get("status") == "failed_fatal":
+        return "end"
     errors = state.get("errors", [])
     if errors:
         return "config"  # Retry

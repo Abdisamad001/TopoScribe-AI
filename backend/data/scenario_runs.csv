@@ -1,0 +1,13 @@
+Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Seconds),Result
+1,No,1,No,0,2.704,Needs Clarification
+2,No,1,No,0,1.123,Needs Clarification
+3,No,1,No,0,1.242,Needs Clarification
+4,No,1,No,0,1.584,Needs Clarification
+5,No,0,No,0,5.446,Error: 'NoneType' object has no attribute 'nodes'
+6,No,1,No,0,1.081,Needs Clarification
+7,No,0,No,0,4.823,Error: 'NoneType' object has no attribute 'nodes'
+8,No,1,No,0,1.956,Needs Clarification
+9,No,1,No,0,1.417,Needs Clarification
+10,Yes,0,No,0,4.629,Incomplete
+11,No,1,No,0,1.242,Needs Clarification
+12,Yes,0,Yes,0,3.19,Success

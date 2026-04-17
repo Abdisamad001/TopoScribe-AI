@@ -25,7 +25,6 @@ import Sidebar from './Sidebar';
 import ConfigPanel from './ConfigPanel';
 import ChatInterface from './ChatInterface';
 import ReportModal from './ReportModal';
-import MetricsDashboard from './MetricsDashboard';
 import ImmersiveChatPanel from './ImmersiveChatPanel';
 import { clarifyRequirements } from '@/lib/api';
 import { initialTopology } from '@/data/initialTopology';
@@ -81,7 +80,6 @@ export default function TopologyEditor() {
     const [edges, setEdges, onEdgesChange] = useEdgesState(convertEdges(initialTopology.links));
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
     const [isReportOpen, setIsReportOpen] = React.useState(false);
-    const [isMetricsOpen, setIsMetricsOpen] = React.useState(false);
     const [topologyMeta, setTopologyMeta] = React.useState(initialTopology.metadata);
     const [generationRuntime, setGenerationRuntime] = React.useState<GenerationRuntime | undefined>(undefined);
 
@@ -291,12 +289,6 @@ export default function TopologyEditor() {
 
                     <div className="absolute top-4 right-4 z-50 flex gap-2">
                         <button
-                            onClick={() => setIsMetricsOpen(!isMetricsOpen)}
-                            className={`px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2 ${isMetricsOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 dark:bg-zinc-800 dark:text-gray-200'}`}
-                        >
-                            📊 Metrics
-                        </button>
-                        <button
                             onClick={() => setIsReportOpen(true)}
                             className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
                         >
@@ -342,8 +334,6 @@ export default function TopologyEditor() {
                     lastUpdated: new Date().toISOString()
                 }}
             />
-
-            {isMetricsOpen && <MetricsDashboard />}
         </div>
     );
 }

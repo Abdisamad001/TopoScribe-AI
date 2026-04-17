@@ -23,3 +23,4 @@ class NetworkDesignState(TypedDict):
     
     # Error handling
     errors: Annotated[List[str], operator.add]          # Accumulated errors
+    retry_count: int                                    # Number of validation->config retries
