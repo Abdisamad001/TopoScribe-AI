@@ -103,6 +103,40 @@ def _apply_sme_defaults(plan: Dict[str, Any], user_input: str, history: List[dic
     p.pop("external_services", None)
     return p
 
+
+def _is_user_delegation(user_input: str, history: List[dict]) -> bool:
+    """
+    True when user explicitly delegates technical decisions to the system.
+    """
+    text = " ".join(
+        [user_input or ""] + [str((m or {}).get("content", "")) for m in (history or [])]
+    ).lower()
+    delegation_patterns = [
+        r"\brecommend\b",
+        r"\bsuggest\b",
+        r"\bdecide\b",
+        r"\byou choose\b",
+        r"\bchoose for me\b",
+    ]
+    return any(re.search(p, text) for p in delegation_patterns)
+
+
+def _ensure_default_departments(plan: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    If departments are absent, inject SME baseline departments for delegated requests.
+    """
+    p = dict(plan or {})
+    depts = p.get("departments")
+    if isinstance(depts, list) and depts:
+        return p
+    p["departments"] = [
+        {"name": "HR", "users": 20, "vlan_id": 10},
+        {"name": "IT", "users": 20, "vlan_id": 20},
+        {"name": "Finance", "users": 20, "vlan_id": 30},
+    ]
+    p["vlans"] = [{"id": int(d["vlan_id"]), "name": str(d["name"])} for d in p["departments"]]
+    return p
+
 def planning_node(state: NetworkDesignState) -> Dict[str, Any]:
     """
     Planning Agent: Analyzes user input and asks clarifying questions.
@@ -139,10 +173,14 @@ Clarification policy:
    - sites, users, connectivity, protocols, vlan ids.
    Infer with SME defaults.
 3) If departments are provided, set requirements_clear=true immediately.
+4) User Delegation override:
+   - If user asks you to "recommend", "suggest", or "decide" for them, treat ALL missing
+     technical parameters as Approved via Defaults and set requirements_clear=true.
+   - Do not ask "Could you provide more details" in this delegation case.
 
 Defaults to apply when missing:
 - sites: 1 site
-- users per department: 12
+- users per department: 20
 - connectivity: internal campus + internet gateway
 - protocol: ospf (area 0)
 - vlan ids: auto assign 10,20,30...
@@ -200,17 +238,33 @@ Return ONLY valid JSON:
     except Exception as e:
         # Graceful fallback for LLM/Network errors
         print(f"LLM Error: {str(e)}")
+        delegated = _is_user_delegation(user_input, history)
+        if delegated:
+            plan = _apply_sme_defaults({}, user_input, history)
+            plan = _ensure_default_departments(plan)
+            return {
+                "requirements_clear": True,
+                "design_plan": plan,
+                "conversation_history": [
+                    {"role": "assistant", "content": "Using SME defaults by delegation."}
+                ],
+            }
         return {
             "requirements_clear": False,
             "clarifying_questions": [f"I encountered an error connecting to the AI service: {str(e)}. Please try again."],
             "conversation_history": [{"role": "assistant", "content": f"Error: {str(e)}"}]
         }
     
+    delegated = _is_user_delegation(user_input, history)
     plan = _apply_sme_defaults(response_json.get("design_plan") or {}, user_input, history)
+    if delegated:
+        plan = _ensure_default_departments(plan)
     has_departments = bool(plan.get("departments"))
 
     # Enforce fatal-gap behavior: only departments can block progression.
     requirements_clear = bool(response_json.get("requirements_clear", False)) and has_departments
+    if delegated:
+        requirements_clear = True
     if has_departments:
         requirements_clear = True
 
