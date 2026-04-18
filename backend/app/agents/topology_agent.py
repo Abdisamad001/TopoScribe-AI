@@ -70,7 +70,13 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     """
     
     design_plan = state.get("design_plan", {})
-    
+    _depts = design_plan.get("departments")
+    if not isinstance(_depts, list) or len(_depts) == 0:
+        _depts = [{"users": 20}]
+    _max_dept_users = max(
+        (d.get("users", 20) if isinstance(d, dict) else 20) for d in _depts
+    )
+
     prompt = f"""You are a network topology generation agent.
 
 Design plan:
@@ -82,7 +88,13 @@ Generate a network topology with:
 - VLANs MUST match the design plan: use the same VLAN IDs and department names as in design_plan.vlans or design_plan.departments (if present). If the plan lists N departments, create N access VLANs with those ids/names and assign each department's hosts and access switch accordingly.
 - On each host node, set "config": {{"vlan_id": <number>, "vlan_name": "<same as catalog>"}} matching that host's department VLAN.
 - Put the full VLAN catalog in metadata.vlans as [{{"id": <int 2-4094>, "name": "<string>"}}, ...] covering every department VLAN in the design.
-- Use distinct private IPv4 subnets per VLAN (e.g. 192.168.<vlan_id>.0/24 or another consistent scheme) on hosts; routers use subinterfaces toward switches (do not rely on a fixed 10/20/30 scheme unless the user asked for it).
+- Use distinct private IPv4 subnets per VLAN.
+  Calculate the subnet size from the number of users per department:
+  - Up to 30 users: use /26 (62 hosts)
+  - 31 to 62 users: use /25 (126 hosts)
+  - 63 to 126 users: use /24 (254 hosts)
+  Each department in this design has {_max_dept_users} users.
+  Use 192.168.<vlan_id>.0 as the base network for each department with the matching mask on hosts; routers use subinterfaces toward switches (do not rely on a fixed 10/20/30 scheme unless the user asked for it).
 - Proper connections between devices
 - Hierarchical spatial layout:
     - Routers at the top (y=0 to y=100)

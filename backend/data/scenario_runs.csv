@@ -26,3 +26,17 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 25,Yes,0,Yes,0,2.607,Success
 26,Yes,0,Yes,0,2.773,Success
 27,Yes,0,Yes,0,2.773,Success
+28,No,1,No,0,1.268,Needs Clarification
+29,Yes,0,Yes,0,3.842,Success
+30,No,1,No,0,0.597,Needs Clarification
+31,Yes,0,Yes,0,2.901,Success
+32,No,1,No,0,2.014,Needs Clarification
+33,No,1,No,0,1.436,Needs Clarification
+34,Yes,0,Yes,0,3.816,Success
+35,No,1,No,0,1.32,Needs Clarification
+36,No,1,No,0,1.237,Needs Clarification
+37,Yes,0,Yes,0,4.18,Success
+38,Yes,0,No,0,4.681,Incomplete
+39,No,1,No,0,1.656,Needs Clarification
+40,No,1,No,0,1.585,Needs Clarification
+41,Yes,0,Yes,0,3.282,Success

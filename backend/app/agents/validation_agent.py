@@ -51,6 +51,17 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
                     errors.append(f"IP conflict: {ip} used multiple times (subinterface)")
                 used_ips.add(ip)
 
+    # Check 2b: Management interface IP conflicts
+    for node_id, config in configurations.items():
+        mgmt_ip = config.get("management_ip")
+        if mgmt_ip:
+            if mgmt_ip in used_ips:
+                errors.append(
+                    f"IP conflict: management IP {mgmt_ip} on {node_id} "
+                    f"already used by another interface"
+                )
+            used_ips.add(mgmt_ip)
+
     # Check 3: VLAN plan (switches): dynamic VLAN ids and port modes
     for node_id, config in configurations.items():
         vp = config.get("vlan_plan")
