@@ -15,7 +15,6 @@ import {
     NodeTypes,
     BackgroundVariant,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
 
 // Import custom nodes
 import RouterNode from './nodes/RouterNode';
@@ -256,6 +255,12 @@ export default function TopologyEditor() {
             } else if (data.status === 'needs_clarification') {
                 const q = data.questions ? data.questions.join('\n\n') : 'Please clarify.';
                 setChatMessages(prev => [...prev, { role: 'assistant', content: q }]);
+            } else if (data.status === 'generation_failed') {
+                const msg =
+                    typeof data.message === 'string'
+                        ? data.message
+                        : 'Topology generation did not complete. Please try again.';
+                setChatMessages(prev => [...prev, { role: 'assistant', content: msg }]);
             } else {
                 setChatMessages(prev => [...prev, { role: 'assistant', content: "Failed to generate design." }]);
             }

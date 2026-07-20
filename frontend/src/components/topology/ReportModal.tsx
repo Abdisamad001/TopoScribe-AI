@@ -5,6 +5,35 @@ import { Copy, Download, X, FileText, Terminal, Check } from 'lucide-react';
 import { NetworkNode, Link, ProtocolConfig, TopologyMetadata, GenerationRuntime } from '@/types/network';
 import { generateMarkdownReport } from '@/lib/generator/report';
 
+/** Clipboard API is missing in non-secure HTTP (except localhost) and some embedded WebViews. */
+async function copyTextToClipboard(text: string): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+    } catch {
+        // Permission denied or blocked context
+    }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+    } catch {
+        return false;
+    }
+}
+
 interface ReportModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -41,10 +70,14 @@ const CiscoTerminalWindow = ({ code }: { code: string }) => {
             .trim();
     };
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(getCleanConfig());
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = async () => {
+        const ok = await copyTextToClipboard(getCleanConfig());
+        if (ok) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } else {
+            alert('Could not copy. Try HTTPS, allow clipboard access, or select the text manually.');
+        }
     };
 
     return (
@@ -166,10 +199,14 @@ export default function ReportModal({ isOpen, onClose, topology }: ReportModalPr
 
     if (!isOpen) return null;
 
-    const handleCopy = () => {
+    const handleCopy = async () => {
         const cleanText = stripMarkdown(report);
-        navigator.clipboard.writeText(cleanText);
-        alert('Clean text copied to clipboard!');
+        const ok = await copyTextToClipboard(cleanText);
+        if (ok) {
+            alert('Clean text copied to clipboard!');
+        } else {
+            alert('Could not copy. Try HTTPS, allow clipboard access, or use Download.');
+        }
     };
 
     const handleDownload = () => {

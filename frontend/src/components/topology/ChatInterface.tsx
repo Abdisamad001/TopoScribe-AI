@@ -28,6 +28,12 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
             } else if (data.status === 'needs_clarification') {
                 onRequestClarification(prompt, data.questions || []);
                 setPrompt('');
+            } else if (data.status === 'generation_failed') {
+                setError(
+                    typeof data.message === 'string'
+                        ? data.message
+                        : 'Topology generation did not complete. Try again.'
+                );
             } else {
                 setError('Failed to generate topology');
             }

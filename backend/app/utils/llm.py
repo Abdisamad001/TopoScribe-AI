@@ -9,7 +9,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def get_llm_response(
     prompt: str,
     model: str = "llama-3.3-70b-versatile", # Updated to latest model avail in Groq
-    temperature: float = 0.7,
+    temperature: float = 0.25,
     max_tokens: int = 2000
 ) -> str:
     """

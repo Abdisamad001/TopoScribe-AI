@@ -117,6 +117,31 @@ async def generate_design(request: DesignRequest):
                 },
             }
         
+        # Planning complete — require a topology payload for the frontend
+        if not result.get("topology"):
+            errs = result.get("errors") or []
+            detail = errs[0] if errs else "Topology could not be produced."
+            _append_run_row(
+                requirements_clear=True,
+                questions_asked=0,
+                design_generated=False,
+                retries=int(result.get("retry_count", 0) or 0),
+                runtime_seconds=runtime_seconds,
+                result=f"Incomplete: {detail}",
+            )
+            return {
+                "status": "generation_failed",
+                "message": detail,
+                "errors": errs,
+                "conversation_history": result.get("conversation_history", []),
+                "retry_count": int(result.get("retry_count", 0) or 0),
+                "runtime": {
+                    "started_at_utc": started_at,
+                    "elapsed_ms": runtime_ms,
+                    "elapsed_seconds": runtime_seconds,
+                },
+            }
+
         # Planning complete, return results
         retries = int(result.get("retry_count", 0) or 0)
         design_generated = bool(result.get("topology"))
