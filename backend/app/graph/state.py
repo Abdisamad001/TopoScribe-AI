@@ -14,6 +14,9 @@ class NetworkDesignState(TypedDict):
     
     # Generation phases
     topology: Optional[Topology]                         # Generated network topology
+    topology_retry_count: int                            # Topology attempts beyond the first
+    topology_source: Optional[str]                       # groq | openai_escalated | deterministic_fallback
+    topology_quality_ok: bool                            # False when rule-based checks rejected the output
     configurations: Optional[dict]                       # Device configurations
     validation_result: Optional[dict]                    # Validation report
     
@@ -24,3 +27,6 @@ class NetworkDesignState(TypedDict):
     # Error handling
     errors: Annotated[List[str], operator.add]          # Accumulated errors
     retry_count: int                                    # Number of validation->config retries
+
+    # Observability
+    agent_trace: Annotated[List[dict], operator.add]    # {agent, model, attempt, outcome} per LLM attempt

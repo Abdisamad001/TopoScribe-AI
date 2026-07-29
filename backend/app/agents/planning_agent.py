@@ -1,5 +1,5 @@
 from app.graph.state import NetworkDesignState
-from app.utils.llm import get_llm_response
+from app.utils.llm import call_llm
 from app.utils.dept_labels import (
     filter_department_string_list,
     is_plausible_department_name,
@@ -368,11 +368,11 @@ Return ONLY valid JSON:
 }}
 """
     
-    # Call LLM (Groq)
+    # Single call, always the planning tier. The model fixes temperature at 1,
+    # so output consistency comes from the strict prompt above plus the
+    # deterministic post-processing below, not from a temperature setting.
     try:
-        response_text = get_llm_response(
-            prompt, model="llama-3.3-70b-versatile", temperature=0.25
-        )
+        response_text = call_llm(prompt, tier="planning")
         
         # Parse response
         try:

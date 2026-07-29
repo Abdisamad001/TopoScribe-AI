@@ -81,12 +81,16 @@ async def generate_design(request: DesignRequest):
             "clarifying_questions": None,
             "design_plan": None,
             "topology": None,
+            "topology_retry_count": 0,
+            "topology_source": None,
+            "topology_quality_ok": True,
             "configurations": None,
             "validation_result": None,
             "cisco_configs": None,
             "report": None,
             "errors": [],
             "retry_count": 0,
+            "agent_trace": [],
         }
         
         # Invoke LangGraph workflow

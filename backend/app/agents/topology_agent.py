@@ -1,9 +1,12 @@
 from app.graph.state import NetworkDesignState
 from app.models.network import Topology
-from app.utils.llm import get_llm_response
+from app.utils.llm import call_llm
 from app.utils.dept_labels import sanitize_department_name, sanitize_topology_node_labels
 from typing import Dict, Any, List, Optional, Tuple
 import json
+
+# Escalated retries allowed after the initial primary-tier attempt.
+MAX_TOPOLOGY_RETRIES = 3
 
 def _effective_department_count(design_plan: Optional[Dict[str, Any]]) -> int:
     """How many department segments the SME layout should have (min 1)."""
@@ -34,24 +37,45 @@ def _count_roles_in_nodes(nodes: Any) -> Tuple[int, int, int]:
     return r, s, h
 
 
+def _sparse_reason(
+    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
+) -> Optional[str]:
+    """
+    The LLM often returns a short path (router–core–one access–one host) even when the plan
+    has several departments. Returns what is missing, or None when the shape fits the plan.
+    """
+    n_depts = _effective_department_count(design_plan)
+    expected_nodes = 2 + 2 * n_depts
+    nodes = topology_dict.get("nodes")
+    if not isinstance(nodes, list) or not nodes:
+        return (
+            f"No nodes were returned; {n_depts} department(s) need at least "
+            f"{expected_nodes} nodes."
+        )
+    if len(nodes) < expected_nodes:
+        return (
+            f"Only {len(nodes)} nodes for {n_depts} department(s); expected at least "
+            f"{expected_nodes} (1 router + 1 core switch + 1 access switch and 1 host "
+            f"per department)."
+        )
+    _r, sw, ho = _count_roles_in_nodes(nodes)
+    if ho < n_depts:
+        return (
+            f"Only {ho} host(s) for {n_depts} department(s); every department needs its "
+            f"own host."
+        )
+    if sw < n_depts + 1:
+        return (
+            f"Only {sw} switch(es) for {n_depts} department(s); expected {n_depts + 1} "
+            f"(1 core switch + 1 access switch per department)."
+        )
+    return None
+
+
 def _topology_too_sparse_for_plan(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> bool:
-    """
-    The LLM often returns a short path (router–core–one access–one host) even when the plan
-    has several departments. Prefer the deterministic SME layout in that case.
-    """
-    n_depts = _effective_department_count(design_plan)
-    nodes = topology_dict.get("nodes")
-    if not isinstance(nodes, list) or not nodes:
-        return True
-    expected_nodes = 2 + 2 * n_depts
-    if len(nodes) < expected_nodes:
-        return True
-    _r, sw, ho = _count_roles_in_nodes(nodes)
-    if ho < n_depts or sw < n_depts + 1:
-        return True
-    return False
+    return _sparse_reason(topology_dict, design_plan) is not None
 
 
 def _allowed_department_names(design_plan: Optional[Dict[str, Any]]) -> set:
@@ -88,15 +112,12 @@ def _node_vlan_department(node: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def _topology_department_scope_invalid(
-    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
-) -> bool:
-    """
-    True when topology references departments/VLANs outside design_plan.departments.
-    """
-    allowed = _allowed_department_names(design_plan)
-    if not allowed:
-        return False
+def _department_scope_items(
+    topology_dict: Dict[str, Any], allowed: set
+) -> Tuple[List[str], set]:
+    """Returns (out-of-scope descriptions, department names actually present)."""
+    unexpected: List[str] = []
+    present: set = set()
 
     md = topology_dict.get("metadata")
     if isinstance(md, dict):
@@ -105,34 +126,86 @@ def _topology_department_scope_invalid(
             for item in vlans:
                 if not isinstance(item, dict):
                     continue
-                name = (item.get("name") or item.get("vlan_name") or "").strip().lower()
-                if name and name not in allowed:
-                    return True
+                raw = str(item.get("name") or item.get("vlan_name") or "").strip()
+                if not raw:
+                    continue
+                if raw.lower() in allowed:
+                    present.add(raw.lower())
+                else:
+                    unexpected.append(f"VLAN {item.get('id')} '{raw}'")
 
     nodes = topology_dict.get("nodes")
-    if not isinstance(nodes, list):
-        return False
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-        if _is_core_infrastructure_node(node):
-            continue
-        t = str(node.get("type", "")).lower()
-        if not (
-            "host" in t
-            or "pc" in t
-            or "server" in t
-            or "laptop" in t
-            or "switch" in t
-            or "hub" in t
-        ):
-            continue
-        dept = _node_vlan_department(node)
-        if dept is None:
-            continue
-        if dept not in allowed:
-            return True
-    return False
+    if isinstance(nodes, list):
+        for node in nodes:
+            if not isinstance(node, dict):
+                continue
+            if _is_core_infrastructure_node(node):
+                continue
+            t = str(node.get("type", "")).lower()
+            if not (
+                "host" in t
+                or "pc" in t
+                or "server" in t
+                or "laptop" in t
+                or "switch" in t
+                or "hub" in t
+            ):
+                continue
+            dept = _node_vlan_department(node)
+            if dept is None:
+                continue
+            if dept in allowed:
+                present.add(dept)
+            else:
+                unexpected.append(f"node '{node.get('id')}' assigned to '{dept}'")
+
+    return unexpected, present
+
+
+def _scope_reason(
+    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
+) -> Optional[str]:
+    """Names the VLANs/nodes outside design_plan.departments, or None when in scope."""
+    allowed = _allowed_department_names(design_plan)
+    if not allowed:
+        return None
+    unexpected, _present = _department_scope_items(topology_dict, allowed)
+    if not unexpected:
+        return None
+    return (
+        "Departments not in the design plan: "
+        + "; ".join(unexpected[:6])
+        + ". Only these are allowed: "
+        + ", ".join(sorted(allowed))
+        + "."
+    )
+
+
+def _missing_department_reason(
+    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
+) -> Optional[str]:
+    """Names plan departments that got no VLAN and no node, or None when all present."""
+    allowed = _allowed_department_names(design_plan)
+    if not allowed:
+        return None
+    _unexpected, present = _department_scope_items(topology_dict, allowed)
+    missing = allowed - present
+    if not missing:
+        return None
+    return (
+        "Missing departments (no VLAN and no node created): "
+        + ", ".join(sorted(missing))
+        + "."
+    )
+
+
+def _topology_department_scope_invalid(
+    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
+) -> bool:
+    """
+    True when topology references departments/VLANs outside design_plan.departments.
+    """
+    return _scope_reason(topology_dict, design_plan) is not None
 
 
 def _norm_vlan_item(item: Any) -> Optional[Tuple[int, str]]:
@@ -294,12 +367,10 @@ def merge_vlan_metadata(design_plan: Dict[str, Any], topology_dict: Dict[str, An
     if out:
         md["vlans"] = out
 
-def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Topology Agent: Converts design plan into network topology.
-    """
-    
-    design_plan = state.get("design_plan", {})
+def _build_topology_prompt(
+    design_plan: Dict[str, Any], prior_errors: Optional[List[str]] = None
+) -> str:
+    """Generation prompt, with the previous attempt's rejection reasons when retrying."""
     _depts = design_plan.get("departments")
     if not isinstance(_depts, list) or len(_depts) == 0:
         _depts = [{"users": 20}]
@@ -376,102 +447,213 @@ Output a JSON object matching this schema:
 
 Output ONLY valid JSON, no markdown.
 """
-    
-    response_text = get_llm_response(
-        prompt, model="llama-3.3-70b-versatile", temperature=0.25
-    )
-    
-    # Parse and validate
+
+    if prior_errors:
+        numbered = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(prior_errors))
+        prompt += f"""
+A previous attempt was REJECTED by automated validation for these specific reasons:
+{numbered}
+
+Return a corrected topology that resolves every point listed above.
+"""
+    return prompt
+
+
+def _parse_and_validate_topology(
+    raw_text: str, design_plan: Dict[str, Any]
+) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    """
+    Returns (topology_dict, []) when the output is usable, or (None, reasons)
+    describing exactly why it was rejected.
+    """
+    clean_text = (raw_text or "").replace("```json", "").replace("```", "").strip()
     try:
-        clean_text = response_text.replace("```json", "").replace("```", "").strip()
         topology_dict = json.loads(clean_text)
+    except json.JSONDecodeError as e:
+        return None, [f"Response was not valid JSON: {e}"]
 
-        merge_vlan_metadata(design_plan or {}, topology_dict)
+    if not isinstance(topology_dict, dict):
+        return None, [
+            f"Response JSON was a {type(topology_dict).__name__}, expected an object "
+            f"with nodes and links."
+        ]
 
-        if _topology_too_sparse_for_plan(topology_dict, design_plan) or _topology_department_scope_invalid(
-            topology_dict, design_plan
-        ):
-            topology_dict = _fallback_topology_dict(design_plan or {})
-            merge_vlan_metadata(design_plan or {}, topology_dict)
+    merge_vlan_metadata(design_plan or {}, topology_dict)
 
-        # Apply deterministic layout
-        nodes = topology_dict.get("nodes", [])
-        
-        # Group by type (case-insensitive)
-        routers = []
-        switches = []
-        hosts = []
-        others = []
+    reasons = [
+        r
+        for r in (
+            _sparse_reason(topology_dict, design_plan),
+            _scope_reason(topology_dict, design_plan),
+            _missing_department_reason(topology_dict, design_plan),
+        )
+        if r
+    ]
+    if reasons:
+        return None, reasons
+    return topology_dict, []
 
-        for n in nodes:
-            t = n.get("type", "").lower()
-            if "router" in t or "gateway" in t or "firewall" in t:
-                routers.append(n)
-            elif "switch" in t or "hub" in t:
-                switches.append(n)
-            elif "host" in t or "pc" in t or "server" in t or "laptop" in t:
-                hosts.append(n)
-            else:
-                others.append(n)
-        
-        # Layout parameters
-        start_x = 100
-        spacing_x = 300
-        level_height = 200
-        
-        # Function to position a row
-        def position_row(items, y_level):
-            total_width = (len(items) - 1) * spacing_x
-            current_x = start_x + (1000 - total_width) / 2 # Center align roughly
-            if current_x < 100: current_x = 100
-            
-            for i, node in enumerate(items):
-                node["x"] = int(current_x + (i * spacing_x))
-                node["y"] = y_level
-                # Remove nested position if LLM put it there
-                if "position" in node:
-                    del node["position"]
 
-        # Apply positions
-        position_row(routers, 0)
-        position_row(switches, 200)
-        position_row(others, 400) # Firewalls etc
-        position_row(hosts, 500)
-        
-        if not topology_dict.get("nodes"):
-            topology_dict = _fallback_topology_dict(design_plan or {})
-            merge_vlan_metadata(design_plan or {}, topology_dict)
+def _finalize_topology(
+    topology_dict: Dict[str, Any], design_plan: Dict[str, Any]
+) -> Topology:
+    """Applies the deterministic layout, cleans labels, and validates the schema."""
+    nodes = topology_dict.get("nodes", [])
 
-        sanitize_topology_node_labels(topology_dict)
+    # Group by type (case-insensitive)
+    routers = []
+    switches = []
+    hosts = []
+    others = []
 
-        if _topology_department_scope_invalid(topology_dict, design_plan):
-            topology_dict = _fallback_topology_dict(design_plan or {})
-            merge_vlan_metadata(design_plan or {}, topology_dict)
-            sanitize_topology_node_labels(topology_dict)
+    for n in nodes:
+        t = n.get("type", "").lower()
+        if "router" in t or "gateway" in t or "firewall" in t:
+            routers.append(n)
+        elif "switch" in t or "hub" in t:
+            switches.append(n)
+        elif "host" in t or "pc" in t or "server" in t or "laptop" in t:
+            hosts.append(n)
+        else:
+            others.append(n)
 
-        topology = Topology(**topology_dict)  # Pydantic validation
+    # Layout parameters
+    start_x = 100
+    spacing_x = 300
 
-        return {
-            "topology": topology,
-            "conversation_history": [{"role": "assistant", "content": "Topology generated successfully."}],
-        }
+    # Function to position a row
+    def position_row(items, y_level):
+        total_width = (len(items) - 1) * spacing_x
+        current_x = start_x + (1000 - total_width) / 2 # Center align roughly
+        if current_x < 100: current_x = 100
+
+        for i, node in enumerate(items):
+            node["x"] = int(current_x + (i * spacing_x))
+            node["y"] = y_level
+            # Remove nested position if LLM put it there
+            if "position" in node:
+                del node["position"]
+
+    # Apply positions
+    position_row(routers, 0)
+    position_row(switches, 200)
+    position_row(others, 400) # Firewalls etc
+    position_row(hosts, 500)
+
+    sanitize_topology_node_labels(topology_dict)
+
+    return Topology(**topology_dict)  # Pydantic validation
+
+
+def _prior_topology_errors(state: NetworkDesignState) -> List[str]:
+    """Rejection reasons recorded by earlier topology attempts in this run."""
+    out: List[str] = []
+    for entry in state.get("agent_trace") or []:
+        if not isinstance(entry, dict) or entry.get("agent") != "topology":
+            continue
+        outcome = entry.get("outcome")
+        if outcome and entry.get("status") != "success":
+            out.append(str(outcome))
+    return out
+
+
+def _trace(model: str, attempt: int, status: str, outcome: str) -> Dict[str, Any]:
+    return {
+        "agent": "topology",
+        "model": model,
+        "attempt": attempt,
+        "status": status,
+        "outcome": outcome,
+    }
+
+
+def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
+    """
+    Topology Agent: Converts design plan into network topology.
+
+    Attempt 0 runs on the primary tier. Attempts 1-3 escalate, each prompted with
+    the specific reasons earlier attempts were rejected. The deterministic layout
+    is only used once the retry budget is exhausted.
+    """
+    design_plan = state.get("design_plan") or {}
+    attempt = int(state.get("topology_retry_count", 0) or 0)
+    tier = "primary" if attempt == 0 else "escalated"
+    prior_errors = _prior_topology_errors(state)
+
+    prompt = _build_topology_prompt(design_plan, prior_errors)
+
+    try:
+        response_text = call_llm(prompt, tier=tier)
     except Exception as e:
-        try:
-            topology_dict = _fallback_topology_dict(design_plan or {})
-            merge_vlan_metadata(design_plan or {}, topology_dict)
-            sanitize_topology_node_labels(topology_dict)
-            topology = Topology(**topology_dict)
-            return {
-                "topology": topology,
-                "conversation_history": [
-                    {
-                        "role": "assistant",
-                        "content": "Topology generated using built-in SME layout (AI output could not be parsed).",
-                    }
-                ],
+        reasons = [str(e)]
+    else:
+        topology_dict, reasons = _parse_and_validate_topology(response_text, design_plan)
+        if topology_dict is not None:
+            try:
+                topology = _finalize_topology(topology_dict, design_plan)
+            except Exception as e:
+                reasons = [f"Topology failed schema validation: {e}"]
+            else:
+                source = "groq" if attempt == 0 else "openai_escalated"
+                return {
+                    "topology": topology,
+                    "topology_source": source,
+                    "topology_quality_ok": True,
+                    "topology_retry_count": attempt,
+                    "agent_trace": [_trace(tier, attempt, "success", f"accepted from {source}")],
+                    "conversation_history": [
+                        {
+                            "role": "assistant",
+                            "content": f"Topology generated successfully (attempt {attempt + 1}, {source}).",
+                        }
+                    ],
+                }
+
+    reason_text = " | ".join(reasons) if reasons else "Unknown topology failure."
+
+    if attempt < MAX_TOPOLOGY_RETRIES:
+        # Hand control back to the graph so the next attempt can escalate with
+        # this reason in its prompt. No fallback while retries remain.
+        return {
+            "topology_quality_ok": False,
+            "topology_retry_count": attempt + 1,
+            "agent_trace": [_trace(tier, attempt, "rejected", reason_text)],
+            "conversation_history": [
+                {
+                    "role": "assistant",
+                    "content": f"Topology attempt {attempt + 1} rejected: {reason_text}",
+                }
+            ],
+        }
+
+    # Retry budget exhausted — fall back to the deterministic SME layout.
+    try:
+        topology_dict = _fallback_topology_dict(design_plan)
+        merge_vlan_metadata(design_plan, topology_dict)
+        sanitize_topology_node_labels(topology_dict)
+        topology = Topology(**topology_dict)
+    except Exception as e:
+        return {
+            "topology_quality_ok": False,
+            "topology_retry_count": attempt + 1,
+            "errors": [f"Topology generation failed: {reason_text}"],
+            "agent_trace": [_trace(tier, attempt, "failed", f"{reason_text} | fallback also failed: {e}")],
+            "conversation_history": [
+                {"role": "assistant", "content": f"Error: {reason_text}"}
+            ],
+        }
+
+    return {
+        "topology": topology,
+        "topology_source": "deterministic_fallback",
+        "topology_quality_ok": False,
+        "topology_retry_count": attempt + 1,
+        "agent_trace": [_trace(tier, attempt, "fallback", reason_text)],
+        "conversation_history": [
+            {
+                "role": "assistant",
+                "content": "Topology generated using built-in SME layout after "
+                f"{attempt + 1} rejected attempts.",
             }
-        except Exception:
-            return {
-                "errors": [f"Topology generation failed: {str(e)}"],
-                "conversation_history": [{"role": "assistant", "content": f"Error: {str(e)}"}],
-            }
+        ],
+    }
