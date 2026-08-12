@@ -103,9 +103,8 @@ def sanitize_topology_node_labels(topology_dict: Dict[str, Any]) -> None:
     if not isinstance(nodes, list):
         return
 
-    switch_i = 0
-    host_i = 0
-    router_i = 0
+    # Per-role ordinals (same counters as the former if/elif branches).
+    ordinals = {"router": 0, "switch": 0, "host": 0}
 
     for node in nodes:
         if not isinstance(node, dict):
@@ -114,18 +113,19 @@ def sanitize_topology_node_labels(topology_dict: Dict[str, Any]) -> None:
         cfg = node.get("config") if isinstance(node.get("config"), dict) else {}
 
         if _is_router(nt):
-            node["label"] = _clean_node_label(node.get("label"), nt, router_i, cfg)
-            router_i += 1
+            role = "router"
         elif _is_switch(nt):
-            node["label"] = _clean_node_label(node.get("label"), nt, switch_i, cfg)
-            switch_i += 1
+            role = "switch"
         elif _is_host(nt):
-            node["label"] = _clean_node_label(node.get("label"), nt, host_i, cfg)
-            host_i += 1
+            role = "host"
         else:
             lbl = node.get("label")
             if not lbl or not is_plausible_department_name(str(lbl)):
-                node["label"] = f"Node {router_i + switch_i + host_i}"
+                node["label"] = f"Node {ordinals['router'] + ordinals['switch'] + ordinals['host']}"
+            continue
+
+        node["label"] = _clean_node_label(node.get("label"), nt, ordinals[role], cfg)
+        ordinals[role] += 1
 
 
 def _is_router(nt: str) -> bool:

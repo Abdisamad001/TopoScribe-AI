@@ -10,7 +10,12 @@ from pathlib import Path
 
 router = APIRouter()
 
-RUN_LOG_PATH = Path(__file__).resolve().parents[2] / "data" / "scenario_runs.csv"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+
+# Part 2 run log. scenario_runs.csv (Part 1) is frozen as the pre-escalation
+# baseline and no longer receives rows; run numbering restarts at 1 here because
+# this is a separate dataset, not a continuation. See scenario_runs_NOTES.md.
+RUN_LOG_PATH = DATA_DIR / "scenario_runs_part2.csv"
 RUN_LOG_HEADERS = [
     "Run #",
     "Requirements Clear?",
@@ -19,7 +24,23 @@ RUN_LOG_HEADERS = [
     "Retries",
     "Runtime (Seconds)",
     "Result",
+    "Topology Source",
+    "Topology Retries",
+    "Escalated",
 ]
+
+# Keys copied out of the graph's agent_trace, so the response shape stays stable
+# if a node starts recording extra internal fields.
+_TRACE_KEYS = ("agent", "model", "attempt", "outcome", "status")
+
+
+def _compact_trace(result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Per-attempt generation provenance, for research evaluation."""
+    return [
+        {k: entry.get(k) for k in _TRACE_KEYS}
+        for entry in (result.get("agent_trace") or [])
+        if isinstance(entry, dict)
+    ]
 
 
 def _ensure_run_log_file() -> None:
@@ -46,8 +67,13 @@ def _append_run_row(
     retries: int,
     runtime_seconds: float,
     result: str,
+    topology_source: Optional[str] = None,
+    topology_retries: int = 0,
 ) -> None:
     _ensure_run_log_file()
+    # Runs that never reached topology generation have no source, and must not
+    # be counted as escalated just because the source is not "groq".
+    escalated = "Yes" if topology_source and topology_source != "groq" else "No"
     row = [
         _next_run_number(),
         "Yes" if requirements_clear else "No",
@@ -56,6 +82,9 @@ def _append_run_row(
         retries,
         runtime_seconds,
         result,
+        topology_source or "",
+        topology_retries,
+        escalated,
     ]
     with RUN_LOG_PATH.open("a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
@@ -125,6 +154,7 @@ async def generate_design(request: DesignRequest):
         if not result.get("topology"):
             errs = result.get("errors") or []
             detail = errs[0] if errs else "Topology could not be produced."
+            topology_retries = int(result.get("topology_retry_count", 0) or 0)
             _append_run_row(
                 requirements_clear=True,
                 questions_asked=0,
@@ -132,6 +162,8 @@ async def generate_design(request: DesignRequest):
                 retries=int(result.get("retry_count", 0) or 0),
                 runtime_seconds=runtime_seconds,
                 result=f"Incomplete: {detail}",
+                topology_source=result.get("topology_source"),
+                topology_retries=topology_retries,
             )
             return {
                 "status": "generation_failed",
@@ -139,6 +171,9 @@ async def generate_design(request: DesignRequest):
                 "errors": errs,
                 "conversation_history": result.get("conversation_history", []),
                 "retry_count": int(result.get("retry_count", 0) or 0),
+                "topology_source": result.get("topology_source"),
+                "topology_retry_count": topology_retries,
+                "agent_trace": _compact_trace(result),
                 "runtime": {
                     "started_at_utc": started_at,
                     "elapsed_ms": runtime_ms,
@@ -149,6 +184,7 @@ async def generate_design(request: DesignRequest):
         # Planning complete, return results
         retries = int(result.get("retry_count", 0) or 0)
         design_generated = bool(result.get("topology"))
+        topology_retries = int(result.get("topology_retry_count", 0) or 0)
         _append_run_row(
             requirements_clear=True,
             questions_asked=0,
@@ -156,6 +192,8 @@ async def generate_design(request: DesignRequest):
             retries=retries,
             runtime_seconds=runtime_seconds,
             result="Success" if design_generated else "Incomplete",
+            topology_source=result.get("topology_source"),
+            topology_retries=topology_retries,
         )
         return {
             "status": "complete",
@@ -164,6 +202,9 @@ async def generate_design(request: DesignRequest):
             "cisco_configs": result.get("cisco_configs"),
             "validation_result": result.get("validation_result"),
             "retry_count": retries,
+            "topology_source": result.get("topology_source"),
+            "topology_retry_count": topology_retries,
+            "agent_trace": _compact_trace(result),
             "runtime": {
                 "started_at_utc": started_at,
                 "elapsed_ms": runtime_ms,

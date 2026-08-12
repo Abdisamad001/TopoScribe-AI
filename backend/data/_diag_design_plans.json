@@ -1,0 +1,208 @@
+{
+  "A1_flat": {
+    "description": "2 routers connected to a switch with 3 PCs",
+    "requirements_clear": false,
+    "clarifying_questions": [
+      "Please list your departments (e.g., HR, IT, Finance)."
+    ],
+    "design_plan": null,
+    "topology_source": null,
+    "topology_retry_count": 0,
+    "node_role_counts": {},
+    "nodes_brief": []
+  },
+  "A2_flat_then_HR_IT": {
+    "description": "2 routers connected to a switch with 3 PCs",
+    "requirements_clear": true,
+    "clarifying_questions": null,
+    "design_plan": {
+      "sites": [
+        "Main Site"
+      ],
+      "users_per_site": 20,
+      "connectivity": "Internal campus connectivity with internet gateway",
+      "protocols": [
+        "ospf"
+      ],
+      "ospf": {
+        "area": 0
+      },
+      "departments": [
+        {
+          "name": "HR",
+          "users": 20,
+          "vlan_id": 10
+        },
+        {
+          "name": "IT",
+          "users": 20,
+          "vlan_id": 20
+        }
+      ],
+      "vlans": [
+        {
+          "id": 10,
+          "name": "HR"
+        },
+        {
+          "id": 20,
+          "name": "IT"
+        }
+      ],
+      "security": [
+        "vlans"
+      ],
+      "devices": {
+        "router": "Cisco 1941",
+        "switch": "Catalyst 2960",
+        "addressing": "IPv4 private"
+      },
+      "topology": "2 Cisco 1941 routers connected to 1 Catalyst 2960 switch with 3 PCs assigned across HR and IT VLANs"
+    },
+    "topology_source": "openai_escalated",
+    "topology_retry_count": 1,
+    "node_role_counts": {
+      "router": 1,
+      "switch": 3,
+      "host": 2
+    },
+    "nodes_brief": [
+      {
+        "id": "R1",
+        "type": "router",
+        "label": "Edge Router"
+      },
+      {
+        "id": "CSW1",
+        "type": "switch",
+        "label": "Core Switch"
+      },
+      {
+        "id": "ASW-HR",
+        "type": "switch",
+        "label": "HR Access Switch"
+      },
+      {
+        "id": "ASW-IT",
+        "type": "switch",
+        "label": "IT Access Switch"
+      },
+      {
+        "id": "PC-HR-1",
+        "type": "host",
+        "label": "HR PC"
+      },
+      {
+        "id": "PC-IT-1",
+        "type": "host",
+        "label": "IT PC"
+      }
+    ]
+  },
+  "B_users_each": {
+    "description": "HR, IT, Finance, 10 users each",
+    "requirements_clear": true,
+    "clarifying_questions": null,
+    "design_plan": {
+      "sites": [
+        "Main Site"
+      ],
+      "users_per_site": 30,
+      "connectivity": "Internal campus connectivity with internet gateway",
+      "protocols": [
+        "ospf"
+      ],
+      "ospf": {
+        "area": 0
+      },
+      "departments": [
+        {
+          "name": "HR",
+          "users": 10,
+          "vlan_id": 10
+        },
+        {
+          "name": "IT",
+          "users": 10,
+          "vlan_id": 20
+        },
+        {
+          "name": "Finance",
+          "users": 10,
+          "vlan_id": 30
+        }
+      ],
+      "vlans": [
+        {
+          "id": 10,
+          "name": "HR"
+        },
+        {
+          "id": 20,
+          "name": "IT"
+        },
+        {
+          "id": 30,
+          "name": "Finance"
+        }
+      ],
+      "security": [
+        "vlans"
+      ],
+      "devices": {
+        "router": "Cisco 1941",
+        "switch": "Catalyst 2960",
+        "addressing": "IPv4 private"
+      }
+    },
+    "topology_source": "openai_escalated",
+    "topology_retry_count": 1,
+    "node_role_counts": {
+      "router": 1,
+      "switch": 4,
+      "host": 3
+    },
+    "nodes_brief": [
+      {
+        "id": "R1",
+        "type": "router",
+        "label": "Router"
+      },
+      {
+        "id": "CSW1",
+        "type": "switch",
+        "label": "Core Switch"
+      },
+      {
+        "id": "ASW-HR",
+        "type": "switch",
+        "label": "HR Access Switch"
+      },
+      {
+        "id": "ASW-IT",
+        "type": "switch",
+        "label": "IT Access Switch"
+      },
+      {
+        "id": "ASW-FIN",
+        "type": "switch",
+        "label": "Finance Access Switch"
+      },
+      {
+        "id": "H-HR-1",
+        "type": "host",
+        "label": "HR Host"
+      },
+      {
+        "id": "H-IT-1",
+        "type": "host",
+        "label": "IT Host"
+      },
+      {
+        "id": "H-FIN-1",
+        "type": "host",
+        "label": "Finance Host"
+      }
+    ]
+  }
+}

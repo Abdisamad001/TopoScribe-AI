@@ -26,8 +26,7 @@ import ChatInterface from './ChatInterface';
 import ReportModal from './ReportModal';
 import ImmersiveChatPanel from './ImmersiveChatPanel';
 import { clarifyRequirements } from '@/lib/api';
-import { initialTopology } from '@/data/initialTopology';
-import { NetworkNode, Link, GenerationRuntime } from '@/types/network';
+import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -75,12 +74,14 @@ const convertEdges = (netLinks: any[]): Edge[] => {
 };
 
 export default function TopologyEditor() {
-    const [nodes, setNodes, onNodesChange] = useNodesState(convertNodes(initialTopology.nodes));
-    const [edges, setEdges, onEdgesChange] = useEdgesState(convertEdges(initialTopology.links));
+    const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
     const [isReportOpen, setIsReportOpen] = React.useState(false);
-    const [topologyMeta, setTopologyMeta] = React.useState(initialTopology.metadata);
+    const [topologyMeta, setTopologyMeta] = React.useState<TopologyMetadata | undefined>(undefined);
+    const [topologyProtocols, setTopologyProtocols] = React.useState<ProtocolConfig[]>([]);
     const [generationRuntime, setGenerationRuntime] = React.useState<GenerationRuntime | undefined>(undefined);
+    const hasTopology = nodes.length > 0;
 
     // Chat State
     const [isChatOpen, setIsChatOpen] = React.useState(false);
@@ -219,7 +220,8 @@ export default function TopologyEditor() {
     const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
-        setTopologyMeta(newTopology.metadata || initialTopology.metadata);
+        setTopologyMeta(newTopology.metadata);
+        setTopologyProtocols(newTopology.protocols || []);
         setGenerationRuntime(runtime);
         onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
@@ -292,14 +294,16 @@ export default function TopologyEditor() {
                     <MiniMap />
                     <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
 
-                    <div className="absolute top-4 right-4 z-50 flex gap-2">
-                        <button
-                            onClick={() => setIsReportOpen(true)}
-                            className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
-                        >
-                            📄 Export Report
-                        </button>
-                    </div>
+                    {hasTopology && (
+                        <div className="absolute top-4 right-4 z-50 flex gap-2">
+                            <button
+                                onClick={() => setIsReportOpen(true)}
+                                className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
+                            >
+                                📄 Export Report
+                            </button>
+                        </div>
+                    )}
                 </ReactFlow>
 
                 <ImmersiveChatPanel
@@ -324,21 +328,23 @@ export default function TopologyEditor() {
                 onDeleteNode={onDeleteNode}
             />
 
-            <ReportModal
-                isOpen={isReportOpen}
-                onClose={() => setIsReportOpen(false)}
-                topology={{
-                    nodes: convertNodesToDomain(nodes),
-                    links: convertEdgesToDomain(edges),
-                    protocols: initialTopology.protocols,
-                    metadata: topologyMeta,
-                    runtime: generationRuntime,
-                    name: "My Generated Network",
-                    id: "topo-gen-1",
-                    version: 1,
-                    lastUpdated: new Date().toISOString()
-                }}
-            />
+            {hasTopology && (
+                <ReportModal
+                    isOpen={isReportOpen}
+                    onClose={() => setIsReportOpen(false)}
+                    topology={{
+                        nodes: convertNodesToDomain(nodes),
+                        links: convertEdgesToDomain(edges),
+                        protocols: topologyProtocols,
+                        metadata: topologyMeta,
+                        runtime: generationRuntime,
+                        name: "My Generated Network",
+                        id: "topo-gen-1",
+                        version: 1,
+                        lastUpdated: new Date().toISOString()
+                    }}
+                />
+            )}
         </div>
     );
 }

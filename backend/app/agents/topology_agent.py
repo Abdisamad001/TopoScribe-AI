@@ -2,11 +2,20 @@ from app.graph.state import NetworkDesignState
 from app.models.network import Topology
 from app.utils.llm import call_llm
 from app.utils.dept_labels import sanitize_department_name, sanitize_topology_node_labels
+from app.agents.planning_agent import LITERAL_HOST_NODE_THRESHOLD
 from typing import Dict, Any, List, Optional, Tuple
 import json
 
 # Escalated retries allowed after the initial primary-tier attempt.
 MAX_TOPOLOGY_RETRIES = 3
+
+
+def _plan_mode(design_plan: Optional[Dict[str, Any]]) -> str:
+    """Return 'flat_inventory' or 'departmental'."""
+    if isinstance(design_plan, dict) and design_plan.get("mode") == "flat_inventory":
+        return "flat_inventory"
+    return "departmental"
+
 
 def _effective_department_count(design_plan: Optional[Dict[str, Any]]) -> int:
     """How many department segments the SME layout should have (min 1)."""
@@ -17,6 +26,57 @@ def _effective_department_count(design_plan: Optional[Dict[str, Any]]) -> int:
         n = sum(1 for d in raw if isinstance(d, dict))
         return max(n, 1)
     return 3
+
+
+def _host_nodes_for_department(dept: Dict[str, Any]) -> int:
+    """
+    How many host nodes to draw for one department.
+    Small literal device counts use host_nodes; otherwise one representative.
+    """
+    raw = dept.get("host_nodes") if isinstance(dept, dict) else None
+    if raw is None:
+        return 1
+    try:
+        n = int(raw)
+    except (TypeError, ValueError):
+        return 1
+    if 1 <= n <= LITERAL_HOST_NODE_THRESHOLD:
+        return n
+    return 1
+
+
+def _expected_departmental_hosts(design_plan: Optional[Dict[str, Any]]) -> int:
+    if not isinstance(design_plan, dict):
+        return _effective_department_count(design_plan)
+    raw = design_plan.get("departments")
+    if not isinstance(raw, list) or not raw:
+        return _effective_department_count(design_plan)
+    total = 0
+    for d in raw:
+        if isinstance(d, dict):
+            total += _host_nodes_for_department(d)
+    return max(total, 1)
+
+
+def _flat_inventory_targets(
+    design_plan: Optional[Dict[str, Any]],
+) -> Tuple[int, int, int]:
+    """Stated (routers, switches, hosts) for flat_inventory plans."""
+    if not isinstance(design_plan, dict):
+        return 0, 0, 0
+    try:
+        r = max(0, int(design_plan.get("router_count") or 0))
+    except (TypeError, ValueError):
+        r = 0
+    try:
+        s = max(0, int(design_plan.get("switch_count") or 0))
+    except (TypeError, ValueError):
+        s = 0
+    try:
+        h = max(0, int(design_plan.get("host_count") or 0))
+    except (TypeError, ValueError):
+        h = 0
+    return r, s, h
 
 
 def _count_roles_in_nodes(nodes: Any) -> Tuple[int, int, int]:
@@ -41,12 +101,35 @@ def _sparse_reason(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> Optional[str]:
     """
-    The LLM often returns a short path (router–core–one access–one host) even when the plan
-    has several departments. Returns what is missing, or None when the shape fits the plan.
+    Returns what is missing vs the plan shape, or None when the inventory fits.
+    Flat inventory plans are checked against stated device counts; departmental
+    plans keep the SME 1-router / core+access / host-nodes-per-dept formula.
     """
-    n_depts = _effective_department_count(design_plan)
-    expected_nodes = 2 + 2 * n_depts
     nodes = topology_dict.get("nodes")
+    if _plan_mode(design_plan) == "flat_inventory":
+        er, es, eh = _flat_inventory_targets(design_plan)
+        expected_nodes = er + es + eh
+        if not isinstance(nodes, list) or not nodes:
+            return (
+                f"No nodes were returned; flat inventory needs {er} router(s), "
+                f"{es} switch(es), and {eh} host(s) ({expected_nodes} nodes)."
+            )
+        ar, asw, ah = _count_roles_in_nodes(nodes)
+        missing = []
+        if ar < er:
+            missing.append(f"routers {ar}/{er}")
+        if asw < es:
+            missing.append(f"switches {asw}/{es}")
+        if ah < eh:
+            missing.append(f"hosts {ah}/{eh}")
+        if missing:
+            return "Flat inventory short of stated device counts: " + ", ".join(missing) + "."
+        return None
+
+    n_depts = _effective_department_count(design_plan)
+    expected_hosts = _expected_departmental_hosts(design_plan)
+    expected_switches = n_depts + 1
+    expected_nodes = 1 + expected_switches + expected_hosts
     if not isinstance(nodes, list) or not nodes:
         return (
             f"No nodes were returned; {n_depts} department(s) need at least "
@@ -55,18 +138,18 @@ def _sparse_reason(
     if len(nodes) < expected_nodes:
         return (
             f"Only {len(nodes)} nodes for {n_depts} department(s); expected at least "
-            f"{expected_nodes} (1 router + 1 core switch + 1 access switch and 1 host "
-            f"per department)."
+            f"{expected_nodes} (1 router + 1 core switch + 1 access switch per "
+            f"department and {expected_hosts} host node(s) total)."
         )
     _r, sw, ho = _count_roles_in_nodes(nodes)
-    if ho < n_depts:
+    if ho < expected_hosts:
         return (
-            f"Only {ho} host(s) for {n_depts} department(s); every department needs its "
-            f"own host."
+            f"Only {ho} host(s); expected at least {expected_hosts} host node(s) "
+            f"for {n_depts} department(s)."
         )
-    if sw < n_depts + 1:
+    if sw < expected_switches:
         return (
-            f"Only {sw} switch(es) for {n_depts} department(s); expected {n_depts + 1} "
+            f"Only {sw} switch(es) for {n_depts} department(s); expected {expected_switches} "
             f"(1 core switch + 1 access switch per department)."
         )
     return None
@@ -166,6 +249,8 @@ def _scope_reason(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> Optional[str]:
     """Names the VLANs/nodes outside design_plan.departments, or None when in scope."""
+    if _plan_mode(design_plan) == "flat_inventory":
+        return None
     allowed = _allowed_department_names(design_plan)
     if not allowed:
         return None
@@ -185,6 +270,8 @@ def _missing_department_reason(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> Optional[str]:
     """Names plan departments that got no VLAN and no node, or None when all present."""
+    if _plan_mode(design_plan) == "flat_inventory":
+        return None
     allowed = _allowed_department_names(design_plan)
     if not allowed:
         return None
@@ -225,11 +312,123 @@ def _norm_vlan_item(item: Any) -> Optional[Tuple[int, str]]:
     name = item.get("name") or item.get("vlan_name") or f"VLAN_{v}"
     return (v, str(name).strip()[:64])
 
+def _fallback_flat_inventory_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
+    """Deterministic topology from stated router/switch/host counts."""
+    er, es, eh = _flat_inventory_targets(design_plan)
+    nodes: List[Dict[str, Any]] = []
+    links: List[Dict[str, Any]] = []
+
+    router_ids: List[str] = []
+    for i in range(er):
+        rid = f"R{i + 1}"
+        router_ids.append(rid)
+        nodes.append(
+            {
+                "id": rid,
+                "type": "router",
+                "label": f"Router {i + 1}",
+                "interfaces": [
+                    {
+                        "name": "GigabitEthernet0/0",
+                        "ip": f"192.168.1.{i + 1}",
+                        "mask": "255.255.255.0",
+                    }
+                ],
+                "config": {},
+                "x": 100 + i * 300,
+                "y": 0,
+            }
+        )
+
+    switch_ids: List[str] = []
+    for i in range(es):
+        sid = f"SW{i + 1}"
+        switch_ids.append(sid)
+        nodes.append(
+            {
+                "id": sid,
+                "type": "switch",
+                "label": f"Switch {i + 1}",
+                "interfaces": [],
+                "config": {},
+                "x": 100 + i * 300,
+                "y": 200,
+            }
+        )
+
+    host_ids: List[str] = []
+    for i in range(eh):
+        hid = f"PC{i + 1}"
+        host_ids.append(hid)
+        nodes.append(
+            {
+                "id": hid,
+                "type": "host",
+                "label": f"PC{i + 1}",
+                "interfaces": [
+                    {
+                        "name": "Ethernet0",
+                        "ip": f"192.168.10.{10 + i}",
+                        "mask": "255.255.255.0",
+                    }
+                ],
+                "config": {},
+                "x": 100 + i * 250,
+                "y": 500,
+            }
+        )
+
+    # Simple hierarchy: routers ↔ first switch (or first host), switches ↔ hosts.
+    uplink = switch_ids[0] if switch_ids else (host_ids[0] if host_ids else None)
+    if uplink:
+        for rid in router_ids:
+            links.append(
+                {
+                    "id": f"link-{rid}-{uplink}",
+                    "source": rid,
+                    "target": uplink,
+                    "bandwidth": 1000,
+                }
+            )
+    for i, sid in enumerate(switch_ids):
+        if i == 0:
+            continue
+        links.append(
+            {
+                "id": f"link-{switch_ids[0]}-{sid}",
+                "source": switch_ids[0],
+                "target": sid,
+                "bandwidth": 1000,
+            }
+        )
+    access = switch_ids[0] if switch_ids else (router_ids[0] if router_ids else None)
+    if access:
+        for hid in host_ids:
+            links.append(
+                {
+                    "id": f"link-{access}-{hid}",
+                    "source": access,
+                    "target": hid,
+                    "bandwidth": 1000,
+                }
+            )
+
+    return {
+        "nodes": nodes,
+        "links": links,
+        "protocols": [{"name": "ospf", "parameters": {"area": 0}}],
+        "metadata": {"vlans": []},
+    }
+
+
 def _fallback_topology_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Deterministic SME topology when LLM output cannot be parsed or validated.
-    Single router, core switch, one access switch + host per department.
+    Deterministic topology when LLM output cannot be parsed or validated.
+    Flat inventory uses stated device counts; departmental uses the SME campus shape.
     """
+    if _plan_mode(design_plan) == "flat_inventory":
+        return _fallback_flat_inventory_dict(design_plan)
+
     depts: List[Dict[str, Any]] = []
     raw = design_plan.get("departments") if isinstance(design_plan, dict) else None
     if isinstance(raw, list):
@@ -246,12 +445,18 @@ def _fallback_topology_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
                 vi = 100 + i * 10
             if vi < 2:
                 vi = 10 + i * 10
-            depts.append({"name": nm, "vlan_id": min(max(vi, 2), 4094)})
+            depts.append(
+                {
+                    "name": nm,
+                    "vlan_id": min(max(vi, 2), 4094),
+                    "host_nodes": _host_nodes_for_department(d),
+                }
+            )
     if not depts:
         depts = [
-            {"name": "HR", "vlan_id": 10},
-            {"name": "IT", "vlan_id": 20},
-            {"name": "Finance", "vlan_id": 30},
+            {"name": "HR", "vlan_id": 10, "host_nodes": 1},
+            {"name": "IT", "vlan_id": 20, "host_nodes": 1},
+            {"name": "Finance", "vlan_id": 30, "host_nodes": 1},
         ]
 
     nodes: List[Dict[str, Any]] = []
@@ -282,11 +487,11 @@ def _fallback_topology_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
     links.append({"id": "link-r-core", "source": "R1", "target": "SW_CORE", "bandwidth": 1000})
 
     x = 100
+    host_global = 0
     for i, d in enumerate(depts):
         vid = int(d["vlan_id"])
         name = str(d["name"])
         sid = f"SW_ACC_{i + 1}"
-        hid = f"H{i + 1}"
         nodes.append(
             {
                 "id": sid,
@@ -298,21 +503,31 @@ def _fallback_topology_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
                 "y": 400,
             }
         )
-        nodes.append(
-            {
-                "id": hid,
-                "type": "host",
-                "label": f"{name} Host",
-                "interfaces": [
-                    {"name": "Ethernet0", "ip": f"192.168.{vid}.10", "mask": "255.255.255.0"}
-                ],
-                "config": {"vlan_id": vid, "vlan_name": name},
-                "x": x,
-                "y": 550,
-            }
-        )
         links.append({"id": f"link-core-{sid}", "source": "SW_CORE", "target": sid, "bandwidth": 1000})
-        links.append({"id": f"link-{sid}-{hid}", "source": sid, "target": hid, "bandwidth": 1000})
+        n_hosts = int(d.get("host_nodes") or 1)
+        for hi in range(n_hosts):
+            host_global += 1
+            hid = f"H{host_global}"
+            nodes.append(
+                {
+                    "id": hid,
+                    "type": "host",
+                    "label": f"{name} Host {hi + 1}" if n_hosts > 1 else f"{name} Host",
+                    "interfaces": [
+                        {
+                            "name": "Ethernet0",
+                            "ip": f"192.168.{vid}.{10 + hi}",
+                            "mask": "255.255.255.0",
+                        }
+                    ],
+                    "config": {"vlan_id": vid, "vlan_name": name},
+                    "x": x + hi * 40,
+                    "y": 550,
+                }
+            )
+            links.append(
+                {"id": f"link-{sid}-{hid}", "source": sid, "target": hid, "bandwidth": 1000}
+            )
         x += 300
 
     vlans = [{"id": int(d["vlan_id"]), "name": str(d["name"])} for d in depts]
@@ -371,21 +586,92 @@ def _build_topology_prompt(
     design_plan: Dict[str, Any], prior_errors: Optional[List[str]] = None
 ) -> str:
     """Generation prompt, with the previous attempt's rejection reasons when retrying."""
-    _depts = design_plan.get("departments")
-    if not isinstance(_depts, list) or len(_depts) == 0:
-        _depts = [{"users": 20}]
-    _max_dept_users = max(
-        (d.get("users", 20) if isinstance(d, dict) else 20) for d in _depts
-    )
+    if _plan_mode(design_plan) == "flat_inventory":
+        er, es, eh = _flat_inventory_targets(design_plan)
+        prompt = f"""You are a network topology generation agent.
 
-    prompt = f"""You are a network topology generation agent.
+Design plan (FLAT INVENTORY mode):
+{json.dumps(design_plan, indent=2)}
 
-Design plan:
+Generate a network topology that matches the stated device inventory EXACTLY:
+- Create exactly {er} router node(s) (type "router").
+- Create exactly {es} switch node(s) (type "switch").
+- Create exactly {eh} host node(s) (type "host").
+- Do NOT invent departments, VLANs, a core-switch hierarchy, or extra devices.
+- Connect devices sensibly (routers to switches, switches to hosts; if there is no switch, connect hosts to a router).
+- Hierarchical spatial layout: routers near y=0, switches near y=200, hosts near y=500+.
+- Spread devices horizontally with at least 200px gap. Assign private IPv4 addresses to routers and hosts.
+- metadata.vlans may be an empty list.
+
+Output a JSON object matching this schema:
+{{
+  "nodes": [
+    {{
+      "id": "R1",
+      "type": "router",
+      "label": "Router 1",
+      "interfaces": [
+          {{ "name": "eth0", "ip": "192.168.1.1", "mask": "255.255.255.0" }}
+      ],
+      "config": {{}},
+      "x": 100,
+      "y": 0
+    }}
+  ],
+  "links": [
+    {{
+      "id": "link1",
+      "source": "R1",
+      "target": "SW1",
+      "bandwidth": 1000
+    }}
+  ],
+  "protocols": [
+    {{
+      "name": "ospf",
+      "parameters": {{"area": 0}}
+    }}
+  ],
+  "metadata": {{
+    "vlans": []
+  }}
+}}
+
+Output ONLY valid JSON, no markdown.
+"""
+    else:
+        _depts = design_plan.get("departments")
+        if not isinstance(_depts, list) or len(_depts) == 0:
+            _depts = [{"users": 20, "host_nodes": 1}]
+        _max_dept_users = max(
+            (d.get("users", 20) if isinstance(d, dict) else 20) for d in _depts
+        )
+        host_lines = []
+        for d in _depts:
+            if not isinstance(d, dict):
+                continue
+            hn = _host_nodes_for_department(d)
+            host_lines.append(
+                f"  - {d.get('name', 'Dept')}: create exactly {hn} host node(s)"
+            )
+        host_inventory = "\n".join(host_lines) or "  - one host per department"
+        expected_hosts = _expected_departmental_hosts(design_plan)
+        n_depts = _effective_department_count(design_plan)
+
+        prompt = f"""You are a network topology generation agent.
+
+Design plan (DEPARTMENTAL / SME mode):
 {json.dumps(design_plan, indent=2)}
 
 Generate a network topology with:
-- Routers, switches, hosts as needed
-- If the design plan describes a SINGLE site / single campus, use exactly ONE router (one logical L3 device). Do not add separate "Edge Router" and "Core Router" pairs for a single-site design.
+- Required device inventory. For N={n_depts} departments the design MUST contain, as separate nodes:
+    - Exactly ONE router. If the design plan describes a SINGLE site / single campus, use exactly ONE router (one logical L3 device). Do not add separate "Edge Router" and "Core Router" pairs for a single-site design.
+    - Exactly ONE dedicated core switch, labelled "Core Switch". This is an ADDITIONAL node on top of the per-department access switches below — it is never one of them, and it must never be omitted.
+    - Exactly ONE access switch per department listed in design_plan.departments.
+    - Host nodes per department (honour design_plan.departments[].host_nodes when present; otherwise one representative host per department):
+{host_inventory}
+  Total host nodes must be {expected_hosts}. Do NOT create one host per "users" count when host_nodes is absent — "users" sizes subnets only.
+- Connect the topology in that hierarchy: each host connects to its own department's access switch, every access switch connects up to the single core switch, and only the core switch connects up to the router. Do NOT connect access switches directly to the router.
 - VLANs MUST match the design plan: use the same VLAN IDs and department names as in design_plan.vlans or design_plan.departments (if present). If the plan lists N departments, create N access VLANs with those ids/names and assign each department's hosts and access switch accordingly.
 - ONLY create nodes for departments listed in design_plan.departments. Do NOT add any other departments, VLANs, access switches, or hosts beyond that list.
 - On each host node, set "config": {{"vlan_id": <number>, "vlan_name": "<same as catalog>"}} matching that host's department VLAN.
@@ -400,7 +686,7 @@ Generate a network topology with:
 - Proper connections between devices
 - Hierarchical spatial layout:
     - Routers at the top (y=0 to y=100)
-    - Core Switches below (y=200)
+    - The core switch below the router (y=200)
     - Access Switches further below (y=400)
     - Hosts/Servers at the bottom (y=600+)
     - Spread devices horizontally (x-axis) with at least 250px gap between them to avoid overlap.
@@ -541,8 +827,106 @@ def _finalize_topology(
     position_row(hosts, 500)
 
     sanitize_topology_node_labels(topology_dict)
+    _annotate_representative_host_user_counts(topology_dict, design_plan)
 
     return Topology(**topology_dict)  # Pydantic validation
+
+
+def _match_host_to_representative_users(
+    node: Dict[str, Any],
+    by_vlan_name: Dict[str, Tuple[str, int]],
+    by_vlan_id: Dict[int, Tuple[str, int]],
+) -> Optional[Tuple[str, int]]:
+    """
+    Resolve a host to (department_name, users) when that department is a
+    representative (collapsed) user-count department. Prefer VLAN config;
+    fall back to a label that starts with the department name.
+    """
+    cfg = node.get("config") if isinstance(node.get("config"), dict) else {}
+
+    vlan_name = cfg.get("vlan_name")
+    if vlan_name is not None:
+        key = str(vlan_name).strip().lower()
+        if key in by_vlan_name:
+            return by_vlan_name[key]
+
+    vlan_id = cfg.get("vlan_id")
+    if vlan_id is not None:
+        try:
+            vid = int(vlan_id)
+        except (TypeError, ValueError):
+            vid = None
+        if vid is not None and vid in by_vlan_id:
+            return by_vlan_id[vid]
+
+    label = str(node.get("label") or "").strip()
+    if label:
+        low = label.lower()
+        for dept_key, value in by_vlan_name.items():
+            if low == dept_key or low.startswith(dept_key + " "):
+                return value
+    return None
+
+
+def _annotate_representative_host_user_counts(
+    topology_dict: Dict[str, Any], design_plan: Dict[str, Any]
+) -> None:
+    """
+    When a department is drawn as one representative host (no host_nodes) and
+    its stated user count is above LITERAL_HOST_NODE_THRESHOLD, append
+    "(N PCs)" to that host's label so the canvas shows what the node stands for.
+
+    Flat-inventory plans and departments with explicit small host_nodes are left alone.
+    """
+    if _plan_mode(design_plan) != "departmental":
+        return
+
+    depts = design_plan.get("departments") if isinstance(design_plan, dict) else None
+    if not isinstance(depts, list) or not depts:
+        return
+
+    by_vlan_name: Dict[str, Tuple[str, int]] = {}
+    by_vlan_id: Dict[int, Tuple[str, int]] = {}
+    for d in depts:
+        if not isinstance(d, dict):
+            continue
+        # Literal host draws already show individually — no count suffix.
+        if d.get("host_nodes") is not None:
+            continue
+        try:
+            users = int(d.get("users", 0))
+        except (TypeError, ValueError):
+            continue
+        if users <= LITERAL_HOST_NODE_THRESHOLD:
+            continue
+        name = str(d.get("name") or d.get("department") or "").strip()
+        if not name:
+            continue
+        by_vlan_name[name.lower()] = (name, users)
+        try:
+            vid = int(d["vlan_id"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        by_vlan_id[vid] = (name, users)
+
+    if not by_vlan_name and not by_vlan_id:
+        return
+
+    nodes = topology_dict.get("nodes")
+    if not isinstance(nodes, list):
+        return
+
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        t = str(node.get("type") or "").lower()
+        if not ("host" in t or "pc" in t or "server" in t or "laptop" in t):
+            continue
+        matched = _match_host_to_representative_users(node, by_vlan_name, by_vlan_id)
+        if matched is None:
+            continue
+        dept_name, users = matched
+        node["label"] = f"{dept_name} Host ({users} PCs)"
 
 
 def _prior_topology_errors(state: NetworkDesignState) -> List[str]:
@@ -630,8 +1014,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     try:
         topology_dict = _fallback_topology_dict(design_plan)
         merge_vlan_metadata(design_plan, topology_dict)
-        sanitize_topology_node_labels(topology_dict)
-        topology = Topology(**topology_dict)
+        topology = _finalize_topology(topology_dict, design_plan)
     except Exception as e:
         return {
             "topology_quality_ok": False,

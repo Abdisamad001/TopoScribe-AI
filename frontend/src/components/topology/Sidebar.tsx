@@ -1,5 +1,75 @@
 import React from 'react';
-import { Globe, Share2, Monitor, GripVertical } from 'lucide-react';
+import { Globe, Share2, Monitor, GripVertical, LucideIcon } from 'lucide-react';
+
+type DeviceCardConfig = {
+    type: string;
+    title: string;
+    subtitle: string;
+    Icon: LucideIcon;
+    iconWrapClass: string;
+    iconClass: string;
+    titleHoverClass: string;
+};
+
+const DEVICE_CARDS: DeviceCardConfig[] = [
+    {
+        type: 'router',
+        title: 'Router',
+        subtitle: 'L3 Networking',
+        Icon: Globe,
+        iconWrapClass: 'bg-teal-500/10 border-teal-500/20',
+        iconClass: 'text-teal-400',
+        titleHoverClass: 'group-hover:text-teal-300',
+    },
+    {
+        type: 'switch',
+        title: 'Switch',
+        subtitle: 'L2 Switching',
+        Icon: Share2,
+        iconWrapClass: 'bg-blue-500/10 border-blue-500/20',
+        iconClass: 'text-blue-400',
+        titleHoverClass: 'group-hover:text-blue-300',
+    },
+    {
+        type: 'host',
+        title: 'End Device',
+        subtitle: 'Workstation / Server',
+        Icon: Monitor,
+        iconWrapClass: 'bg-purple-500/10 border-purple-500/20',
+        iconClass: 'text-purple-400',
+        titleHoverClass: 'group-hover:text-purple-300',
+    },
+];
+
+function DeviceCard({
+    card,
+    onDragStart,
+}: {
+    card: DeviceCardConfig;
+    onDragStart: (event: React.DragEvent, nodeType: string) => void;
+}) {
+    const { type, title, subtitle, Icon, iconWrapClass, iconClass, titleHoverClass } = card;
+    return (
+        <div
+            className="group bg-[#142338] hover:bg-[#1A2C42] border border-[#3DD6B5]/10 hover:border-[#3DD6B5]/40 rounded-xl p-3 cursor-grab transition-all duration-300 relative overflow-hidden"
+            onDragStart={(event) => onDragStart(event, type)}
+            draggable
+        >
+            <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <GripVertical size={14} className="text-slate-500" />
+            </div>
+            <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform ${iconWrapClass}`}>
+                    <Icon size={20} className={iconClass} />
+                </div>
+                <div>
+                    <div className={`font-bold text-sm text-gray-100 transition-colors ${titleHoverClass}`}>{title}</div>
+                    <div className="text-[10px] text-slate-400 font-mono tracking-tight uppercase">{subtitle}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function Sidebar() {
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -14,65 +84,9 @@ export default function Sidebar() {
             </div>
 
             <div className="flex flex-col gap-3">
-                {/* Router Card */}
-                <div
-                    className="group bg-[#142338] hover:bg-[#1A2C42] border border-[#3DD6B5]/10 hover:border-[#3DD6B5]/40 rounded-xl p-3 cursor-grab transition-all duration-300 relative overflow-hidden"
-                    onDragStart={(event) => onDragStart(event, 'router')}
-                    draggable
-                >
-                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <GripVertical size={14} className="text-slate-500" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20 group-hover:scale-105 transition-transform">
-                            <Globe size={20} className="text-teal-400" />
-                        </div>
-                        <div>
-                            <div className="font-bold text-sm text-gray-100 group-hover:text-teal-300 transition-colors">Router</div>
-                            <div className="text-[10px] text-slate-400 font-mono tracking-tight uppercase">L3 Networking</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Switch Card */}
-                <div
-                    className="group bg-[#142338] hover:bg-[#1A2C42] border border-[#3DD6B5]/10 hover:border-[#3DD6B5]/40 rounded-xl p-3 cursor-grab transition-all duration-300 relative overflow-hidden"
-                    onDragStart={(event) => onDragStart(event, 'switch')}
-                    draggable
-                >
-                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <GripVertical size={14} className="text-slate-500" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-105 transition-transform">
-                            <Share2 size={20} className="text-blue-400" />
-                        </div>
-                        <div>
-                            <div className="font-bold text-sm text-gray-100 group-hover:text-blue-300 transition-colors">Switch</div>
-                            <div className="text-[10px] text-slate-400 font-mono tracking-tight uppercase">L2 Switching</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Host Card */}
-                <div
-                    className="group bg-[#142338] hover:bg-[#1A2C42] border border-[#3DD6B5]/10 hover:border-[#3DD6B5]/40 rounded-xl p-3 cursor-grab transition-all duration-300 relative overflow-hidden"
-                    onDragStart={(event) => onDragStart(event, 'host')}
-                    draggable
-                >
-                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <GripVertical size={14} className="text-slate-500" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-105 transition-transform">
-                            <Monitor size={20} className="text-purple-400" />
-                        </div>
-                        <div>
-                            <div className="font-bold text-sm text-gray-100 group-hover:text-purple-300 transition-colors">End Device</div>
-                            <div className="text-[10px] text-slate-400 font-mono tracking-tight uppercase">Workstation / Server</div>
-                        </div>
-                    </div>
-                </div>
+                {DEVICE_CARDS.map((card) => (
+                    <DeviceCard key={card.type} card={card} onDragStart={onDragStart} />
+                ))}
             </div>
 
             <div className="mt-auto p-4 rounded-lg bg-[#142338]/50 border border-[#3DD6B5]/10 text-center">

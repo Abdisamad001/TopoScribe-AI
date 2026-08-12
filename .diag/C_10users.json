@@ -1,0 +1,533 @@
+{
+  "status": "complete",
+  "topology": {
+    "nodes": [
+      {
+        "id": "R1",
+        "type": "router",
+        "label": "Router",
+        "interfaces": [
+          {
+            "name": "GigabitEthernet0/0.10",
+            "ip_address": "192.168.1.1",
+            "subnet_mask": "255.255.255.0"
+          },
+          {
+            "name": "GigabitEthernet0/0.20",
+            "ip_address": "192.168.1.2",
+            "subnet_mask": "255.255.255.0"
+          },
+          {
+            "name": "GigabitEthernet0/0.30",
+            "ip_address": "192.168.1.3",
+            "subnet_mask": "255.255.255.0"
+          }
+        ],
+        "config": {
+          "role": "internet_gateway",
+          "routing": "ospf",
+          "ospf_area": 0,
+          "router_on_a_stick": true,
+          "subinterfaces": [
+            {
+              "interface": "GigabitEthernet0/0.10",
+              "vlan_id": 10,
+              "encapsulation": "dot1q",
+              "gateway_ip": "192.168.10.1"
+            },
+            {
+              "interface": "GigabitEthernet0/0.20",
+              "vlan_id": 20,
+              "encapsulation": "dot1q",
+              "gateway_ip": "192.168.20.1"
+            },
+            {
+              "interface": "GigabitEthernet0/0.30",
+              "vlan_id": 30,
+              "encapsulation": "dot1q",
+              "gateway_ip": "192.168.30.1"
+            }
+          ]
+        },
+        "x": 600,
+        "y": 0
+      },
+      {
+        "id": "CSW1",
+        "type": "switch",
+        "label": "Core Switch",
+        "interfaces": [],
+        "config": {
+          "model": "Catalyst 2960",
+          "role": "core",
+          "trunks": [
+            {
+              "to": "R1",
+              "allowed_vlans": [
+                10,
+                20,
+                30
+              ]
+            },
+            {
+              "to": "ASW-HR",
+              "allowed_vlans": [
+                10
+              ]
+            },
+            {
+              "to": "ASW-IT",
+              "allowed_vlans": [
+                20
+              ]
+            },
+            {
+              "to": "ASW-FIN",
+              "allowed_vlans": [
+                30
+              ]
+            }
+          ]
+        },
+        "x": 150,
+        "y": 200
+      },
+      {
+        "id": "ASW-HR",
+        "type": "switch",
+        "label": "HR Access Switch",
+        "interfaces": [],
+        "config": {
+          "model": "Catalyst 2960",
+          "role": "access",
+          "department": "HR",
+          "vlan_id": 10,
+          "vlan_name": "HR",
+          "access_ports_vlan": 10,
+          "uplink_mode": "trunk"
+        },
+        "x": 450,
+        "y": 200
+      },
+      {
+        "id": "ASW-IT",
+        "type": "switch",
+        "label": "IT Access Switch",
+        "interfaces": [],
+        "config": {
+          "model": "Catalyst 2960",
+          "role": "access",
+          "department": "IT",
+          "vlan_id": 20,
+          "vlan_name": "IT",
+          "access_ports_vlan": 20,
+          "uplink_mode": "trunk"
+        },
+        "x": 750,
+        "y": 200
+      },
+      {
+        "id": "ASW-FIN",
+        "type": "switch",
+        "label": "Finance Access Switch",
+        "interfaces": [],
+        "config": {
+          "model": "Catalyst 2960",
+          "role": "access",
+          "department": "Finance",
+          "vlan_id": 30,
+          "vlan_name": "Finance",
+          "access_ports_vlan": 30,
+          "uplink_mode": "trunk"
+        },
+        "x": 1050,
+        "y": 200
+      },
+      {
+        "id": "HOST-HR-1",
+        "type": "host",
+        "label": "HR Host",
+        "interfaces": [
+          {
+            "name": "eth0",
+            "ip_address": "192.168.10.2",
+            "subnet_mask": "255.255.255.240"
+          }
+        ],
+        "config": {
+          "vlan_id": 10,
+          "vlan_name": "HR"
+        },
+        "x": 300,
+        "y": 500
+      },
+      {
+        "id": "HOST-IT-1",
+        "type": "host",
+        "label": "IT Host",
+        "interfaces": [
+          {
+            "name": "eth0",
+            "ip_address": "192.168.20.2",
+            "subnet_mask": "255.255.255.240"
+          }
+        ],
+        "config": {
+          "vlan_id": 20,
+          "vlan_name": "IT"
+        },
+        "x": 600,
+        "y": 500
+      },
+      {
+        "id": "HOST-FIN-1",
+        "type": "host",
+        "label": "Finance Host",
+        "interfaces": [
+          {
+            "name": "eth0",
+            "ip_address": "192.168.30.2",
+            "subnet_mask": "255.255.255.240"
+          }
+        ],
+        "config": {
+          "vlan_id": 30,
+          "vlan_name": "Finance"
+        },
+        "x": 900,
+        "y": 500
+      }
+    ],
+    "links": [
+      {
+        "id": "link1",
+        "source": "R1",
+        "target": "CSW1",
+        "bandwidth": 1000
+      },
+      {
+        "id": "link2",
+        "source": "CSW1",
+        "target": "ASW-HR",
+        "bandwidth": 1000
+      },
+      {
+        "id": "link3",
+        "source": "CSW1",
+        "target": "ASW-IT",
+        "bandwidth": 1000
+      },
+      {
+        "id": "link4",
+        "source": "CSW1",
+        "target": "ASW-FIN",
+        "bandwidth": 1000
+      },
+      {
+        "id": "link5",
+        "source": "HOST-HR-1",
+        "target": "ASW-HR",
+        "bandwidth": 100
+      },
+      {
+        "id": "link6",
+        "source": "HOST-IT-1",
+        "target": "ASW-IT",
+        "bandwidth": 100
+      },
+      {
+        "id": "link7",
+        "source": "HOST-FIN-1",
+        "target": "ASW-FIN",
+        "bandwidth": 100
+      }
+    ],
+    "protocols": [
+      {
+        "name": "ospf",
+        "parameters": {
+          "area": 0,
+          "networks": [
+            {
+              "network": "192.168.10.0",
+              "mask": "0.0.0.63",
+              "area": 0
+            },
+            {
+              "network": "192.168.20.0",
+              "mask": "0.0.0.63",
+              "area": 0
+            },
+            {
+              "network": "192.168.30.0",
+              "mask": "0.0.0.63",
+              "area": 0
+            }
+          ]
+        }
+      }
+    ],
+    "metadata": {
+      "site": "Main Site",
+      "users_per_site": 30,
+      "addressing": "IPv4 private",
+      "vlans": [
+        {
+          "id": 10,
+          "name": "HR"
+        },
+        {
+          "id": 20,
+          "name": "IT"
+        },
+        {
+          "id": 30,
+          "name": "Finance"
+        }
+      ],
+      "subnets": [
+        {
+          "department": "HR",
+          "vlan_id": 10,
+          "network": "192.168.10.0",
+          "prefix": 26,
+          "mask": "255.255.255.192",
+          "gateway": "192.168.10.1"
+        },
+        {
+          "department": "IT",
+          "vlan_id": 20,
+          "network": "192.168.20.0",
+          "prefix": 26,
+          "mask": "255.255.255.192",
+          "gateway": "192.168.20.1"
+        },
+        {
+          "department": "Finance",
+          "vlan_id": 30,
+          "network": "192.168.30.0",
+          "prefix": 26,
+          "mask": "255.255.255.192",
+          "gateway": "192.168.30.1"
+        }
+      ],
+      "vlan_gateways": [
+        {
+          "vlan_id": 10,
+          "gateway": "192.168.10.1",
+          "mask": "255.255.255.240"
+        },
+        {
+          "vlan_id": 20,
+          "gateway": "192.168.20.1",
+          "mask": "255.255.255.240"
+        },
+        {
+          "vlan_id": 30,
+          "gateway": "192.168.30.1",
+          "mask": "255.255.255.240"
+        }
+      ]
+    }
+  },
+  "configurations": {
+    "R1": {
+      "hostname": "Router",
+      "trunk_interfaces": [
+        {
+          "name": "GigabitEthernet0/0.10",
+          "allowed_vlans_csv": "10,20,30"
+        }
+      ],
+      "subinterfaces": [
+        {
+          "parent": "GigabitEthernet0/0.10",
+          "vlan_id": 10,
+          "ip": "192.168.10.1",
+          "mask": "255.255.255.240"
+        },
+        {
+          "parent": "GigabitEthernet0/0.10",
+          "vlan_id": 20,
+          "ip": "192.168.20.1",
+          "mask": "255.255.255.240"
+        },
+        {
+          "parent": "GigabitEthernet0/0.10",
+          "vlan_id": 30,
+          "ip": "192.168.30.1",
+          "mask": "255.255.255.240"
+        }
+      ],
+      "interfaces": []
+    },
+    "CSW1": {
+      "hostname": "Core Switch",
+      "vlan_plan": {
+        "vlans": [
+          {
+            "id": 10,
+            "name": "HR"
+          },
+          {
+            "id": 20,
+            "name": "IT"
+          },
+          {
+            "id": 30,
+            "name": "Finance"
+          }
+        ],
+        "ports": [
+          {
+            "interface": "FastEthernet0/1",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          },
+          {
+            "interface": "FastEthernet0/2",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          },
+          {
+            "interface": "FastEthernet0/3",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          },
+          {
+            "interface": "FastEthernet0/4",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          }
+        ]
+      }
+    },
+    "ASW-HR": {
+      "hostname": "HR Access Switch",
+      "vlan_plan": {
+        "vlans": [
+          {
+            "id": 10,
+            "name": "HR"
+          },
+          {
+            "id": 20,
+            "name": "IT"
+          },
+          {
+            "id": 30,
+            "name": "Finance"
+          }
+        ],
+        "ports": [
+          {
+            "interface": "FastEthernet0/1",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          },
+          {
+            "interface": "FastEthernet0/2",
+            "mode": "access",
+            "vlan_id": 10
+          }
+        ]
+      }
+    },
+    "ASW-IT": {
+      "hostname": "IT Access Switch",
+      "vlan_plan": {
+        "vlans": [
+          {
+            "id": 10,
+            "name": "HR"
+          },
+          {
+            "id": 20,
+            "name": "IT"
+          },
+          {
+            "id": 30,
+            "name": "Finance"
+          }
+        ],
+        "ports": [
+          {
+            "interface": "FastEthernet0/1",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          },
+          {
+            "interface": "FastEthernet0/2",
+            "mode": "access",
+            "vlan_id": 20
+          }
+        ]
+      }
+    },
+    "ASW-FIN": {
+      "hostname": "Finance Access Switch",
+      "vlan_plan": {
+        "vlans": [
+          {
+            "id": 10,
+            "name": "HR"
+          },
+          {
+            "id": 20,
+            "name": "IT"
+          },
+          {
+            "id": 30,
+            "name": "Finance"
+          }
+        ],
+        "ports": [
+          {
+            "interface": "FastEthernet0/1",
+            "mode": "trunk",
+            "allowed_vlans_csv": "10,20,30"
+          },
+          {
+            "interface": "FastEthernet0/2",
+            "mode": "access",
+            "vlan_id": 30
+          }
+        ]
+      }
+    }
+  },
+  "cisco_configs": {
+    "R1": "\nhostname Router\n!\n\ninterface GigabitEthernet0/0.10\n no ip address\n no shutdown\n!\n\n\ninterface GigabitEthernet0/0.10.10\n encapsulation dot1Q 10\n ip address 192.168.10.1 255.255.255.240\n no shutdown\n!\n\ninterface GigabitEthernet0/0.10.20\n encapsulation dot1Q 20\n ip address 192.168.20.1 255.255.255.240\n no shutdown\n!\n\ninterface GigabitEthernet0/0.10.30\n encapsulation dot1Q 30\n ip address 192.168.30.1 255.255.255.240\n no shutdown\n!\n\n!\nrouter ospf 1\n\n network 192.168.10.0 0.0.0.15 area 0\n\n network 192.168.20.0 0.0.0.15 area 0\n\n network 192.168.30.0 0.0.0.15 area 0\n\n!\nend",
+    "CSW1": "\nhostname Core Switch\n!\n\nvlan 10\n name HR\n!\n\nvlan 20\n name IT\n!\n\nvlan 30\n name Finance\n!\n\n\ninterface FastEthernet0/1\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\ninterface FastEthernet0/2\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\ninterface FastEthernet0/3\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\ninterface FastEthernet0/4\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\nend",
+    "ASW-HR": "\nhostname HR Access Switch\n!\n\nvlan 10\n name HR\n!\n\nvlan 20\n name IT\n!\n\nvlan 30\n name Finance\n!\n\n\ninterface FastEthernet0/1\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\ninterface FastEthernet0/2\n\n switchport mode access\n switchport access vlan 10\n\n no shutdown\n!\n\nend",
+    "ASW-IT": "\nhostname IT Access Switch\n!\n\nvlan 10\n name HR\n!\n\nvlan 20\n name IT\n!\n\nvlan 30\n name Finance\n!\n\n\ninterface FastEthernet0/1\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\ninterface FastEthernet0/2\n\n switchport mode access\n switchport access vlan 20\n\n no shutdown\n!\n\nend",
+    "ASW-FIN": "\nhostname Finance Access Switch\n!\n\nvlan 10\n name HR\n!\n\nvlan 20\n name IT\n!\n\nvlan 30\n name Finance\n!\n\n\ninterface FastEthernet0/1\n\n switchport mode trunk\n switchport trunk encapsulation dot1q\n switchport trunk allowed vlan 10,20,30\n\n no shutdown\n!\n\ninterface FastEthernet0/2\n\n switchport mode access\n switchport access vlan 30\n\n no shutdown\n!\n\nend"
+  },
+  "validation_result": {
+    "status": "passed"
+  },
+  "retry_count": 0,
+  "topology_source": "openai_escalated",
+  "topology_retry_count": 1,
+  "agent_trace": [
+    {
+      "agent": "topology",
+      "model": "primary",
+      "attempt": 0,
+      "outcome": "Groq call failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01k8x9drfcftdvqc36e690r8pd` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 94014, Requested 9190. Please try again in 46m8.256s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+      "status": "rejected"
+    },
+    {
+      "agent": "topology",
+      "model": "escalated",
+      "attempt": 1,
+      "outcome": "accepted from openai_escalated",
+      "status": "success"
+    }
+  ],
+  "runtime": {
+    "started_at_utc": "2026-07-30T23:40:26.331183+03:00",
+    "elapsed_ms": 30664.7,
+    "elapsed_seconds": 30.665
+  }
+}

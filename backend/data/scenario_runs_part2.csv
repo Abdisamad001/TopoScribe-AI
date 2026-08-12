@@ -1,0 +1,33 @@
+Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Seconds),Result,Topology Source,Topology Retries,Escalated
+1,No,1,No,0,12.711,Needs Clarification,,0,No
+2,Yes,0,Yes,0,19.197,Success,groq,0,No
+3,No,1,No,0,15.118,Needs Clarification,,0,No
+4,Yes,0,Yes,0,31.175,Success,openai_escalated,1,Yes
+5,Yes,0,Yes,0,35.87,Success,openai_escalated,1,Yes
+6,No,1,No,0,8.415,Needs Clarification,,0,No
+7,Yes,0,Yes,0,28.01,Success,openai_escalated,1,Yes
+8,Yes,0,Yes,0,30.665,Success,openai_escalated,1,Yes
+9,Yes,0,Yes,0,35.411,Success,openai_escalated,1,Yes
+10,No,1,No,0,2.419,Needs Clarification,,0,No
+11,Yes,0,Yes,0,28.286,Success,openai_escalated,1,Yes
+12,Yes,0,Yes,0,31.533,Success,openai_escalated,1,Yes
+13,No,1,No,0,3.455,Needs Clarification,,0,No
+14,Yes,0,Yes,4,34.637,Success,openai_escalated,1,Yes
+15,Yes,0,Yes,0,32.538,Success,openai_escalated,1,Yes
+16,No,1,No,0,4.174,Needs Clarification,,0,No
+17,Yes,0,Yes,0,25.824,Success,openai_escalated,1,Yes
+18,Yes,0,Yes,0,30.397,Success,openai_escalated,1,Yes
+19,No,1,No,0,18.806,Needs Clarification,,0,No
+20,Yes,0,Yes,0,9.479,Success,groq,0,No
+21,No,1,No,0,3.211,Needs Clarification,,0,No
+22,Yes,0,Yes,0,13.18,Success,groq,0,No
+23,Yes,0,Yes,0,16.562,Success,groq,0,No
+24,Yes,0,Yes,0,13.725,Success,groq,0,No
+25,Yes,0,Yes,0,14.872,Success,groq,0,No
+26,Yes,0,Yes,0,10.724,Success,groq,0,No
+27,Yes,0,Yes,0,13.512,Success,groq,0,No
+28,Yes,0,Yes,0,17.207,Success,groq,0,No
+29,No,1,No,0,9.65,Needs Clarification,,0,No
+30,Yes,0,Yes,0,9.823,Success,groq,0,No
+31,Yes,0,Yes,0,64.858,Success,groq,0,No
+32,Yes,0,Yes,0,9.18,Success,groq,0,No

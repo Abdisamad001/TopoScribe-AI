@@ -30,6 +30,21 @@ _openai_client: Optional[OpenAI] = None
 # `max_completion_tokens`.
 _FIXED_TEMPERATURE_MODEL_PREFIXES = ("gpt-5",)
 
+# Output budget every tier gets, so a retry that escalates does so because the
+# stronger model produced better content, not because it was handed more room.
+# Topology output scales with design size: 1425/2839/3556 content tokens for
+# 5/10/15-department designs. At the previous 2000 cap Groq truncated a
+# 15-department topology mid-JSON (finish_reason="length"), which the quality
+# gate could only report as malformed JSON.
+LLM_MAX_OUTPUT_TOKENS = 8000
+
+# gpt-5 class models bill internal reasoning against the same budget, so they get
+# an allowance on top to keep their *content* budget equal to the figure above.
+# Reasoning is near-constant with design size (404/485/512 tokens for the three
+# designs measured), so this is sized well clear of the observed range rather
+# than scaled per request.
+_REASONING_TOKEN_ALLOWANCE = 2000
+
 
 def _get_groq_client() -> Groq:
     """Groq client, created on first use so a missing key never breaks imports."""
@@ -81,7 +96,7 @@ def _openai_create(client: OpenAI, model: str, prompt: str, temperature: float, 
         return client.chat.completions.create(
             model=model,
             messages=messages,
-            max_completion_tokens=max_tokens,
+            max_completion_tokens=max_tokens + _REASONING_TOKEN_ALLOWANCE,
         )
     return client.chat.completions.create(
         model=model,
@@ -95,9 +110,19 @@ def _call_openai(prompt: str, model: str, temperature: float, max_tokens: int) -
     client = _get_openai_client()
     try:
         response = _openai_create(client, model, prompt, temperature, max_tokens)
-        return response.choices[0].message.content
     except Exception as e:
         raise Exception(f"OpenAI call failed: {str(e)}")
+
+    choice = response.choices[0]
+    content = choice.message.content or ""
+    if not content.strip():
+        # Reported as its own failure rather than passed on as an empty string,
+        # which downstream parsers would misdiagnose as malformed JSON.
+        raise Exception(
+            f"OpenAI call failed: {model} returned no content "
+            f"(finish_reason={choice.finish_reason})."
+        )
+    return content
 
 
 def call_llm(
@@ -105,7 +130,7 @@ def call_llm(
     *,
     tier: Tier,
     temperature: float = 0.25,
-    max_tokens: int = 2000,
+    max_tokens: int = LLM_MAX_OUTPUT_TOKENS,
 ) -> str:
     """
     Routes a prompt to the provider and model assigned to the given tier.
