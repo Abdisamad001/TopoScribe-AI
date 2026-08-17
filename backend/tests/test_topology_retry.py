@@ -8,6 +8,7 @@ from app.agents.topology_agent import (
     MAX_TOPOLOGY_RETRIES,
     _build_topology_prompt,
     _missing_department_reason,
+    _missing_host_link_reason,
     _parse_and_validate_topology,
     _scope_reason,
     _sparse_reason,
@@ -156,6 +157,152 @@ def test_parse_and_validate_accepts_good_topology():
     topology_dict, reasons = _parse_and_validate_topology(raw, DESIGN_PLAN)
     assert reasons == []
     assert topology_dict is not None
+
+
+# --- host-link quality gate ---------------------------------------------------
+
+
+def test_missing_host_link_reason_none_when_every_host_is_linked():
+    assert _missing_host_link_reason(_valid_topology_dict(), DESIGN_PLAN) is None
+
+
+def test_missing_host_link_reason_names_unlinked_host_for_unseen_departments():
+    """
+    Structural check: host id in the links list. Uses department names and a
+    host count (7) that do not appear elsewhere in the test suite.
+    """
+    plan = {
+        "mode": "departmental",
+        "departments": [
+            {"name": "Archaeology", "users": 20, "vlan_id": 110, "host_nodes": 7},
+            {"name": "Paleontology", "users": 20, "vlan_id": 120, "host_nodes": 1},
+        ],
+    }
+    nodes = [
+        {"id": "R1", "type": "router", "label": "Router", "interfaces": [], "config": {}},
+        {"id": "SW_CORE", "type": "switch", "label": "Core Switch", "interfaces": [], "config": {}},
+        {
+            "id": "SW_ARCH",
+            "type": "switch",
+            "label": "Archaeology Access Switch",
+            "interfaces": [],
+            "config": {"vlan_id": 110, "vlan_name": "Archaeology"},
+        },
+        {
+            "id": "SW_PAL",
+            "type": "switch",
+            "label": "Paleontology Access Switch",
+            "interfaces": [],
+            "config": {"vlan_id": 120, "vlan_name": "Paleontology"},
+        },
+    ]
+    links = [
+        {"id": "l-r-core", "source": "R1", "target": "SW_CORE", "bandwidth": 1000},
+        {"id": "l-core-arch", "source": "SW_CORE", "target": "SW_ARCH", "bandwidth": 1000},
+        {"id": "l-core-pal", "source": "SW_CORE", "target": "SW_PAL", "bandwidth": 1000},
+    ]
+    for i in range(1, 8):
+        hid = f"ARCH-H{i}"
+        nodes.append(
+            {
+                "id": hid,
+                "type": "host",
+                "label": f"Archaeology Host {i}",
+                "interfaces": [],
+                "config": {"vlan_id": 110, "vlan_name": "Archaeology"},
+            }
+        )
+        if i != 7:
+            links.append(
+                {"id": f"l-arch-{i}", "source": "SW_ARCH", "target": hid, "bandwidth": 1000}
+            )
+    nodes.append(
+        {
+            "id": "PAL-H1",
+            "type": "host",
+            "label": "Paleontology Host",
+            "interfaces": [],
+            "config": {"vlan_id": 120, "vlan_name": "Paleontology"},
+        }
+    )
+    links.append({"id": "l-pal-1", "source": "SW_PAL", "target": "PAL-H1", "bandwidth": 1000})
+    topo = {
+        "nodes": nodes,
+        "links": links,
+        "protocols": [],
+        "metadata": {
+            "vlans": [
+                {"id": 110, "name": "Archaeology"},
+                {"id": 120, "name": "Paleontology"},
+            ]
+        },
+    }
+
+    reason = _missing_host_link_reason(topo, plan)
+    assert reason is not None
+    assert "ARCH-H7" in reason
+    assert "Archaeology" not in reason
+    assert "Paleontology" not in reason
+    assert "no link to an access switch" in reason
+
+    parsed, reasons = _parse_and_validate_topology(json.dumps(topo), plan)
+    assert parsed is None
+    assert any("ARCH-H7" in r for r in reasons)
+
+
+def test_flat_inventory_unlinked_host_is_also_rejected():
+    plan = {
+        "mode": "flat_inventory",
+        "router_count": 1,
+        "switch_count": 1,
+        "host_count": 2,
+        "departments": [],
+    }
+    topo = {
+        "nodes": [
+            {"id": "R1", "type": "router", "label": "Router 1", "interfaces": [], "config": {}},
+            {"id": "SW1", "type": "switch", "label": "Switch 1", "interfaces": [], "config": {}},
+            {"id": "PC1", "type": "host", "label": "PC1", "interfaces": [], "config": {}},
+            {"id": "PC2", "type": "host", "label": "PC2", "interfaces": [], "config": {}},
+        ],
+        "links": [
+            {"id": "l1", "source": "R1", "target": "SW1", "bandwidth": 1000},
+            {"id": "l2", "source": "SW1", "target": "PC1", "bandwidth": 1000},
+        ],
+        "metadata": {"vlans": []},
+    }
+    reason = _missing_host_link_reason(topo, plan)
+    assert reason is not None
+    assert "PC2" in reason
+    assert "switch or router" in reason
+
+
+def test_validation_agent_does_not_reject_unlinked_host():
+    """Downstream validation only checks that existing links point at real nodes."""
+    from app.agents.validation_agent import validation_node
+    from app.models.network import Topology
+
+    topo = Topology(
+        nodes=[
+            {"id": "R1", "type": "router", "label": "Router", "interfaces": [], "config": {}},
+            {"id": "SW1", "type": "switch", "label": "Core Switch", "interfaces": [], "config": {}},
+            {"id": "H_orphan", "type": "host", "label": "Host", "interfaces": [], "config": {}},
+        ],
+        links=[{"id": "l1", "source": "R1", "target": "SW1", "bandwidth": 1000}],
+    )
+    result = validation_node(
+        {
+            "topology": topo,
+            "configurations": {
+                "R1": {"hostname": "R1", "interfaces": [], "trunk_interfaces": [], "subinterfaces": []},
+                "SW1": {"hostname": "SW1"},
+                "H_orphan": {"hostname": "H_orphan"},
+            },
+            "retry_count": 0,
+        }
+    )
+    assert result["validation_result"]["status"] == "passed"
+    assert _missing_host_link_reason(topo.model_dump(), {"mode": "departmental"}) is not None
 
 
 # --- prompt threading ---------------------------------------------------------

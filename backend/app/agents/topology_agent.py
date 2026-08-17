@@ -9,6 +9,30 @@ import json
 # Escalated retries allowed after the initial primary-tier attempt.
 MAX_TOPOLOGY_RETRIES = 3
 
+# HostNode.tsx uses Tailwind `w-48` (12rem = 192px at the default 16px root).
+# React Flow positions are the node's top-left, so sibling centers/left-edges
+# must be at least this wide plus a small gutter or the cards overlap.
+HOST_CARD_WIDTH_PX = 192
+HOST_GAP_MARGIN_PX = 16
+HOST_CLUSTER_GUTTER_PX = 24
+DEFAULT_COLUMN_SPACING_PX = 300
+
+
+def _host_center_gap() -> int:
+    """Left-edge to left-edge distance that keeps two host cards from overlapping."""
+    return HOST_CARD_WIDTH_PX + HOST_GAP_MARGIN_PX
+
+
+def _departmental_column_spacing(max_hosts_in_cluster: int) -> int:
+    """
+    Access-switch column spacing so the widest host cluster still clears
+    its neighbor. Shrinking host_gap below card width would reintroduce
+    intra-cluster overlap, so wide clusters widen the columns instead.
+    """
+    n = max(1, int(max_hosts_in_cluster))
+    needed = (n - 1) * _host_center_gap() + HOST_CARD_WIDTH_PX + HOST_CLUSTER_GUTTER_PX
+    return max(DEFAULT_COLUMN_SPACING_PX, needed)
+
 
 def _plan_mode(design_plan: Optional[Dict[str, Any]]) -> str:
     """Return 'flat_inventory' or 'departmental'."""
@@ -284,6 +308,54 @@ def _missing_department_reason(
         + ", ".join(sorted(missing))
         + "."
     )
+
+
+def _missing_host_link_reason(
+    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
+) -> Optional[str]:
+    """
+    Every host must appear as source or target of at least one link.
+    Departmental designs expect that link to an access switch; flat inventory
+    allows switch or router (the prompt connects hosts to a router when no
+    switch exists). The check itself is only: host id present in the links list.
+    """
+    nodes = topology_dict.get("nodes")
+    if not isinstance(nodes, list):
+        return None
+
+    host_ids: List[str] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        t = str(node.get("type") or "").lower()
+        if not ("host" in t or "pc" in t or "server" in t or "laptop" in t):
+            continue
+        hid = node.get("id")
+        if hid:
+            host_ids.append(str(hid))
+    if not host_ids:
+        return None
+
+    linked: set = set()
+    links = topology_dict.get("links")
+    if isinstance(links, list):
+        for link in links:
+            if not isinstance(link, dict):
+                continue
+            for key in ("source", "target", "sourceNodeId", "targetNodeId"):
+                val = link.get(key)
+                if val:
+                    linked.add(str(val))
+
+    missing = [hid for hid in host_ids if hid not in linked]
+    if not missing:
+        return None
+
+    if _plan_mode(design_plan) == "flat_inventory":
+        clause = "has no link to a switch or router"
+    else:
+        clause = "has no link to an access switch"
+    return " ".join(f"Host {hid} {clause}." for hid in missing).rstrip(".")
 
 
 def _topology_department_scope_invalid(
@@ -772,12 +844,95 @@ def _parse_and_validate_topology(
             _sparse_reason(topology_dict, design_plan),
             _scope_reason(topology_dict, design_plan),
             _missing_department_reason(topology_dict, design_plan),
+            _missing_host_link_reason(topology_dict, design_plan),
         )
         if r
     ]
     if reasons:
         return None, reasons
     return topology_dict, []
+
+
+def _access_switch_id_for_host(
+    host: Dict[str, Any],
+    access_by_id: Dict[str, Dict[str, Any]],
+    links: List[Any],
+) -> Optional[str]:
+    """Which access switch this host hangs off, via link first, then VLAN config."""
+    hid = host.get("id")
+    for link in links:
+        if not isinstance(link, dict):
+            continue
+        a = link.get("source") or link.get("sourceNodeId")
+        b = link.get("target") or link.get("targetNodeId")
+        if a == hid and b in access_by_id:
+            return b
+        if b == hid and a in access_by_id:
+            return a
+
+    cfg = host.get("config") if isinstance(host.get("config"), dict) else {}
+    vlan_name = str(cfg.get("vlan_name") or "").strip().lower()
+    vlan_id = cfg.get("vlan_id")
+    for sid, sw in access_by_id.items():
+        sc = sw.get("config") if isinstance(sw.get("config"), dict) else {}
+        sw_name = str(sc.get("vlan_name") or "").strip().lower()
+        if vlan_name and sw_name and vlan_name == sw_name:
+            return sid
+        if vlan_id is None or sc.get("vlan_id") is None:
+            continue
+        try:
+            if int(vlan_id) == int(sc.get("vlan_id")):
+                return sid
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _group_hosts_by_access_switch(
+    hosts: List[Dict[str, Any]],
+    access_switches: List[Dict[str, Any]],
+    links: List[Any],
+) -> Tuple[Dict[str, List[Dict[str, Any]]], List[Dict[str, Any]]]:
+    """Returns (switch_id -> hosts, unmatched hosts)."""
+    access_by_id = {s.get("id"): s for s in access_switches if s.get("id")}
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    unmatched: List[Dict[str, Any]] = []
+    for host in hosts:
+        sid = _access_switch_id_for_host(host, access_by_id, links)
+        if sid is None:
+            unmatched.append(host)
+        else:
+            grouped.setdefault(sid, []).append(host)
+    return grouped, unmatched
+
+
+def _position_hosts_under_access_switches(
+    hosts: List[Dict[str, Any]],
+    access_switches: List[Dict[str, Any]],
+    links: List[Any],
+    y_level: int,
+    position_row,
+) -> None:
+    """
+    Place each department's hosts on the host row, centered under that
+    department's access switch. Unmatched hosts keep the flat-row fallback.
+    """
+    access_by_id = {s.get("id"): s for s in access_switches if s.get("id")}
+    grouped, unmatched = _group_hosts_by_access_switch(hosts, access_switches, links)
+
+    host_gap = _host_center_gap()
+    for sid, group in grouped.items():
+        center_x = int(access_by_id[sid].get("x") or 0)
+        n = len(group)
+        start_x = center_x - ((n - 1) * host_gap) / 2
+        for i, host in enumerate(group):
+            host["x"] = int(start_x + i * host_gap)
+            host["y"] = y_level
+            if "position" in host:
+                del host["position"]
+
+    if unmatched:
+        position_row(unmatched, y_level)
 
 
 def _finalize_topology(
@@ -805,26 +960,44 @@ def _finalize_topology(
 
     # Layout parameters
     start_x = 100
-    spacing_x = 300
+    spacing_x = DEFAULT_COLUMN_SPACING_PX
 
     # Function to position a row
-    def position_row(items, y_level):
-        total_width = (len(items) - 1) * spacing_x
+    def position_row(items, y_level, col_spacing=None):
+        gap = spacing_x if col_spacing is None else col_spacing
+        total_width = (len(items) - 1) * gap
         current_x = start_x + (1000 - total_width) / 2 # Center align roughly
         if current_x < 100: current_x = 100
 
         for i, node in enumerate(items):
-            node["x"] = int(current_x + (i * spacing_x))
+            node["x"] = int(current_x + (i * gap))
             node["y"] = y_level
             # Remove nested position if LLM put it there
             if "position" in node:
                 del node["position"]
 
-    # Apply positions
+    # Apply positions. Departmental mode is four tiers (router → core → access → hosts);
+    # flat inventory has no core/access split, so every switch stays on one row.
     position_row(routers, 0)
-    position_row(switches, 200)
-    position_row(others, 400) # Firewalls etc
-    position_row(hosts, 500)
+    if _plan_mode(design_plan) == "departmental":
+        core_switches = [s for s in switches if _is_core_infrastructure_node(s)]
+        access_switches = [s for s in switches if not _is_core_infrastructure_node(s)]
+        links = topology_dict.get("links") if isinstance(topology_dict.get("links"), list) else []
+        grouped, _unmatched = _group_hosts_by_access_switch(
+            hosts, access_switches, links
+        )
+        max_cluster = max((len(g) for g in grouped.values()), default=1)
+        column_spacing = _departmental_column_spacing(max_cluster)
+        position_row(core_switches, 200)
+        position_row(access_switches, 400, column_spacing)
+        position_row(others, 400)
+        _position_hosts_under_access_switches(
+            hosts, access_switches, links, 500, position_row
+        )
+    else:
+        position_row(switches, 200)
+        position_row(others, 400)
+        position_row(hosts, 500)
 
     sanitize_topology_node_labels(topology_dict)
     _annotate_representative_host_user_counts(topology_dict, design_plan)

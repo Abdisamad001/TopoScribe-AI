@@ -439,6 +439,24 @@ def _explicit_departments_from_user(user_input: str, history: List[dict]) -> Lis
     return inferred
 
 
+def _strip_trailing_list_qualifiers(raw: str) -> str:
+    """
+    Cut a trailing global qualifier off a department-list span before it is
+    split on commas. Otherwise ", with 5 PCs each" is treated as another name.
+    """
+    if not raw:
+        return raw
+    qualifier_nouns = rf"(?:users?|{_HOST_DEVICE_WORDS}|employees?)"
+    cut = re.split(
+        rf"\s*(?:,\s*)?\b(?:with|having|using|including)\b\s+"
+        rf"(?:{_COUNT_TOKEN}\s+)?{qualifier_nouns}\b",
+        raw,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0]
+    return cut.strip(" ,")
+
+
 def _extract_department_names(text: str) -> List[str]:
     """
     Heuristic extraction of department names from free text.
@@ -458,19 +476,13 @@ def _extract_department_names(text: str) -> List[str]:
     m = re.search(r"departments?\s*[:\-]?\s*([^\n\.]+)", text, flags=re.IGNORECASE)
     if not m:
         return []
-    raw = m.group(1)
+    # Same idea as _infer_departments_from_free_text: stop the capture at a
+    # trailing qualifier before splitting on comma/and.
+    raw = _strip_trailing_list_qualifiers(m.group(1))
     parts = re.split(r",|\band\b|/|\|", raw, flags=re.IGNORECASE)
     out: List[str] = []
     for p in parts:
         name = p.strip(" \"'[](){}")
-        # Drop trailing quantity clauses: "IT with 3 PCs each" → "IT"
-        name = re.split(r"\s+with\s+", name, maxsplit=1, flags=re.IGNORECASE)[0].strip()
-        name = re.sub(
-            rf"\s+{_COUNT_TOKEN}\s+(?:users?|{_HOST_DEVICE_WORDS})\s*each\s*$",
-            "",
-            name,
-            flags=re.IGNORECASE,
-        ).strip()
         if name:
             out.append(name)
     # Deduplicate while preserving order

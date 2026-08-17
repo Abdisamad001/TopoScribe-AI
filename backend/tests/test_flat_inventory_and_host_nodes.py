@@ -16,11 +16,15 @@ from app.agents.planning_agent import (
     _requested_users_each,
 )
 from app.agents.topology_agent import (
+    DEFAULT_COLUMN_SPACING_PX,
+    HOST_CARD_WIDTH_PX,
     _annotate_representative_host_user_counts,
     _build_topology_prompt,
     _count_roles_in_nodes,
+    _departmental_column_spacing,
     _fallback_topology_dict,
     _finalize_topology,
+    _host_center_gap,
     _sparse_reason,
 )
 
@@ -295,3 +299,158 @@ def test_unmatched_host_label_left_unchanged():
     }
     _annotate_representative_host_user_counts(topo, plan)
     assert _host_labels(topo) == ["Mystery Host"]
+
+
+# --- Four-tier departmental layout vs single-row flat switches -----------------
+
+
+def _y_by_role_labels(finalized):
+    rows = {"router": [], "core": [], "access": [], "host": []}
+    for n in finalized.nodes:
+        t = (n.type or "").lower()
+        lbl = (n.label or "").lower()
+        if "router" in t:
+            rows["router"].append(n.y)
+        elif "host" in t or "pc" in t:
+            rows["host"].append(n.y)
+        elif "switch" in t:
+            if "core" in lbl:
+                rows["core"].append(n.y)
+            else:
+                rows["access"].append(n.y)
+    return rows
+
+
+def test_departmental_layout_is_four_tiers():
+    """Router above core, core above access switches, access above hosts."""
+    plan = _apply_sme_defaults({}, "departments HR and IT, 20 users each", [])
+    topo = _fallback_topology_dict(plan)
+    finalized = _finalize_topology(topo, plan)
+    rows = _y_by_role_labels(finalized)
+
+    assert len(rows["router"]) == 1
+    assert len(rows["core"]) == 1
+    assert len(rows["access"]) == 2
+    assert len(rows["host"]) == 2
+
+    assert set(rows["router"]) == {0}
+    assert set(rows["core"]) == {200}
+    assert set(rows["access"]) == {400}
+    assert set(rows["host"]) == {500}
+
+    # Access switches sit on the same row (side by side), distinct from core.
+    assert rows["access"][0] == rows["access"][1]
+    assert rows["core"][0] < rows["access"][0] < rows["host"][0]
+
+
+def test_flat_inventory_keeps_all_switches_on_one_row():
+    plan = _apply_sme_defaults({}, "a router connected to 2 switches with 5 computers", [])
+    topo = _fallback_topology_dict(plan)
+    finalized = _finalize_topology(topo, plan)
+    switch_ys = [n.y for n in finalized.nodes if "switch" in (n.type or "").lower()]
+    host_ys = [n.y for n in finalized.nodes if "host" in (n.type or "").lower()]
+    router_ys = [n.y for n in finalized.nodes if "router" in (n.type or "").lower()]
+
+    assert set(router_ys) == {0}
+    assert set(switch_ys) == {200}
+    assert len(switch_ys) == 2
+    assert set(host_ys) == {500}
+
+
+def test_departmental_hosts_cluster_under_their_access_switch():
+    plan = _apply_sme_defaults({}, "departments HR and IT with 3 PCs each", [])
+    topo = _fallback_topology_dict(plan)
+    finalized = _finalize_topology(topo, plan)
+
+    access = [
+        n for n in finalized.nodes
+        if "switch" in (n.type or "").lower() and "core" not in (n.label or "").lower()
+    ]
+    hosts = [n for n in finalized.nodes if "host" in (n.type or "").lower()]
+    assert len(access) == 2
+    assert len(hosts) == 6
+
+    by_id = {n.id: n for n in finalized.nodes}
+    for host in hosts:
+        parent = None
+        for link in finalized.links:
+            if link.source == host.id and link.target in {s.id for s in access}:
+                parent = by_id[link.target]
+                break
+            if link.target == host.id and link.source in {s.id for s in access}:
+                parent = by_id[link.source]
+                break
+        assert parent is not None
+        assert host.y == 500
+        assert abs(host.x - parent.x) <= _host_center_gap()
+
+
+def test_flat_inventory_hosts_stay_on_one_spread_row():
+    plan = _apply_sme_defaults({}, "2 routers connected to a switch with 3 PCs", [])
+    topo = _fallback_topology_dict(plan)
+    finalized = _finalize_topology(topo, plan)
+    host_xs = sorted(n.x for n in finalized.nodes if "host" in (n.type or "").lower())
+    # Three hosts on one row, spaced by the global 300px row layout — not clustered.
+    assert len(host_xs) == 3
+    assert host_xs[1] - host_xs[0] == 300
+    assert host_xs[2] - host_xs[1] == 300
+
+
+def _hosts_by_parent(finalized):
+    access_ids = {
+        n.id
+        for n in finalized.nodes
+        if "switch" in (n.type or "").lower() and "core" not in (n.label or "").lower()
+    }
+    grouped = {sid: [] for sid in access_ids}
+    for host in finalized.nodes:
+        if "host" not in (host.type or "").lower():
+            continue
+        for link in finalized.links:
+            if link.source == host.id and link.target in access_ids:
+                grouped[link.target].append(host)
+                break
+            if link.target == host.id and link.source in access_ids:
+                grouped[link.source].append(host)
+                break
+    return grouped
+
+
+def _assert_no_card_overlap(nodes, card_width=HOST_CARD_WIDTH_PX):
+    xs = sorted(n.x for n in nodes)
+    for a, b in zip(xs, xs[1:]):
+        assert b - a >= card_width, f"cards overlap: {a} then {b} (need gap >= {card_width})"
+
+
+def test_five_hosts_each_do_not_overlap_within_or_across_departments():
+    plan = _apply_sme_defaults({}, "departments HR and IT with 5 PCs each", [])
+    topo = _fallback_topology_dict(plan)
+    finalized = _finalize_topology(topo, plan)
+    grouped = _hosts_by_parent(finalized)
+    assert [len(v) for v in grouped.values()] == [5, 5]
+    for cluster in grouped.values():
+        _assert_no_card_overlap(cluster)
+        xs = sorted(n.x for n in cluster)
+        assert xs[1] - xs[0] == _host_center_gap()
+    all_hosts = [n for n in finalized.nodes if "host" in (n.type or "").lower()]
+    _assert_no_card_overlap(all_hosts)
+
+
+def test_eight_host_threshold_clusters_do_not_overlap():
+    n = LITERAL_HOST_NODE_THRESHOLD
+    plan = _apply_sme_defaults({}, f"departments HR and IT with {n} PCs each", [])
+    topo = _fallback_topology_dict(plan)
+    finalized = _finalize_topology(topo, plan)
+    grouped = _hosts_by_parent(finalized)
+    assert sorted(len(v) for v in grouped.values()) == [n, n]
+    for cluster in grouped.values():
+        _assert_no_card_overlap(cluster)
+    all_hosts = [n for n in finalized.nodes if "host" in (n.type or "").lower()]
+    _assert_no_card_overlap(all_hosts)
+    access = [
+        s for s in finalized.nodes
+        if "switch" in (s.type or "").lower() and "core" not in (s.label or "").lower()
+    ]
+    access_xs = sorted(s.x for s in access)
+    assert access_xs[1] - access_xs[0] == _departmental_column_spacing(n)
+    assert access_xs[1] - access_xs[0] > DEFAULT_COLUMN_SPACING_PX

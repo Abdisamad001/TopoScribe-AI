@@ -31,3 +31,12 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 30,Yes,0,Yes,0,9.823,Success,groq,0,No
 31,Yes,0,Yes,0,64.858,Success,groq,0,No
 32,Yes,0,Yes,0,9.18,Success,groq,0,No
+33,Yes,0,Yes,0,16.069,Success,groq,0,No
+34,Yes,0,Yes,0,58.188,Success,openai_escalated,1,Yes
+35,Yes,0,Yes,0,79.348,Success,openai_escalated,1,Yes
+36,Yes,0,Yes,0,53.358,Success,openai_escalated,1,Yes
+37,Yes,0,Yes,0,39.656,Success,openai_escalated,1,Yes
+38,Yes,0,Yes,0,40.065,Success,openai_escalated,1,Yes
+39,Yes,0,Yes,0,36.862,Success,openai_escalated,1,Yes
+40,Yes,0,Yes,0,51.087,Success,openai_escalated,1,Yes
+41,Yes,0,Yes,0,40.579,Success,openai_escalated,1,Yes

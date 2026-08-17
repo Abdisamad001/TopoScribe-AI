@@ -6,6 +6,29 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
+# Single-word English closed-class tokens. These cannot be department names;
+# they appear when a qualifier clause is split on a comma (e.g. orphan "with").
+_CLOSED_CLASS_WORDS = frozenset(
+    {
+        "with",
+        "having",
+        "using",
+        "including",
+        "without",
+        "excluding",
+        "per",
+        "plus",
+        "for",
+        "of",
+        "and",
+        "or",
+        "nor",
+        "but",
+        "so",
+        "yet",
+    }
+)
+
 # Requirement-style fragments that are not department names
 _JUNK_PATTERNS = [
     re.compile(r"sites?\s+in\b", re.I),
@@ -34,6 +57,8 @@ def is_plausible_department_name(name: str) -> bool:
     if re.search(r"\d", n) and re.search(r"[A-Za-z]", n):
         return False
     low = n.lower()
+    if " " not in n and low in _CLOSED_CLASS_WORDS:
+        return False
     if low in ("vlan", "each", "sites", "site", "users", "user", "network", "eg", "e.g"):
         return False
     if low.startswith("e.g") or low.startswith("eg,"):

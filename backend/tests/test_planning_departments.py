@@ -72,6 +72,8 @@ def test_is_plausible_department_name_rejects_prose_fragments():
     assert is_plausible_department_name("OP") is True
     assert is_plausible_department_name("e.g.") is False
     assert is_plausible_department_name("Finance). 2 departments HR") is False
+    assert is_plausible_department_name("with") is False
+    assert is_plausible_department_name("having") is False
 
 
 def test_topology_department_scope_invalid_detects_extra_vlan():

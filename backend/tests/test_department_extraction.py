@@ -10,10 +10,12 @@ import pytest
 from app.agents.planning_agent import (
     _apply_sme_defaults,
     _explicit_departments_from_user,
+    _extract_department_names,
     _infer_departments_from_free_text,
     _is_user_delegation,
     _requested_department_count,
 )
+from app.utils.dept_labels import is_plausible_department_name
 
 
 def _names(plan):
@@ -168,3 +170,34 @@ def test_assistant_examples_still_ignored_with_the_wider_vocabulary():
         {"role": "assistant", "content": "Please list your departments (e.g., HR, IT, Finance)."},
     ]
     assert _explicit_departments_from_user("finance and JS with five Pcs", history) == ["Finance", "JS"]
+
+
+# --- ghost department: trailing ", with N PCs each" must not become a name ----
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("departments HR, IT, with 5 PCs each", ["HR", "IT"]),
+        ("departments: HR, IT, Finance, with 5 PCs each", ["HR", "IT", "Finance"]),
+        ("departments HR, IT, with 10 employees, with 3 PCs each", ["HR", "IT"]),
+        ("departments Sales and Marketing having 5 computers each", ["Sales", "Marketing"]),
+        ("departments HR and IT using 8 hosts each", ["HR", "IT"]),
+        ("departments Legal, Finance including 4 workstations each", ["Legal", "Finance"]),
+        ("departments HR, IT, Finance, 20 users each", ["HR", "IT", "Finance"]),
+    ],
+)
+def test_trailing_qualifier_is_not_a_department(text, expected):
+    names = _extract_department_names(text)
+    assert names == expected
+    assert "with" not in [n.lower() for n in names]
+    plan_names = _names(_apply_sme_defaults({}, text, []))
+    assert plan_names == expected
+    assert "with" not in [n.lower() for n in plan_names]
+
+
+def test_closed_class_single_words_are_not_plausible_departments():
+    for word in ("with", "having", "using", "including", "and", "for", "of"):
+        assert is_plausible_department_name(word) is False
+    assert is_plausible_department_name("IT") is True
+    assert is_plausible_department_name("Human Resources") is True
