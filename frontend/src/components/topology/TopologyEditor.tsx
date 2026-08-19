@@ -27,6 +27,7 @@ import ReportModal from './ReportModal';
 import ImmersiveChatPanel from './ImmersiveChatPanel';
 import { clarifyRequirements } from '@/lib/api';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
+import { MessageSquare } from 'lucide-react';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -305,6 +306,25 @@ export default function TopologyEditor() {
                         </div>
                     )}
                 </ReactFlow>
+
+                {chatMessages.length > 0 && !isChatOpen && (
+                    <button
+                        type="button"
+                        aria-label="Reopen chat"
+                        title="Reopen chat"
+                        onClick={() => setIsChatOpen(true)}
+                        className={`
+                            absolute z-50 p-2.5 rounded-xl
+                            bg-[#1C2F45]/90 backdrop-blur-md
+                            border border-[#3DD6B5]/20 text-[#3DD6B5]
+                            shadow-[0_8px_24px_rgba(0,0,0,0.45)]
+                            hover:border-[#3DD6B5] hover:brightness-110 transition-all
+                            ${hasTopology ? 'top-4 right-48' : 'top-4 right-4'}
+                        `}
+                    >
+                        <MessageSquare size={18} />
+                    </button>
+                )}
 
                 <ImmersiveChatPanel
                     isOpen={isChatOpen}

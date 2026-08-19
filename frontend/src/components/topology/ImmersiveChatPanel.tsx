@@ -1,7 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, MessageSquare, Maximize2, Minimize2, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { X, Send, Sparkles, MessageSquare, Maximize2, Minimize2, PanelRightOpen, PanelRightClose, AlertTriangle } from 'lucide-react';
 
+const FRIENDLY_ERROR_COPY =
+    'Something went wrong generating your design. Please try again in a moment.';
 
+function isTechnicalErrorMessage(content: string): boolean {
+    const text = (content || '').trim();
+    if (!text) return false;
+    if (/^I encountered an error/i.test(text)) return true;
+    if (/Error code:/i.test(text)) return true;
+    if (/OpenAI call failed/i.test(text)) return true;
+    if (/^\s*[\{\[]/.test(text) && /["']error["']/i.test(text)) return true;
+    return false;
+}
+
+function getDisplayContent(content: string): string {
+    if (isTechnicalErrorMessage(content)) return FRIENDLY_ERROR_COPY;
+    return content;
+}
 
 interface ImmersiveChatPanelProps {
     isOpen: boolean;
@@ -66,23 +82,37 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                         </div>
                     </div>
                 ) : (
-                    messages.map((msg, i) => (
-                        <div
-                            key={i}
-                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
+                    messages.map((msg, i) => {
+                        const isError = msg.role === 'assistant' && isTechnicalErrorMessage(msg.content);
+                        const display = isError ? getDisplayContent(msg.content) : msg.content;
+                        return (
                             <div
-                                className={`
-                                    max-w-[85%] rounded-2xl px-5 py-4 text-sm leading-relaxed shadow-lg
-                                    ${msg.role === 'user'
-                                        ? 'bg-[#3DD6B5] text-[#0F1824] font-medium rounded-tr-sm'
-                                        : 'bg-[#1C2F45] text-slate-200 border border-[#3DD6B5]/10 rounded-tl-sm'}
-                                `}
+                                key={i}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                {msg.content}
+                                <div
+                                    className={`
+                                        max-w-[85%] rounded-2xl px-5 py-4 leading-relaxed shadow-lg
+                                        break-words [overflow-wrap:anywhere] max-h-64 overflow-y-auto
+                                        ${msg.role === 'user'
+                                            ? 'bg-[#3DD6B5] text-[#0F1824] text-sm font-medium rounded-tr-sm'
+                                            : isError
+                                                ? 'bg-[#1C2F45] text-rose-200/90 text-xs border border-rose-400/20 border-l-2 border-l-rose-400/80 rounded-tl-sm'
+                                                : 'bg-[#1C2F45] text-slate-200 text-sm border border-[#3DD6B5]/10 rounded-tl-sm'}
+                                    `}
+                                >
+                                    {isError ? (
+                                        <span className="flex items-start gap-2">
+                                            <AlertTriangle size={14} className="text-rose-400 mt-0.5 shrink-0" />
+                                            <span>{display}</span>
+                                        </span>
+                                    ) : (
+                                        display
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
                 {loading && (
                     <div className="flex justify-start">
