@@ -50,7 +50,7 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
                 <form onSubmit={handleSubmit} className="relative w-full">
                     <input
                         type="text"
-                        className="w-full bg-[#142338] border border-[#3DD6B5]/20 rounded-xl py-3.5 pl-4 pr-[140px] text-sm text-white placeholder-[#6B7A8F] focus:outline-none focus:border-[#3DD6B5] focus:ring-[3px] focus:ring-[#3DD6B5]/15 transition-all duration-300 min-h-[48px]"
+                        className="w-full bg-[#142338] border border-[#3DD6B5]/20 rounded-xl py-3.5 pl-4 pr-[184px] text-sm text-white placeholder-[#6B7A8F] focus:outline-none focus:border-[#3DD6B5] focus:ring-[3px] focus:ring-[#3DD6B5]/15 transition-all duration-300 min-h-[48px]"
                         placeholder="Describe your network... (e.g., 2 routers connected to a switch with 3 PCs)"
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
@@ -60,7 +60,7 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
                     <button
                         type="submit"
                         disabled={loading || !prompt}
-                        className={`absolute right-1.5 top-1/2 transform -translate-y-1/2 bg-gradient-to-br from-[#3DD6B5] to-[#2BC4A3] text-white font-semibold text-sm px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all duration-300 hover:-translate-y-[calc(50%+2px)] hover:shadow-[0_8px_20px_rgba(61,214,181,0.4)] hover:brightness-110 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-[-50%] disabled:hover:shadow-none`}
+                        className={`absolute right-1.5 top-1/2 transform -translate-y-1/2 bg-gradient-to-br from-[#3DD6B5] to-[#2BC4A3] text-white font-semibold text-sm px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 min-w-[168px] transition-all duration-300 hover:-translate-y-[calc(50%+2px)] hover:shadow-[0_8px_20px_rgba(61,214,181,0.4)] hover:brightness-110 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-[-50%] disabled:hover:shadow-none`}
                     >
                         {loading ? (
                             <>
