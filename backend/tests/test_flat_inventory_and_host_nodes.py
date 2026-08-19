@@ -454,3 +454,78 @@ def test_eight_host_threshold_clusters_do_not_overlap():
     access_xs = sorted(s.x for s in access)
     assert access_xs[1] - access_xs[0] == _departmental_column_spacing(n)
     assert access_xs[1] - access_xs[0] > DEFAULT_COLUMN_SPACING_PX
+
+
+def _dept_plan_one_host():
+    return {
+        "mode": "departmental",
+        "departments": [{"name": "HR", "users": 20, "vlan_id": 10}],
+    }
+
+
+def _dept_topo_with_host_link(source: str, target: str) -> dict:
+    return {
+        "nodes": [
+            {"id": "R1", "type": "router", "label": "Router", "interfaces": [], "config": {}},
+            {"id": "SW_CORE", "type": "switch", "label": "Core Switch", "interfaces": [], "config": {}},
+            {
+                "id": "SW_HR",
+                "type": "switch",
+                "label": "Access HR",
+                "interfaces": [],
+                "config": {"vlan_id": 10, "vlan_name": "HR"},
+            },
+            {
+                "id": "H1",
+                "type": "host",
+                "label": "HR Host",
+                "interfaces": [],
+                "config": {"vlan_id": 10, "vlan_name": "HR"},
+            },
+        ],
+        "links": [
+            {"id": "link-r-core", "source": "R1", "target": "SW_CORE", "bandwidth": 1000},
+            {"id": "link-core-acc", "source": "SW_CORE", "target": "SW_HR", "bandwidth": 1000},
+            {"id": "link-host", "source": source, "target": target, "bandwidth": 1000},
+        ],
+        "protocols": [],
+        "metadata": {"vlans": [{"id": 10, "name": "HR"}]},
+    }
+
+
+def test_finalize_swaps_reversed_host_to_switch_link():
+    topo = _dept_topo_with_host_link("H1", "SW_HR")
+    finalized = _finalize_topology(topo, _dept_plan_one_host())
+    host_link = next(l for l in finalized.links if l.id == "link-host")
+    assert host_link.source == "SW_HR"
+    assert host_link.target == "H1"
+
+
+def test_finalize_leaves_correct_switch_to_host_link_unchanged():
+    topo = _dept_topo_with_host_link("SW_HR", "H1")
+    finalized = _finalize_topology(topo, _dept_plan_one_host())
+    host_link = next(l for l in finalized.links if l.id == "link-host")
+    assert host_link.source == "SW_HR"
+    assert host_link.target == "H1"
+    core = next(l for l in finalized.links if l.id == "link-r-core")
+    assert core.source == "R1" and core.target == "SW_CORE"
+
+
+def test_finalize_swaps_reversed_host_to_router_link():
+    """Flat inventory may link a host directly to a router when there is no switch."""
+    topo = {
+        "nodes": [
+            {"id": "R1", "type": "router", "label": "Router", "interfaces": [], "config": {}},
+            {"id": "H1", "type": "host", "label": "Host", "interfaces": [], "config": {}},
+        ],
+        "links": [
+            {"id": "link-rh", "source": "H1", "target": "R1", "bandwidth": 1000},
+        ],
+        "protocols": [],
+        "metadata": {"vlans": []},
+    }
+    plan = {"mode": "flat_inventory", "router_count": 1, "switch_count": 0, "host_count": 1}
+    finalized = _finalize_topology(topo, plan)
+    link = finalized.links[0]
+    assert link.source == "R1"
+    assert link.target == "H1"
