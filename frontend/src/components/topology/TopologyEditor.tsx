@@ -5,7 +5,6 @@ import {
     ReactFlow,
     MiniMap,
     Controls,
-    Background,
     useNodesState,
     useEdgesState,
     addEdge,
@@ -13,7 +12,6 @@ import {
     Edge,
     Node,
     NodeTypes,
-    BackgroundVariant,
 } from '@xyflow/react';
 
 // Import custom nodes
@@ -290,10 +288,10 @@ export default function TopologyEditor() {
                     onPaneClick={onPaneClick}
                     nodeTypes={nodeTypes}
                     fitView
+                    style={{ background: '#000000' }}
                 >
                     <Controls />
                     <MiniMap />
-                    <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
 
                     {hasTopology && (
                         <div className="absolute top-4 right-4 z-50 flex gap-2">

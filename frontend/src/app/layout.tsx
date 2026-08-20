@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TopoScribe AI - Intelligent Network Design",
+  title: "TopoScribe AI",
   description: "Agentic AI System for Natural Language Network Design & Simulation",
   icons: {
     icon: '/icon.png',
