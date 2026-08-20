@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Share2, Monitor, GripVertical, LucideIcon } from 'lucide-react';
+import { Globe, Share2, Monitor, GripVertical, Layers, MousePointerClick, LucideIcon } from 'lucide-react';
 
 type DeviceCardConfig = {
     type: string;
@@ -51,7 +51,7 @@ function DeviceCard({
     const { type, title, subtitle, Icon, iconWrapClass, iconClass, titleHoverClass } = card;
     return (
         <div
-            className="group bg-[#212127] hover:bg-[#292931] border border-[#E05216]/10 hover:border-[#E05216]/40 rounded-xl p-3 cursor-grab transition-all duration-300 relative overflow-hidden"
+            className="group bg-[#212127] hover:bg-[#292931] border border-[#14213D]/10 hover:border-[#14213D]/40 rounded-xl p-3 cursor-grab transition-all duration-300 relative overflow-hidden shadow-md shadow-black/20"
             onDragStart={(event) => onDragStart(event, type)}
             draggable
         >
@@ -59,7 +59,7 @@ function DeviceCard({
                 <GripVertical size={14} className="text-slate-500" />
             </div>
             <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform ${iconWrapClass}`}>
+                <div className={`w-11 h-11 rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform ${iconWrapClass}`}>
                     <Icon size={20} className={iconClass} />
                 </div>
                 <div>
@@ -78,9 +78,10 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="w-64 h-full bg-[#2C2C34] border-r border-[#E05216]/15 p-4 flex flex-col gap-5 shadow-xl z-30">
-            <div className="flex items-center gap-2 pb-4 border-b border-[#E05216]/10">
-                <span className="text-[#E05216] font-bold tracking-wider text-xs uppercase">Component Library</span>
+        <aside className="w-64 h-full bg-[#2C2C34] border-r border-[#14213D]/15 p-4 flex flex-col gap-4 shadow-xl z-30">
+            <div className="flex items-center gap-2 pb-3 border-b border-[#14213D]/10">
+                <Layers size={14} className="text-white shrink-0" />
+                <span className="text-white font-bold tracking-widest text-xs uppercase">Component Library</span>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -89,7 +90,8 @@ export default function Sidebar() {
                 ))}
             </div>
 
-            <div className="mt-auto p-4 rounded-lg bg-[#212127]/50 border border-[#E05216]/10 text-center">
+            <div className="mt-auto p-3 rounded-lg bg-[#212127]/50 border border-[#14213D]/10 flex items-start gap-2.5">
+                <MousePointerClick size={14} className="text-slate-500 mt-0.5 shrink-0" />
                 <p className="text-[10px] text-slate-400 leading-relaxed">
                     Drag components to the canvas to build your topology manually or use AI generation.
                 </p>

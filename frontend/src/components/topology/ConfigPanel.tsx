@@ -110,9 +110,9 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
     if (!selectedNode) {
         return (
-            <aside className="w-80 h-full backdrop-blur-md border-l border-teal-500/15 p-6 flex flex-col justify-center items-center text-center text-gray-400 z-20"
+            <aside className="w-80 h-full backdrop-blur-md border-l border-[#14213D]/15 p-6 flex flex-col justify-center items-center text-center text-gray-400 z-20"
                 style={{ backgroundColor: '#1C2F45', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)' }}>
-                <Activity size={48} className="text-teal-500/30 mb-4 animate-pulse" />
+                <Activity size={48} className="text-white/30 mb-4 animate-pulse" />
                 <p className="font-semibold text-slate-400">Select a device to configure</p>
                 <div className="mt-2 text-xs text-slate-600">Click any node on the canvas</div>
             </aside>
@@ -130,17 +130,17 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
     return (
         <>
-        <aside className="w-80 h-full backdrop-blur-md border-l border-teal-500/15 p-6 flex flex-col gap-6 shadow-2xl z-20 overflow-y-auto transition-all duration-300"
+        <aside className="w-80 h-full backdrop-blur-md border-l border-[#14213D]/15 p-6 flex flex-col gap-6 shadow-2xl z-20 overflow-y-auto transition-all duration-300"
             style={{ backgroundColor: '#1C2F45', boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.2)' }}>
 
-            <div className="border-b border-teal-500/20 pb-4">
+            <div className="border-b border-[#14213D]/20 pb-4">
                 <div className="flex items-center gap-3 mb-1">
                     <div className="p-2 rounded-lg bg-slate-800/50 border border-white/10 shadow-inner">
                         <NodeTypeIcon />
                     </div>
                     <div>
                         <h2 className="text-lg font-semibold text-white tracking-tight">{selectedNode.data.label as string}</h2>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-teal-400/80 bg-teal-900/20 px-2 py-0.5 rounded-full border border-teal-500/20">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-white/80 bg-[#14213D]/20 px-2 py-0.5 rounded-full border border-[#14213D]/20">
                             {selectedNode.type}
                         </span>
                     </div>
@@ -149,11 +149,11 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
             <div className="flex flex-col gap-5">
                 <div className="group">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider group-hover:text-teal-400/70 transition-colors">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider group-hover:text-white/70 transition-colors">
                         Hostname
                     </label>
                     <input
-                        className="w-full bg-[#142338] border border-teal-500/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition-all duration-300 hover:border-teal-400/40 placeholder-slate-600"
+                        className="w-full bg-[#142338] border border-[#14213D]/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-[#14213D] focus:ring-1 focus:ring-[#14213D]/20 transition-all duration-300 hover:border-[#14213D]/40 placeholder-slate-600"
                         value={label}
                         onChange={(e) => setLabel(e.target.value)}
                         placeholder="Device Name"
@@ -162,11 +162,11 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
                 {selectedNode.type !== 'switch' && (
                     <div className="group">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider group-hover:text-teal-400/70 transition-colors">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider group-hover:text-white/70 transition-colors">
                             Management IP
                         </label>
                         <input
-                            className="w-full bg-[#142338] border border-teal-500/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition-all duration-300 hover:border-teal-400/40 placeholder-slate-600 font-mono"
+                            className="w-full bg-[#142338] border border-[#14213D]/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-[#14213D] focus:ring-1 focus:ring-[#14213D]/20 transition-all duration-300 hover:border-[#14213D]/40 placeholder-slate-600 font-mono"
                             value={ip}
                             onChange={(e) => setIp(e.target.value)}
                             placeholder="0.0.0.0"
@@ -176,19 +176,19 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
                 <button
                     onClick={handleSave}
-                    className="w-full mt-2 bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-400 hover:to-teal-600 text-white p-3 rounded-lg shadow-lg shadow-teal-900/20 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 font-semibold text-sm"
+                    className="w-full mt-2 bg-gradient-to-br from-[#14213D] to-[#14213D] hover:from-[#14213D] hover:to-[#14213D] text-white p-3 rounded-lg shadow-lg shadow-[#14213D]/20 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 font-semibold text-sm"
                 >
                     <Save size={16} /> Apply Configuration
                 </button>
             </div>
 
             {/* Logical Divider */}
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-teal-500/20 to-transparent my-2"></div>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-[#14213D]/20 to-transparent my-2"></div>
 
             {/* Simulation Section */}
             <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2 text-slate-400">
-                    <Activity size={14} className="text-teal-400" />
+                    <Activity size={14} className="text-white" />
                     <h3 className="text-[10px] uppercase font-bold tracking-wider">Simulation Interface</h3>
                 </div>
 
@@ -196,7 +196,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                     <div className="group">
                         <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block tracking-wider group-hover:text-blue-400/70 transition-colors">Target Node</label>
                         <select
-                            className="w-full bg-[#142338] border border-teal-500/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 transition-all duration-300 cursor-pointer hover:border-blue-400/40 appearance-none"
+                            className="w-full bg-[#142338] border border-[#14213D]/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 transition-all duration-300 cursor-pointer hover:border-blue-400/40 appearance-none"
                             value={pingTarget}
                             onChange={(e) => setPingTarget(e.target.value)}
                         >
@@ -214,7 +214,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                     <button
                         onClick={handlePing}
                         disabled={!pingTarget || loading}
-                        className="w-full bg-[#142338] hover:bg-teal-500/10 border border-teal-500/30 text-teal-400 p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-sm hover:border-teal-400 active:bg-teal-500/20"
+                        className="w-full bg-[#142338] hover:bg-[#14213D]/10 border border-[#14213D]/30 text-white p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-sm hover:border-[#14213D] active:bg-[#14213D]/20"
                     >
                         {loading ? (
                             <span className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
                     {pingResult && (
                         <div className={`mt-2 p-3 rounded-lg border text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-2 duration-300 ${pingResult.startsWith('Path')
-                            ? 'bg-teal-500/10 border-teal-500/30 text-teal-300 shadow-[0_0_15px_rgba(45,212,191,0.1)]'
+                            ? 'bg-[#14213D]/10 border-[#14213D]/30 text-teal-300 shadow-[0_0_15px_rgba(20,33,61,0.1)]'
                             : 'bg-red-500/10 border-red-500/30 text-red-300'
                             }`}>
                             {pingResult.startsWith('Path')
@@ -251,8 +251,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                 </button>
             </div>
 
-            <div className="mt-auto pt-6 text-[10px] text-slate-600 text-center border-t border-teal-500/5">
-                System Status: <span className="text-teal-500 font-bold">ONLINE</span>
+            <div className="mt-auto pt-6 text-[10px] text-slate-600 text-center border-t border-[#14213D]/5">
+                System Status: <span className="text-white font-bold">ONLINE</span>
             </div>
         </aside>
 

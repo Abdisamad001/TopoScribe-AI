@@ -49,15 +49,15 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
     if (!isOpen) return null;
 
     return (
-        <div className="absolute right-0 top-0 h-full w-[450px] bg-[#17171B]/95 backdrop-blur-xl border-l border-[#E05216]/20 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-50 flex flex-col transition-all duration-300 transform translate-x-0 animate-in slide-in-from-right">
+        <div className="absolute right-0 top-0 h-full w-[450px] bg-[#17171B]/95 backdrop-blur-xl border-l border-[#14213D]/20 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-50 flex flex-col transition-all duration-300 transform translate-x-0 animate-in slide-in-from-right">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#E05216]/10 bg-[#212127]/50">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#14213D]/10 bg-[#212127]/50">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-[#E05216] to-[#E05216] rounded-lg shadow-lg shadow-[#E05216]/20">
+                    <div className="p-2 bg-gradient-to-br from-[#14213D] to-[#14213D] rounded-lg shadow-lg shadow-[#14213D]/20">
                         <Sparkles size={20} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="text-white font-bold text-lg tracking-wide">AI Assistant</h2>
+                        <h2 className="text-white font-bold text-lg tracking-wide font-[family-name:var(--font-orbitron)]">AI Assistant</h2>
                         <p className="text-[#94A8C0] text-xs">Design & Clarification</p>
                     </div>
                 </div>
@@ -73,7 +73,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
             <div className="flex-grow overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50">
-                        <MessageSquare size={48} className="text-[#E05216]" />
+                        <MessageSquare size={48} className="text-white" />
                         <div className="space-y-2">
                             <p className="text-white font-medium">Ready to help!</p>
                             <p className="text-[#94A8C0] text-sm max-w-[250px]">
@@ -95,10 +95,10 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                                         max-w-[85%] rounded-2xl px-5 py-4 leading-relaxed shadow-lg
                                         break-words [overflow-wrap:anywhere] max-h-64 overflow-y-auto
                                         ${msg.role === 'user'
-                                            ? 'bg-[#E05216] text-[#17171B] text-sm font-medium rounded-tr-sm'
+                                            ? 'bg-[#14213D] text-white text-sm font-medium rounded-tr-sm'
                                             : isError
                                                 ? 'bg-[#2C2C34] text-rose-200/90 text-xs border border-rose-400/20 border-l-2 border-l-rose-400/80 rounded-tl-sm'
-                                                : 'bg-[#2C2C34] text-slate-200 text-sm border border-[#E05216]/10 rounded-tl-sm'}
+                                                : 'bg-[#2C2C34] text-slate-200 text-sm border border-[#14213D]/10 rounded-tl-sm'}
                                     `}
                                 >
                                     {isError ? (
@@ -116,10 +116,10 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                 )}
                 {loading && (
                     <div className="flex justify-start">
-                        <div className="bg-[#2C2C34] rounded-2xl rounded-tl-sm px-6 py-4 border border-[#E05216]/10 flex gap-2 items-center">
-                            <span className="w-2 h-2 bg-[#E05216] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                            <span className="w-2 h-2 bg-[#E05216] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                            <span className="w-2 h-2 bg-[#E05216] rounded-full animate-bounce"></span>
+                        <div className="bg-[#2C2C34] rounded-2xl rounded-tl-sm px-6 py-4 border border-[#14213D]/10 flex gap-2 items-center">
+                            <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                            <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                            <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
                         </div>
                     </div>
                 )}
@@ -127,7 +127,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
             </div>
 
             {/* Input Area */}
-            <div className="p-6 bg-[#212127] border-t border-[#E05216]/10">
+            <div className="p-6 bg-[#212127] border-t border-[#14213D]/10">
                 <form onSubmit={handleSubmit} className="relative">
                     <input
                         type="text"
@@ -135,12 +135,12 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Type your reply..."
                         disabled={loading}
-                        className="w-full bg-[#0F0F11] border border-[#E05216]/20 rounded-xl py-4 pl-5 pr-14 text-white placeholder-[#6B7A8F] focus:outline-none focus:border-[#E05216] focus:ring-1 focus:ring-[#E05216] transition-all disabled:opacity-50"
+                        className="w-full bg-[#0F0F11] border border-[#14213D]/20 rounded-xl py-4 pl-5 pr-14 text-white placeholder-[#6B7A8F] focus:outline-none focus:border-[#14213D] focus:ring-1 focus:ring-[#14213D] transition-all disabled:opacity-50"
                     />
                     <button
                         type="submit"
                         disabled={!input.trim() || loading}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[#E05216] hover:bg-[#E05216] text-[#17171B] rounded-lg transition-all disabled:opacity-0 disabled:scale-90"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[#14213D] hover:bg-[#14213D] text-white border border-white/20 rounded-lg transition-all disabled:opacity-0 disabled:scale-90"
                     >
                         <Send size={18} />
                     </button>
