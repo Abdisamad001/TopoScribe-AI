@@ -18,6 +18,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
     const [pingTarget, setPingTarget] = useState('');
     const [pingResult, setPingResult] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     useEffect(() => {
         if (selectedNode) {
@@ -128,6 +129,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
     };
 
     return (
+        <>
         <aside className="w-80 h-full backdrop-blur-md border-l border-teal-500/15 p-6 flex flex-col gap-6 shadow-2xl z-20 overflow-y-auto transition-all duration-300"
             style={{ backgroundColor: '#1C2F45', boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.2)' }}>
 
@@ -242,11 +244,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
             <div className="mt-8 px-1">
                 <button
-                    onClick={() => {
-                        if (confirm('Are you sure you want to delete this device?')) {
-                            onDeleteNode(selectedNode.id);
-                        }
-                    }}
+                    onClick={() => setShowDeleteConfirm(true)}
                     className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2 rounded-lg transition-all text-xs font-semibold"
                 >
                     <Trash2 size={14} /> Delete Device
@@ -257,5 +255,42 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                 System Status: <span className="text-teal-500 font-bold">ONLINE</span>
             </div>
         </aside>
+
+        {showDeleteConfirm && (
+            <div
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                onClick={() => setShowDeleteConfirm(false)}
+            >
+                <div
+                    className="mx-4 w-full max-w-sm rounded-xl border border-red-500/20 bg-[#1C2F45] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-top-2 duration-300"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <h3 className="text-lg font-semibold text-white tracking-tight">Delete Device?</h3>
+                    <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+                        Are you sure you want to delete &quot;{selectedNode.data.label as string}&quot;? This action cannot be undone.
+                    </p>
+                    <div className="mt-6 flex gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="flex-1 bg-[#142338] hover:bg-slate-700/50 border border-white/10 text-slate-300 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onDeleteNode(selectedNode.id);
+                                setShowDeleteConfirm(false);
+                            }}
+                            className="flex-1 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 }

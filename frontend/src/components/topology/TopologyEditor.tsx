@@ -3,7 +3,6 @@
 import React, { useCallback } from 'react';
 import {
     ReactFlow,
-    MiniMap,
     Controls,
     useNodesState,
     useEdgesState,
@@ -291,7 +290,6 @@ export default function TopologyEditor() {
                     style={{ background: '#000000' }}
                 >
                     <Controls />
-                    <MiniMap />
 
                     {hasTopology && (
                         <div className="absolute top-4 right-4 z-50 flex gap-2">

@@ -91,7 +91,7 @@ export default function Sidebar() {
 
             <div className="mt-auto p-4 rounded-lg bg-[#212127]/50 border border-[#E05216]/10 text-center">
                 <p className="text-[10px] text-slate-400 leading-relaxed">
-                    Drag components to the canavas to build your topology manually or use AI generation.
+                    Drag components to the canvas to build your topology manually or use AI generation.
                 </p>
             </div>
         </aside>
