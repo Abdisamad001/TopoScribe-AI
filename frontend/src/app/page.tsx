@@ -1,11 +1,11 @@
 import TopologyEditor from '@/components/topology/TopologyEditor';
-import { Github } from 'lucide-react';
+import { Search, CircleHelp, Bell, CircleUserRound } from 'lucide-react';
 
 export default function Home() {
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-white dark:bg-zinc-950">
       {/* App Header */}
-      <header className="flex-shrink-0 z-50 flex w-full items-center justify-between border-b border-[#14213D]/20 bg-[#212127]/95 backdrop-blur-md px-6 py-2 shadow-lg shadow-black/20">
+      <header className="relative flex-shrink-0 z-50 flex w-full items-center justify-between border-b border-[#14213D]/20 bg-[#212127]/95 backdrop-blur-md px-6 py-2 shadow-lg shadow-black/20">
         <div className="flex items-center gap-1.5">
           <div className="relative h-10 w-10 shrink-0">
             <img
@@ -19,17 +19,53 @@ export default function Home() {
           </h1>
         </div>
 
+        <div className="absolute left-1/2 top-1/2 hidden w-[min(28rem,36vw)] -translate-x-1/2 -translate-y-1/2 md:flex items-center rounded-full border border-white/15 bg-[#14213D]/20 px-3 py-1.5">
+          <Search size={16} strokeWidth={1.75} className="shrink-0 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search or ask anything"
+            className="ml-2 w-full bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+          />
+        </div>
+
         <div className="flex items-center gap-4 text-sm font-medium text-slate-400">
+          <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            aria-label="Support"
+            className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          >
+            <CircleHelp size={20} strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          >
+            <Bell size={20} strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            aria-label="Account"
+            className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          >
+            <CircleUserRound size={20} strokeWidth={1.75} />
+          </button>
+          </div>
           <a
             href="https://github.com/Abdisamad001/TopoScribe-AI.git"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#14213D]/10 hover:bg-[#14213D]/20 text-white border border-[#14213D]/20 rounded-full text-xs font-semibold uppercase tracking-wider shadow-[0_0_10px_rgba(20,33,61,0.1)] transition-colors"
+            aria-label="GitHub"
+            title="GitHub"
+            className="hidden md:inline-flex p-2 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <Github size={14} className="text-white" />
-            GitHub
+            <img
+              src="/github-mark.png"
+              alt=""
+              className="h-[18px] w-[18px] invert"
+            />
           </a>
-          <span className="text-xs opacity-50 font-mono">v1.0.0</span>
         </div>
       </header>
 

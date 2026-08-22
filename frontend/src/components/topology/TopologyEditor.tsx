@@ -289,7 +289,15 @@ export default function TopologyEditor() {
                     fitView
                     style={{ background: '#000000' }}
                 >
-                    <Controls />
+                    <Controls
+                        style={{
+                            '--xy-controls-button-background-color': '#14213D',
+                            '--xy-controls-button-background-color-hover': '#1C2F45',
+                            '--xy-controls-button-color': '#E5E7EB',
+                            '--xy-controls-button-color-hover': '#FFFFFF',
+                            '--xy-controls-button-border-color': 'rgba(255,255,255,0.12)',
+                        } as React.CSSProperties}
+                    />
 
                     {hasTopology && (
                         <div className="absolute top-4 right-4 z-50 flex gap-2">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Share2, Monitor, GripVertical, Layers, MousePointerClick, LucideIcon } from 'lucide-react';
+import { Globe, Share2, Monitor, GripVertical, Layers, MousePointerClick, Home, Star, BookOpen, LucideIcon } from 'lucide-react';
 
 type DeviceCardConfig = {
     type: string;
@@ -79,7 +79,22 @@ export default function Sidebar() {
 
     return (
         <aside className="w-64 h-full bg-[#2C2C34] border-r border-[#14213D]/15 p-4 flex flex-col gap-4 shadow-xl z-30">
-            <div className="flex items-center gap-2 pb-3 border-b border-[#14213D]/10">
+            <nav className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white bg-white/10">
+                    <Home size={16} className="shrink-0" />
+                    Home
+                </div>
+                <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer">
+                    <Star size={16} className="shrink-0" />
+                    Favourites
+                </div>
+                <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer">
+                    <BookOpen size={16} className="shrink-0" />
+                    Documentation
+                </div>
+            </nav>
+
+            <div className="flex items-center gap-2 pt-3 pb-3 border-t border-white/10">
                 <Layers size={14} className="text-white shrink-0" />
                 <span className="text-white font-bold tracking-widest text-xs uppercase">Component Library</span>
             </div>
