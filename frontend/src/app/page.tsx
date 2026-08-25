@@ -1,5 +1,5 @@
 import TopologyEditor from '@/components/topology/TopologyEditor';
-import { Search, CircleHelp, Bell, CircleUserRound } from 'lucide-react';
+import { MagnifyingGlassIcon, QuestionIcon, BellIcon, UserCircleIcon } from '@phosphor-icons/react/ssr';
 
 export default function Home() {
   return (
@@ -20,7 +20,7 @@ export default function Home() {
         </div>
 
         <div className="absolute left-1/2 top-1/2 hidden w-[min(28rem,36vw)] -translate-x-1/2 -translate-y-1/2 md:flex items-center rounded-full border border-white/15 bg-[#14213D]/20 px-3 py-1.5">
-          <Search size={16} strokeWidth={1.75} className="shrink-0 text-slate-400" />
+          <MagnifyingGlassIcon size={16} weight="regular" className="shrink-0 text-slate-400" />
           <input
             type="text"
             placeholder="Search or ask anything"
@@ -35,23 +35,15 @@ export default function Home() {
             aria-label="Support"
             className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
           >
-            <CircleHelp size={20} strokeWidth={1.75} />
+            <QuestionIcon size={20} weight="regular" />
           </button>
           <button
             type="button"
             aria-label="Notifications"
             className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
           >
-            <Bell size={20} strokeWidth={1.75} />
+            <BellIcon size={20} weight="regular" />
           </button>
-          <button
-            type="button"
-            aria-label="Account"
-            className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
-          >
-            <CircleUserRound size={20} strokeWidth={1.75} />
-          </button>
-          </div>
           <a
             href="https://github.com/Abdisamad001/TopoScribe-AI.git"
             target="_blank"
@@ -66,6 +58,14 @@ export default function Home() {
               className="h-[18px] w-[18px] invert"
             />
           </a>
+          </div>
+          <button
+            type="button"
+            aria-label="Account"
+            className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+          >
+            <UserCircleIcon size={20} weight="regular" />
+          </button>
         </div>
       </header>
 

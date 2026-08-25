@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { SparkleIcon, SpinnerIcon } from '@phosphor-icons/react';
 import { generateDesign } from '@/lib/api';
 
 interface ChatInterfaceProps {
@@ -64,12 +64,12 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
                     >
                         {loading ? (
                             <>
-                                <Loader2 size={18} className="animate-spin" />
+                                <SpinnerIcon size={18} weight="regular" className="animate-spin" />
                                 <span>Generating...</span>
                             </>
                         ) : (
                             <>
-                                <Sparkles size={18} />
+                                <SparkleIcon size={18} weight="regular" />
                                 <span>Generate</span>
                             </>
                         )}

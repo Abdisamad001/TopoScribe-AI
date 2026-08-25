@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, MessageSquare, Maximize2, Minimize2, PanelRightOpen, PanelRightClose, AlertTriangle } from 'lucide-react';
+import { XIcon, PaperPlaneRightIcon, SparkleIcon, ChatIcon, WarningIcon } from '@phosphor-icons/react';
 
 const FRIENDLY_ERROR_COPY =
     'Something went wrong generating your design. Please try again in a moment.';
@@ -54,7 +54,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#14213D]/10 bg-[#212127]/50">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-gradient-to-br from-[#14213D] to-[#14213D] rounded-lg shadow-lg shadow-[#14213D]/20">
-                        <Sparkles size={20} className="text-white" />
+                        <SparkleIcon size={20} weight="regular" className="text-white" />
                     </div>
                     <div>
                         <h2 className="text-white font-bold text-lg tracking-wide font-[family-name:var(--font-orbitron)]">AI Assistant</h2>
@@ -65,7 +65,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                     onClick={onClose}
                     className="text-[#6B7A8F] hover:text-white hover:bg-white/10 p-2 rounded-lg transition-all"
                 >
-                    <X size={20} />
+                    <XIcon size={20} weight="regular" />
                 </button>
             </div>
 
@@ -73,7 +73,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
             <div className="flex-grow overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50">
-                        <MessageSquare size={48} className="text-white" />
+                        <ChatIcon size={48} weight="regular" className="text-white" />
                         <div className="space-y-2">
                             <p className="text-white font-medium">Ready to help!</p>
                             <p className="text-[#94A8C0] text-sm max-w-[250px]">
@@ -103,7 +103,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                                 >
                                     {isError ? (
                                         <span className="flex items-start gap-2">
-                                            <AlertTriangle size={14} className="text-rose-400 mt-0.5 shrink-0" />
+                                            <WarningIcon size={14} weight="regular" className="text-rose-400 mt-0.5 shrink-0" />
                                             <span>{display}</span>
                                         </span>
                                     ) : (
@@ -142,7 +142,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                         disabled={!input.trim() || loading}
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[#14213D] hover:bg-[#14213D] text-white border border-white/20 rounded-lg transition-all disabled:opacity-0 disabled:scale-90"
                     >
-                        <Send size={18} />
+                        <PaperPlaneRightIcon size={18} weight="regular" />
                     </button>
                 </form>
             </div>

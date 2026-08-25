@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { NetworkNode, Link } from '@/types/network';
-import { Share2, CheckCircle, Activity, Save, Monitor, Shield, Globe, Trash2 } from 'lucide-react';
+import { ShareNetworkIcon, CheckCircleIcon, PulseIcon, FloppyDiskIcon, DesktopIcon, ShieldIcon, GlobeIcon, TrashIcon } from '@phosphor-icons/react';
 
 interface ConfigPanelProps {
     selectedNode: Node | null;
@@ -112,7 +112,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
         return (
             <aside className="w-80 h-full backdrop-blur-md border-l border-[#14213D]/15 p-6 flex flex-col justify-center items-center text-center text-gray-400 z-20"
                 style={{ backgroundColor: '#1C2F45', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)' }}>
-                <Activity size={48} className="text-white/30 mb-4 animate-pulse" />
+                <PulseIcon size={48} weight="regular" className="text-white/30 mb-4 animate-pulse" />
                 <p className="font-semibold text-slate-400">Select a device to configure</p>
                 <div className="mt-2 text-xs text-slate-600">Click any node on the canvas</div>
             </aside>
@@ -121,10 +121,10 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
     const NodeTypeIcon = () => {
         switch (selectedNode.type) {
-            case 'router': return <Globe size={18} className="text-teal-400" />;
-            case 'switch': return <Share2 size={18} className="text-blue-400" />;
-            case 'host': return <Monitor size={18} className="text-purple-400" />;
-            default: return <Shield size={18} className="text-gray-400" />;
+            case 'router': return <GlobeIcon size={18} weight="regular" className="text-teal-400" />;
+            case 'switch': return <ShareNetworkIcon size={18} weight="regular" className="text-blue-400" />;
+            case 'host': return <DesktopIcon size={18} weight="regular" className="text-purple-400" />;
+            default: return <ShieldIcon size={18} weight="regular" className="text-gray-400" />;
         }
     };
 
@@ -178,7 +178,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                     onClick={handleSave}
                     className="w-full mt-2 bg-gradient-to-br from-[#14213D] to-[#14213D] hover:from-[#14213D] hover:to-[#14213D] text-white p-3 rounded-lg shadow-lg shadow-[#14213D]/20 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 font-semibold text-sm"
                 >
-                    <Save size={16} /> Apply Configuration
+                    <FloppyDiskIcon size={16} weight="regular" /> Apply Configuration
                 </button>
             </div>
 
@@ -188,7 +188,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
             {/* Simulation Section */}
             <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2 text-slate-400">
-                    <Activity size={14} className="text-white" />
+                    <PulseIcon size={14} weight="regular" className="text-white" />
                     <h3 className="text-[10px] uppercase font-bold tracking-wider">Simulation Interface</h3>
                 </div>
 
@@ -218,11 +218,11 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                     >
                         {loading ? (
                             <span className="flex items-center gap-2">
-                                <Activity className="animate-spin" size={16} /> Transmitting...
+                                <PulseIcon weight="regular" className="animate-spin" size={16} /> Transmitting...
                             </span>
                         ) : (
                             <span className="flex items-center gap-2">
-                                <Share2 size={16} /> Send Packet
+                                <ShareNetworkIcon size={16} weight="regular" /> Send Packet
                             </span>
                         )}
                     </button>
@@ -233,8 +233,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                             : 'bg-red-500/10 border-red-500/30 text-red-300'
                             }`}>
                             {pingResult.startsWith('Path')
-                                ? <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
-                                : <Shield size={16} className="mt-0.5 flex-shrink-0" />
+                                ? <CheckCircleIcon size={16} weight="regular" className="mt-0.5 flex-shrink-0" />
+                                : <ShieldIcon size={16} weight="regular" className="mt-0.5 flex-shrink-0" />
                             }
                             <span className="leading-relaxed font-mono">{pingResult}</span>
                         </div>
@@ -247,7 +247,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                     onClick={() => setShowDeleteConfirm(true)}
                     className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2 rounded-lg transition-all text-xs font-semibold"
                 >
-                    <Trash2 size={14} /> Delete Device
+                    <TrashIcon size={14} weight="regular" /> Delete Device
                 </button>
             </div>
 
