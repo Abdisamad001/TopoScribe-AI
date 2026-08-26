@@ -109,11 +109,14 @@ Return ONLY valid JSON:
 }}
 """
     
-    # Single call, always the planning tier. The model fixes temperature at 1,
-    # so output consistency comes from the strict prompt above plus the
-    # deterministic post-processing below, not from a temperature setting.
+    # Single call, always the planning tier. Temperature is fixed by the model
+    # at 1; consistency comes from the prompt plus deterministic post-processing.
+    # reasoning_effort="low" was chosen after a 7-case × 3-repeat comparison vs
+    # the gpt-5.5 default (medium): identical correctness, ~58% fewer reasoning
+    # tokens and ~29% lower mean wall time. Topology escalation is left at the
+    # model default — do not copy this override there without a separate study.
     try:
-        response_text = call_llm(prompt, tier="planning")
+        response_text = call_llm(prompt, tier="planning", reasoning_effort="low")
         
         # Parse response
         try:

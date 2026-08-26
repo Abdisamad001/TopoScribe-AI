@@ -18,6 +18,10 @@ from openai import OpenAI
 load_dotenv()
 
 Tier = Literal["planning", "primary", "escalated"]
+# Chat Completions top-level parameter (not the Responses API's nested
+# reasoning={"effort": ...}). Verified live against gpt-5.5: the nested shape
+# raises TypeError; reasoning_effort="low"|"medium"|... is accepted.
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
 
 GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile"
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
@@ -90,26 +94,48 @@ def _call_groq(prompt: str, model: str, temperature: float, max_tokens: int) -> 
         raise Exception(f"Groq call failed: {str(e)}")
 
 
-def _openai_create(client: OpenAI, model: str, prompt: str, temperature: float, max_tokens: int):
+def _openai_create(
+    client: OpenAI,
+    model: str,
+    prompt: str,
+    temperature: float,
+    max_tokens: int,
+    reasoning_effort: Optional[ReasoningEffort] = None,
+):
     messages = [{"role": "user", "content": prompt}]
+    kwargs = {}
+    # Omit the key entirely when unset so the model keeps its own default
+    # (gpt-5.5 → medium). Passing null is not the same as omitting.
+    if reasoning_effort is not None:
+        kwargs["reasoning_effort"] = reasoning_effort
     if _requires_default_params(model):
         return client.chat.completions.create(
             model=model,
             messages=messages,
             max_completion_tokens=max_tokens + _REASONING_TOKEN_ALLOWANCE,
+            **kwargs,
         )
     return client.chat.completions.create(
         model=model,
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens,
+        **kwargs,
     )
 
 
-def _call_openai(prompt: str, model: str, temperature: float, max_tokens: int) -> str:
+def _call_openai(
+    prompt: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    reasoning_effort: Optional[ReasoningEffort] = None,
+) -> str:
     client = _get_openai_client()
     try:
-        response = _openai_create(client, model, prompt, temperature, max_tokens)
+        response = _openai_create(
+            client, model, prompt, temperature, max_tokens, reasoning_effort
+        )
     except Exception as e:
         raise Exception(f"OpenAI call failed: {str(e)}")
 
@@ -131,19 +157,35 @@ def call_llm(
     tier: Tier,
     temperature: float = 0.25,
     max_tokens: int = LLM_MAX_OUTPUT_TOKENS,
+    reasoning_effort: Optional[ReasoningEffort] = None,
 ) -> str:
     """
     Routes a prompt to the provider and model assigned to the given tier.
+
+    reasoning_effort is Chat Completions-only and only applies to OpenAI tiers.
+    When None (the default), the key is omitted and the model uses its own
+    default (medium for gpt-5.5). Topology's escalated path must keep calling
+    without an override unless separately re-tuned.
     """
     if tier == "primary":
+        # Groq has no reasoning_effort; the argument is ignored for this tier.
         return _call_groq(prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens)
     if tier == "planning":
         return _call_openai(
-            prompt, _resolve_openai_model("OPENAI_PLANNING_MODEL"), temperature, max_tokens
+            prompt,
+            _resolve_openai_model("OPENAI_PLANNING_MODEL"),
+            temperature,
+            max_tokens,
+            reasoning_effort,
         )
     if tier == "escalated":
+        # Intentionally does not force an effort — leave at model default.
         return _call_openai(
-            prompt, _resolve_openai_model("OPENAI_ESCALATION_MODEL"), temperature, max_tokens
+            prompt,
+            _resolve_openai_model("OPENAI_ESCALATION_MODEL"),
+            temperature,
+            max_tokens,
+            reasoning_effort,
         )
     raise ValueError(f"Unknown LLM tier: {tier!r}")
 
