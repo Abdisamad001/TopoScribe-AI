@@ -85,9 +85,13 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
 
     prompt = _build_topology_prompt(design_plan, prior_errors)
 
-    # Lever 1: only the escalated (GPT-5.5) path may override reasoning_effort.
-    # Primary/Groq never receives this kwarg — effort stays None on that path.
-    effort = _escalated_reasoning_effort(design_plan) if tier == "escalated" else None
+    # Primary (Groq/Qwen): reasoning_effort="none" disables thinking mode so
+    # the response is JSON, not a <think> wrapper. Escalated (GPT-5.5) keeps
+    # Lever 1's low-vs-medium selector; OpenAI uses a different effort scale.
+    if tier == "primary":
+        effort = "none"
+    else:
+        effort = _escalated_reasoning_effort(design_plan)
 
     try:
         response_text = call_llm(prompt, tier=tier, reasoning_effort=effort)

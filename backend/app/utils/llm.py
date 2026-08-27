@@ -4,9 +4,10 @@ LLM access layer.
 Tier routing (Part 2 escalation scope):
 - "planning"   -> OpenAI. Used unconditionally by the Planning Agent on every call.
                   This is Planning's assigned model, not a retry/escalation path.
-- "primary"    -> Groq. Used by Topology attempt 0, Configuration, and Validation.
+- "primary"    -> Groq. Used only by Topology attempt 0.
+                  Configuration and Validation are deterministic Python and never
+                  call this layer.
 - "escalated"  -> OpenAI. Invoked only by the Topology Agent's retry path.
-                  Never wired into Configuration or Validation.
 """
 import os
 from typing import Literal, Optional
@@ -23,7 +24,9 @@ Tier = Literal["planning", "primary", "escalated"]
 # raises TypeError; reasoning_effort="low"|"medium"|... is accepted.
 ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
 
-GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile"
+# Confirmed against Groq deprecations (llama-3.3-70b-versatile shut down
+# 2026-08-16) and the live /models list: exact ID is qwen/qwen3.6-27b.
+GROQ_DEFAULT_MODEL = "qwen/qwen3.6-27b"
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
 
 _groq_client: Optional[Groq] = None
@@ -80,14 +83,26 @@ def _requires_default_params(model: str) -> bool:
     return model.startswith(_FIXED_TEMPERATURE_MODEL_PREFIXES)
 
 
-def _call_groq(prompt: str, model: str, temperature: float, max_tokens: int) -> str:
+def _call_groq(
+    prompt: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    reasoning_effort: Optional[ReasoningEffort] = None,
+) -> str:
     client = _get_groq_client()
+    kwargs = {}
+    # Qwen3 on Groq: "none" disables thinking mode. Omit the key when unset
+    # so other Groq callers keep the model default.
+    if reasoning_effort is not None:
+        kwargs["reasoning_effort"] = reasoning_effort
     try:
         response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=temperature,
             max_tokens=max_tokens,
+            **kwargs,
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -162,14 +177,15 @@ def call_llm(
     """
     Routes a prompt to the provider and model assigned to the given tier.
 
-    reasoning_effort is Chat Completions-only and only applies to OpenAI tiers.
-    When None (the default), the key is omitted and the model uses its own
-    default (medium for gpt-5.5). Topology's escalated path must keep calling
-    without an override unless separately re-tuned.
+    reasoning_effort is Chat Completions-only. When None (the default), the
+    key is omitted so each provider keeps its own default (medium for gpt-5.5;
+    thinking-on for Qwen3 on Groq). Topology's escalated path must keep
+    calling without an OpenAI override unless separately re-tuned.
     """
     if tier == "primary":
-        # Groq has no reasoning_effort; the argument is ignored for this tier.
-        return _call_groq(prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens)
+        return _call_groq(
+            prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens, reasoning_effort
+        )
     if tier == "planning":
         return _call_openai(
             prompt,
