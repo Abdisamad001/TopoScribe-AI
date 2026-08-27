@@ -24,8 +24,7 @@ Tier = Literal["planning", "primary", "escalated"]
 # raises TypeError; reasoning_effort="low"|"medium"|... is accepted.
 ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
 
-# Confirmed against Groq deprecations (llama-3.3-70b-versatile shut down
-# 2026-08-16) and the live /models list: exact ID is qwen/qwen3.6-27b.
+# qwen/qwen3.6-27b is the default model for Groq.
 GROQ_DEFAULT_MODEL = "qwen/qwen3.6-27b"
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
 
@@ -37,13 +36,14 @@ _openai_client: Optional[OpenAI] = None
 # `max_completion_tokens`.
 _FIXED_TEMPERATURE_MODEL_PREFIXES = ("gpt-5",)
 
-# Output budget every tier gets, so a retry that escalates does so because the
-# stronger model produced better content, not because it was handed more room.
-# Topology output scales with design size: 1425/2839/3556 content tokens for
-# 5/10/15-department designs. At the previous 2000 cap Groq truncated a
-# 15-department topology mid-JSON (finish_reason="length"), which the quality
-# gate could only report as malformed JSON.
+# Output budget for OpenAI tiers (planning + escalated). Kept at 8000 so GPT-5.5
+
 LLM_MAX_OUTPUT_TOKENS = 8000
+
+# Groq Free-tier TPM is 8000 for qwen/qwen3.6-27b (prompt + requested max_tokens
+# reserved together). Measured 2026-08-27 with reasoning_effort="none"
+
+GROQ_PRIMARY_MAX_OUTPUT_TOKENS = 5700
 
 # gpt-5 class models bill internal reasoning against the same budget, so they get
 # an allowance on top to keep their *content* budget equal to the figure above.
@@ -171,7 +171,7 @@ def call_llm(
     *,
     tier: Tier,
     temperature: float = 0.25,
-    max_tokens: int = LLM_MAX_OUTPUT_TOKENS,
+    max_tokens: Optional[int] = None,
     reasoning_effort: Optional[ReasoningEffort] = None,
 ) -> str:
     """
@@ -182,6 +182,12 @@ def call_llm(
     thinking-on for Qwen3 on Groq). Topology's escalated path must keep
     calling without an OpenAI override unless separately re-tuned.
     """
+    if max_tokens is None:
+        max_tokens = (
+            GROQ_PRIMARY_MAX_OUTPUT_TOKENS
+            if tier == "primary"
+            else LLM_MAX_OUTPUT_TOKENS
+        )
     if tier == "primary":
         return _call_groq(
             prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens, reasoning_effort

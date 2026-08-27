@@ -1,5 +1,5 @@
 from app.graph.state import NetworkDesignState
-from app.utils.llm import call_llm
+from app.utils.llm import GROQ_PRIMARY_MAX_OUTPUT_TOKENS, call_llm
 from app.generators.topology_layout import (
     DEFAULT_COLUMN_SPACING_PX,
     HOST_CARD_WIDTH_PX,
@@ -85,16 +85,21 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
 
     prompt = _build_topology_prompt(design_plan, prior_errors)
 
-    # Primary (Groq/Qwen): reasoning_effort="none" disables thinking mode so
-    # the response is JSON, not a <think> wrapper. Escalated (GPT-5.5) keeps
-    # Lever 1's low-vs-medium selector; OpenAI uses a different effort scale.
+    # Primary (Groq/Qwen): reasoning_effort="none" 
     if tier == "primary":
         effort = "none"
     else:
         effort = _escalated_reasoning_effort(design_plan)
 
     try:
-        response_text = call_llm(prompt, tier=tier, reasoning_effort=effort)
+        response_text = call_llm(
+            prompt,
+            tier=tier,
+            reasoning_effort=effort,
+            max_tokens=(
+                GROQ_PRIMARY_MAX_OUTPUT_TOKENS if tier == "primary" else None
+            ),
+        )
     except Exception as e:
         reasons = [str(e)]
     else:
