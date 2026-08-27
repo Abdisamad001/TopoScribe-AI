@@ -4,11 +4,28 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --chrome-navy: #14213D;
+  --chrome-navy-hover: #1C2F45;
+  --chrome-charcoal: #2C2C34;
+  --chrome-surface: #17171B;
+  --chrome-elevated: #212127;
+  --chrome-muted: #6B7A8F;
+  --chrome-subtitle: #94A8C0;
+  --chrome-scrollbar-size: 0.3125rem;
+  --chrome-scrollbar-thumb: color-mix(in srgb, var(--chrome-muted) 40%, transparent);
+  --chrome-scrollbar-thumb-active: color-mix(in srgb, var(--chrome-muted) 70%, transparent);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-chrome-navy: #14213D;
+  --color-chrome-navy-hover: #1C2F45;
+  --color-chrome-charcoal: #2C2C34;
+  --color-chrome-surface: #17171B;
+  --color-chrome-elevated: #212127;
+  --color-chrome-muted: #6B7A8F;
+  --color-chrome-subtitle: #94A8C0;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -24,4 +41,47 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.custom-scrollbar:hover,
+.custom-scrollbar:focus-within,
+.custom-scrollbar:active {
+  scrollbar-color: var(--chrome-scrollbar-thumb) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: var(--chrome-scrollbar-size);
+  height: var(--chrome-scrollbar-size);
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner,
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  transition: background-color 300ms ease;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb,
+.custom-scrollbar:focus-within::-webkit-scrollbar-thumb,
+.custom-scrollbar:active::-webkit-scrollbar-thumb {
+  background-color: var(--chrome-scrollbar-thumb);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: var(--chrome-scrollbar-thumb-active);
 }

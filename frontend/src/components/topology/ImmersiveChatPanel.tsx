@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { XIcon, PaperPlaneRightIcon, SparkleIcon, ChatIcon, WarningIcon } from '@phosphor-icons/react';
+import { PaperPlaneRightIcon, ChatIcon, WarningIcon } from '@phosphor-icons/react';
+
+export const AI_ASSISTANT_TITLE = 'AI Assistant';
+export const AI_ASSISTANT_SUBTITLE = 'Design & Clarification';
+export const REPLY_PLACEHOLDER = 'Type your reply...';
 
 const FRIENDLY_ERROR_COPY =
     'Something went wrong generating your design. Please try again in a moment.';
@@ -21,13 +25,14 @@ function getDisplayContent(content: string): string {
 
 interface ImmersiveChatPanelProps {
     isOpen: boolean;
-    onClose: () => void;
+    onClose?: () => void;
     messages: { role: 'user' | 'assistant', content: string }[];
     onSendMessage: (message: string) => void;
     loading?: boolean;
+    showComposer?: boolean;
 }
 
-export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMessage, loading }: ImmersiveChatPanelProps) {
+export default function ImmersiveChatPanel({ isOpen, messages, onSendMessage, loading, showComposer = true }: ImmersiveChatPanelProps) {
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -46,33 +51,20 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
         setInput('');
     };
 
+    const submitOnEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return;
+        e.preventDefault();
+        e.currentTarget.form?.requestSubmit();
+    };
+
     if (!isOpen) return null;
 
     return (
-        <div className="absolute right-0 top-0 h-full w-[450px] bg-[#17171B]/95 backdrop-blur-xl border-l border-[#14213D]/20 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-50 flex flex-col transition-all duration-300 transform translate-x-0 animate-in slide-in-from-right">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#14213D]/10 bg-[#212127]/50">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-[#14213D] to-[#14213D] rounded-lg shadow-lg shadow-[#14213D]/20">
-                        <SparkleIcon size={20} weight="regular" className="text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-white font-bold text-lg tracking-wide font-[family-name:var(--font-orbitron)]">AI Assistant</h2>
-                        <p className="text-[#94A8C0] text-xs">Design & Clarification</p>
-                    </div>
-                </div>
-                <button
-                    onClick={onClose}
-                    className="text-[#6B7A8F] hover:text-white hover:bg-white/10 p-2 rounded-lg transition-all"
-                >
-                    <XIcon size={20} weight="regular" />
-                </button>
-            </div>
-
+        <div className="flex min-h-0 flex-col">
             {/* Chat Area */}
-            <div className="flex-grow overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
+            <div className="min-h-0 overflow-y-auto px-6 py-5 space-y-5 custom-scrollbar">
                 {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50">
+                    <div className="flex flex-col items-center justify-center text-center space-y-3 py-2 opacity-50">
                         <ChatIcon size={48} weight="regular" className="text-white" />
                         <div className="space-y-2">
                             <p className="text-white font-medium">Ready to help!</p>
@@ -126,16 +118,18 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-6 bg-[#212127] border-t border-[#14213D]/10">
+            {showComposer && (
+            <div className="shrink-0 bg-[#212127] px-6 py-5">
                 <form onSubmit={handleSubmit} className="relative">
-                    <input
-                        type="text"
+                    <textarea
+                        rows={1}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type your reply..."
+                        onKeyDown={submitOnEnter}
+                        placeholder={REPLY_PLACEHOLDER}
+                        aria-label={REPLY_PLACEHOLDER}
                         disabled={loading}
-                        className="w-full bg-[#0F0F11] border border-[#14213D]/20 rounded-xl py-4 pl-5 pr-14 text-white placeholder-[#6B7A8F] focus:outline-none focus:border-[#14213D] focus:ring-1 focus:ring-[#14213D] transition-all disabled:opacity-50"
+                        className="w-full bg-[#0F0F11] border border-[#14213D]/20 rounded-xl py-4 pl-5 pr-14 text-white placeholder-[#6B7A8F] focus:outline-none focus:border-chrome-navy focus:ring-2 focus:ring-chrome-navy/40 focus:shadow-lg focus:shadow-chrome-navy/25 transition-all duration-300 disabled:opacity-50 field-sizing-content resize-none max-h-[35vh] overflow-y-auto custom-scrollbar"
                     />
                     <button
                         type="submit"
@@ -146,6 +140,7 @@ export default function ImmersiveChatPanel({ isOpen, onClose, messages, onSendMe
                     </button>
                 </form>
             </div>
+            )}
         </div>
     );
 }

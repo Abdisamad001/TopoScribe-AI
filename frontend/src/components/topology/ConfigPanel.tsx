@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { NetworkNode, Link } from '@/types/network';
-import { ShareNetworkIcon, CheckCircleIcon, PulseIcon, FloppyDiskIcon, DesktopIcon, ShieldIcon, GlobeIcon, TrashIcon } from '@phosphor-icons/react';
+import { ShareNetworkIcon, CheckCircleIcon, PulseIcon, FloppyDiskIcon, DesktopIcon, ShieldIcon, GlobeIcon, TrashIcon, CaretRightIcon } from '@phosphor-icons/react';
 
 interface ConfigPanelProps {
     selectedNode: Node | null;
@@ -10,17 +10,22 @@ interface ConfigPanelProps {
     allEdges: Edge[];
     onSimulationPath: (result: { path: string[], success: boolean, failureNodeId?: string }) => void;
     onDeleteNode: (nodeId: string) => void;
+    onDeselect: () => void;
 }
 
-export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allEdges, onSimulationPath, onDeleteNode }: ConfigPanelProps) {
+export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allEdges, onSimulationPath, onDeleteNode, onDeselect }: ConfigPanelProps) {
     const [label, setLabel] = useState('');
     const [ip, setIp] = useState('');
     const [pingTarget, setPingTarget] = useState('');
     const [pingResult, setPingResult] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
+
+    const isOpen = !!selectedNode && !manuallyCollapsed;
 
     useEffect(() => {
+        setManuallyCollapsed(false);
         if (selectedNode) {
             setLabel((selectedNode.data.label as string) || '');
             setIp((selectedNode.data.ip as string) || '');
@@ -28,6 +33,15 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
             setPingTarget('');
         }
     }, [selectedNode?.id]);
+
+    useEffect(() => {
+        if (!selectedNode) return;
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onDeselect();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [selectedNode, onDeselect]);
 
     const handleSave = () => {
         if (selectedNode) {
@@ -108,19 +122,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
         }
     };
 
-    if (!selectedNode) {
-        return (
-            <aside className="w-80 h-full backdrop-blur-md border-l border-[#14213D]/15 p-6 flex flex-col justify-center items-center text-center text-gray-400 z-20"
-                style={{ backgroundColor: '#1C2F45', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)' }}>
-                <PulseIcon size={48} weight="regular" className="text-white/30 mb-4 animate-pulse" />
-                <p className="font-semibold text-slate-400">Select a device to configure</p>
-                <div className="mt-2 text-xs text-slate-600">Click any node on the canvas</div>
-            </aside>
-        );
-    }
-
     const NodeTypeIcon = () => {
-        switch (selectedNode.type) {
+        switch (selectedNode?.type) {
             case 'router': return <GlobeIcon size={18} weight="regular" className="text-teal-400" />;
             case 'switch': return <ShareNetworkIcon size={18} weight="regular" className="text-blue-400" />;
             case 'host': return <DesktopIcon size={18} weight="regular" className="text-purple-400" />;
@@ -130,8 +133,42 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
     return (
         <>
-        <aside className="w-80 h-full backdrop-blur-md border-l border-[#14213D]/15 p-6 flex flex-col gap-6 shadow-2xl z-20 overflow-y-auto transition-all duration-300"
-            style={{ backgroundColor: '#1C2F45', boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.2)' }}>
+        {isOpen && (
+            <div
+                className="fixed inset-0 z-40 bg-black/50 min-[1440px]:hidden"
+                onClick={onDeselect}
+            />
+        )}
+        <aside
+            aria-hidden={!isOpen}
+            className={`
+                shrink-0 backdrop-blur-md flex flex-col
+                transition-all duration-300 ease-in-out
+                ${isOpen
+                    ? `
+                        border-[#14213D]/15 gap-6 overflow-y-auto
+                        max-[1023px]:fixed max-[1023px]:inset-x-0 max-[1023px]:bottom-0 max-[1023px]:h-[min(70vh,32rem)] max-[1023px]:w-full max-[1023px]:z-50 max-[1023px]:rounded-t-2xl max-[1023px]:border-l-0 max-[1023px]:border-t max-[1023px]:p-6
+                        min-[1024px]:max-[1439px]:fixed min-[1024px]:max-[1439px]:top-0 min-[1024px]:max-[1439px]:right-0 min-[1024px]:max-[1439px]:h-full min-[1024px]:max-[1439px]:w-80 min-[1024px]:max-[1439px]:z-50 min-[1024px]:max-[1439px]:border-l min-[1024px]:max-[1439px]:p-6
+                        min-[1440px]:relative min-[1440px]:w-80 min-[1440px]:h-full min-[1440px]:border-l min-[1440px]:p-6
+                    `
+                    : 'relative w-0 h-full p-0 border-0 pointer-events-none overflow-hidden'
+                }
+            `}
+            style={{ backgroundColor: '#1C2F45', boxShadow: isOpen ? '-8px 0 32px rgba(0, 0, 0, 0.2)' : 'none' }}
+        >
+
+            {selectedNode && (
+            <>
+            <div className="flex justify-end -mt-1 -mr-1">
+                <button
+                    type="button"
+                    aria-label="Collapse panel"
+                    onClick={() => setManuallyCollapsed(true)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                    <CaretRightIcon size={18} weight="regular" />
+                </button>
+            </div>
 
             <div className="border-b border-[#14213D]/20 pb-4">
                 <div className="flex items-center gap-3 mb-1">
@@ -254,9 +291,11 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
             <div className="mt-auto pt-6 text-[10px] text-slate-600 text-center border-t border-[#14213D]/5">
                 System Status: <span className="text-white font-bold">ONLINE</span>
             </div>
+            </>
+            )}
         </aside>
 
-        {showDeleteConfirm && (
+        {selectedNode && showDeleteConfirm && (
             <div
                 className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
                 onClick={() => setShowDeleteConfirm(false)}

@@ -19,12 +19,10 @@ import SwitchNode from './nodes/SwitchNode';
 import HostNode from './nodes/HostNode';
 import Sidebar from './Sidebar';
 import ConfigPanel from './ConfigPanel';
-import ChatInterface from './ChatInterface';
 import ReportModal from './ReportModal';
-import ImmersiveChatPanel from './ImmersiveChatPanel';
+import AiCopilot from './AiCopilot';
 import { clarifyRequirements } from '@/lib/api';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
-import { MessageSquare } from 'lucide-react';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -223,6 +221,7 @@ export default function TopologyEditor() {
         setGenerationRuntime(runtime);
         onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
+        setChatMessages([]);
     }, [setNodes, setEdges, onSimulationPath]);
 
     const onDeleteNode = useCallback((nodeId: string) => {
@@ -290,6 +289,8 @@ export default function TopologyEditor() {
                     style={{ background: '#000000' }}
                 >
                     <Controls
+                        position="top-right"
+                        className="!m-4"
                         style={{
                             '--xy-controls-button-background-color': '#14213D',
                             '--xy-controls-button-background-color-hover': '#1C2F45',
@@ -300,7 +301,7 @@ export default function TopologyEditor() {
                     />
 
                     {hasTopology && (
-                        <div className="absolute top-4 right-4 z-50 flex gap-2">
+                        <div className="absolute top-4 right-16 z-50 flex gap-2">
                             <button
                                 onClick={() => setIsReportOpen(true)}
                                 className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
@@ -311,34 +312,13 @@ export default function TopologyEditor() {
                     )}
                 </ReactFlow>
 
-                {chatMessages.length > 0 && !isChatOpen && (
-                    <button
-                        type="button"
-                        aria-label="Reopen chat"
-                        title="Reopen chat"
-                        onClick={() => setIsChatOpen(true)}
-                        className={`
-                            absolute z-50 p-2.5 rounded-xl
-                            bg-[#1C2F45]/90 backdrop-blur-md
-                            border border-[#3DD6B5]/20 text-[#3DD6B5]
-                            shadow-[0_8px_24px_rgba(0,0,0,0.45)]
-                            hover:border-[#3DD6B5] hover:brightness-110 transition-all
-                            ${hasTopology ? 'top-4 right-48' : 'top-4 right-4'}
-                        `}
-                    >
-                        <MessageSquare size={18} />
-                    </button>
-                )}
-
-                <ImmersiveChatPanel
+                <AiCopilot
                     isOpen={isChatOpen}
+                    onOpen={() => setIsChatOpen(true)}
                     onClose={() => setIsChatOpen(false)}
                     messages={chatMessages}
                     onSendMessage={onChatSendMessage}
                     loading={chatLoading}
-                />
-
-                <ChatInterface
                     onTopologyGenerated={onTopologyGenerated}
                     onRequestClarification={handleClarificationRequest}
                 />
@@ -350,6 +330,7 @@ export default function TopologyEditor() {
                 allEdges={edges}
                 onSimulationPath={onSimulationPath}
                 onDeleteNode={onDeleteNode}
+                onDeselect={() => setSelectedNodeId(null)}
             />
 
             {hasTopology && (

@@ -52,3 +52,6 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 51,Yes,0,Yes,0,18.317,Success,groq,0,No
 52,Yes,0,Yes,0,55.126,Success,openai_escalated,1,Yes
 53,Yes,0,Yes,0,14.633,Success,groq,0,No
+54,No,1,No,0,6.884,Needs Clarification,,0,No
+55,No,1,No,0,4.006,Needs Clarification,,0,No
+56,Yes,0,Yes,0,11.974,Success,groq,0,No
