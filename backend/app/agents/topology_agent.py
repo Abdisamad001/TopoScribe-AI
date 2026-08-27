@@ -3,10 +3,13 @@ from app.utils.llm import call_llm
 from app.generators.topology_layout import (
     DEFAULT_COLUMN_SPACING_PX,
     HOST_CARD_WIDTH_PX,
+    TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS,
     _annotate_representative_host_user_counts,
     _build_topology_prompt,
     _count_roles_in_nodes,
+    _department_count,
     _departmental_column_spacing,
+    _escalated_reasoning_effort,
     _fallback_topology_dict,
     _finalize_topology,
     _host_center_gap,
@@ -61,8 +64,12 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
 
     prompt = _build_topology_prompt(design_plan, prior_errors)
 
+    # Lever 1: only the escalated (GPT-5.5) path may override reasoning_effort.
+    # Primary/Groq never receives this kwarg — effort stays None on that path.
+    effort = _escalated_reasoning_effort(design_plan) if tier == "escalated" else None
+
     try:
-        response_text = call_llm(prompt, tier=tier)
+        response_text = call_llm(prompt, tier=tier, reasoning_effort=effort)
     except Exception as e:
         reasons = [str(e)]
     else:

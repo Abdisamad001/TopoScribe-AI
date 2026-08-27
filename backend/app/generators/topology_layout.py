@@ -1,7 +1,7 @@
 from app.models.network import Topology
 from app.utils.dept_labels import sanitize_department_name, sanitize_topology_node_labels
 from app.utils.planning_helpers import LITERAL_HOST_NODE_THRESHOLD
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Literal
 import json
 
 
@@ -12,6 +12,12 @@ HOST_CARD_WIDTH_PX = 192
 HOST_GAP_MARGIN_PX = 16
 HOST_CLUSTER_GUTTER_PX = 24
 DEFAULT_COLUMN_SPACING_PX = 300
+
+# Lever 1: on the escalated (GPT-5.5) path only, use reasoning_effort="low"
+# when the plan is small enough that the controlled study showed both
+# correctness and cost savings. Above this count, leave the model default
+# (medium). Does not affect attempt 0 (Groq) or when escalation is triggered.
+TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS = 5
 
 
 def _host_center_gap() -> int:
@@ -46,6 +52,30 @@ def _effective_department_count(design_plan: Optional[Dict[str, Any]]) -> int:
         n = sum(1 for d in raw if isinstance(d, dict))
         return max(n, 1)
     return 3
+
+
+def _department_count(design_plan: Optional[Dict[str, Any]]) -> int:
+    """How many department entries are in the plan (0 if none / not a list)."""
+    if not isinstance(design_plan, dict):
+        return 0
+    raw = design_plan.get("departments")
+    if not isinstance(raw, list):
+        return 0
+    return sum(1 for d in raw if isinstance(d, dict))
+
+
+def _escalated_reasoning_effort(
+    design_plan: Optional[Dict[str, Any]],
+) -> Optional[Literal["low"]]:
+    """
+    reasoning_effort for tier="escalated" only.
+
+    Returns "low" when department count <= TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS,
+    otherwise None (omit the parameter → gpt-5.5 medium default).
+    """
+    if _department_count(design_plan) <= TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS:
+        return "low"
+    return None
 
 
 def _host_nodes_for_department(dept: Dict[str, Any]) -> int:
