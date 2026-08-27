@@ -8,6 +8,8 @@ import time
 import csv
 from pathlib import Path
 
+import langwatch
+
 router = APIRouter()
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -95,6 +97,7 @@ class DesignRequest(BaseModel):
     conversation_history: List[dict] = []
 
 @router.post("/generate")
+@langwatch.trace(name="Generate Network Topology")
 async def generate_design(request: DesignRequest):
     """
     Initiates the LangGraph workflow.

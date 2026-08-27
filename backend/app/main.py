@@ -1,3 +1,33 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def _setup_langwatch() -> None:
+    """Best-effort tracing. Missing key or setup failure must not block the app."""
+    api_key = os.getenv("LANGWATCH_API_KEY")
+    if not api_key:
+        return
+    try:
+        import langwatch
+        from openinference.instrumentation.groq import GroqInstrumentor
+        from openinference.instrumentation.openai import OpenAIInstrumentor
+
+        langwatch.setup(
+            api_key=api_key,
+            instrumentors=[OpenAIInstrumentor(), GroqInstrumentor()],
+        )
+    except Exception as e:
+        print(f"LangWatch setup skipped: {e}")
+
+
+# Must run before importing routers: @langwatch.trace on generate_design calls
+# ensure_setup() at decoration time and would otherwise create a bare client
+# without the OpenAI/Groq instrumentors.
+_setup_langwatch()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import design, clarify, simulate

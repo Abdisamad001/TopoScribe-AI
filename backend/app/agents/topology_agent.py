@@ -23,6 +23,8 @@ from app.generators.topology_layout import (
 )
 from typing import Dict, Any, List
 
+import langwatch
+
 # Escalated retries allowed after the initial primary-tier attempt.
 MAX_TOPOLOGY_RETRIES = 3
 
@@ -49,6 +51,25 @@ def _trace(model: str, attempt: int, status: str, outcome: str) -> Dict[str, Any
     }
 
 
+def _topology_span_meta(
+    *,
+    tier: str,
+    effort: Any,
+    attempt: int,
+    topology_source: Any = None,
+    gate_outcome: str,
+) -> None:
+    """Attach attempt labels the OpenAI/Groq instrumentors cannot infer."""
+    langwatch.get_current_span().update(
+        tier=tier,
+        reasoning_effort=effort if effort is not None else "default",
+        attempt=attempt,
+        topology_source=topology_source if topology_source is not None else "",
+        gate_outcome=gate_outcome,
+    )
+
+
+@langwatch.span(name="Topology Agent", capture_input=False, capture_output=False)
 def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     """
     Topology Agent: Converts design plan into network topology.
@@ -81,6 +102,13 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
                 reasons = [f"Topology failed schema validation: {e}"]
             else:
                 source = "groq" if attempt == 0 else "openai_escalated"
+                _topology_span_meta(
+                    tier=tier,
+                    effort=effort,
+                    attempt=attempt,
+                    topology_source=source,
+                    gate_outcome="accepted",
+                )
                 return {
                     "topology": topology,
                     "topology_source": source,
@@ -100,6 +128,13 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     if attempt < MAX_TOPOLOGY_RETRIES:
         # Hand control back to the graph so the next attempt can escalate with
         # this reason in its prompt. No fallback while retries remain.
+        _topology_span_meta(
+            tier=tier,
+            effort=effort,
+            attempt=attempt,
+            topology_source=None,
+            gate_outcome=f"rejected: {reason_text}",
+        )
         return {
             "topology_quality_ok": False,
             "topology_retry_count": attempt + 1,
@@ -118,6 +153,13 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
         merge_vlan_metadata(design_plan, topology_dict)
         topology = _finalize_topology(topology_dict, design_plan)
     except Exception as e:
+        _topology_span_meta(
+            tier=tier,
+            effort=effort,
+            attempt=attempt,
+            topology_source=None,
+            gate_outcome=f"failed: {reason_text} | fallback also failed: {e}",
+        )
         return {
             "topology_quality_ok": False,
             "topology_retry_count": attempt + 1,
@@ -128,6 +170,13 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
             ],
         }
 
+    _topology_span_meta(
+        tier=tier,
+        effort=effort,
+        attempt=attempt,
+        topology_source="deterministic_fallback",
+        gate_outcome=f"fallback: {reason_text}",
+    )
     return {
         "topology": topology,
         "topology_source": "deterministic_fallback",
