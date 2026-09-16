@@ -60,15 +60,17 @@ export default function ImmersiveChatPanel({ isOpen, messages, onSendMessage, lo
     if (!isOpen) return null;
 
     return (
-        <div className="flex min-h-0 flex-col">
+        <div className="flex min-h-0 flex-col font-sans">
             {/* Chat Area */}
             <div className="min-h-0 overflow-y-auto px-6 py-5 space-y-5 custom-scrollbar">
                 {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center text-center space-y-3 py-2 opacity-50">
-                        <ChatIcon size={48} weight="regular" className="text-white" />
-                        <div className="space-y-2">
-                            <p className="text-white font-medium">Ready to help!</p>
-                            <p className="text-[#94A8C0] text-sm max-w-[250px]">
+                    <div className="flex flex-col items-center justify-center text-center space-y-1.5 py-1">
+                        <div className="rounded-lg bg-chrome-navy/30 p-2.5">
+                            <ChatIcon size={48} weight="regular" className="text-white" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-white">Ready to help!</p>
+                            <p className="text-xs font-normal text-slate-400 max-w-[250px]">
                                 I can clarify requirements and refine your network design.
                             </p>
                         </div>

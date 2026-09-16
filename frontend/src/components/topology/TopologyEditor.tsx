@@ -3,6 +3,8 @@
 import React, { useCallback } from 'react';
 import {
     ReactFlow,
+    Background,
+    BackgroundVariant,
     Controls,
     useNodesState,
     useEdgesState,
@@ -288,12 +290,19 @@ export default function TopologyEditor() {
                     fitView
                     style={{ background: '#000000' }}
                 >
+                    <Background
+                        variant={BackgroundVariant.Dots}
+                        gap={18}
+                        size={2}
+                        color="rgba(255,255,255,0.12)"
+                        bgColor="#000000"
+                    />
                     <Controls
                         position="top-right"
                         className="!m-4"
                         style={{
-                            '--xy-controls-button-background-color': '#14213D',
-                            '--xy-controls-button-background-color-hover': '#1C2F45',
+                            '--xy-controls-button-background-color': 'var(--chrome-navy)',
+                            '--xy-controls-button-background-color-hover': 'var(--chrome-navy-hover)',
                             '--xy-controls-button-color': '#E5E7EB',
                             '--xy-controls-button-color-hover': '#FFFFFF',
                             '--xy-controls-button-border-color': 'rgba(255,255,255,0.12)',

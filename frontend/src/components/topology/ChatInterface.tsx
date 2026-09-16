@@ -55,7 +55,7 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
     };
 
     return (
-        <div className="w-full">
+        <div className="w-full rounded-xl border border-chrome-navy/40 bg-chrome-charcoal p-3 shadow-lg shadow-black/40">
             {error && (
                 <div className="mb-3 text-center">
                     <span className="bg-red-500/10 text-red-300 text-xs px-4 py-2 rounded-full border border-red-500/20 shadow-lg backdrop-blur-sm">
@@ -66,7 +66,7 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
             <form onSubmit={handleSubmit} className="flex w-full flex-col gap-2">
                 <textarea
                     rows={1}
-                    className="w-full bg-[#212127] border border-[#14213D]/20 rounded-xl py-3.5 px-4 text-sm text-white placeholder-[#6B7A8F] focus:outline-none focus:border-chrome-navy focus:ring-2 focus:ring-chrome-navy/40 focus:shadow-lg focus:shadow-chrome-navy/25 transition-all duration-300 min-h-[48px] field-sizing-content resize-none max-h-[35vh] overflow-y-auto custom-scrollbar"
+                    className="w-full bg-[#212127] border border-chrome-navy/40 rounded-xl py-3.5 px-4 text-sm text-white placeholder-[#6B7A8F] focus:outline-none focus:border-chrome-navy focus:ring-2 focus:ring-chrome-navy/40 focus:shadow-lg focus:shadow-chrome-navy/25 transition-all duration-300 min-h-[48px] field-sizing-content resize-none max-h-[35vh] overflow-y-auto custom-scrollbar"
                     placeholder={GENERATE_PLACEHOLDER}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}

@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-white dark:bg-zinc-950">
       {/* App Header */}
-      <header className="relative flex-shrink-0 z-50 flex w-full items-center justify-between border-b border-[#14213D]/20 bg-[#212127]/95 backdrop-blur-md px-6 py-2 shadow-lg shadow-black/20">
+      <header className="relative flex-shrink-0 z-50 flex w-full items-center justify-between border-b border-chrome-navy/40 bg-[#212127]/95 backdrop-blur-md px-6 py-2 shadow-lg shadow-black/20">
         <div className="flex items-center gap-1.5">
           <div className="relative h-10 w-10 shrink-0">
             <img

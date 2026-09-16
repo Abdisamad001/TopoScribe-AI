@@ -55,7 +55,7 @@ function DeviceCard({
     const { type, title, subtitle, Icon, iconWrapClass, iconClass, titleHoverClass } = card;
     return (
         <div
-            className={`group bg-[#212127] hover:bg-[#292931] border border-[#14213D]/10 hover:border-[#14213D]/40 rounded-xl cursor-grab transition-all duration-300 relative overflow-hidden shadow-md shadow-black/20 ${compact ? 'p-2 flex justify-center' : 'p-3'}`}
+            className={`group bg-[#212127] hover:bg-[#292931] border border-[#14213D]/10 hover:border-[#14213D]/40 rounded-xl cursor-grab transition-all duration-300 relative shadow-md shadow-black/20 ${compact ? 'overflow-visible p-2 flex justify-center' : 'overflow-hidden p-3'}`}
             onDragStart={(event) => onDragStart(event, type)}
             draggable
             title={compact ? title : undefined}
@@ -69,10 +69,15 @@ function DeviceCard({
                 <div className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform ${iconWrapClass}`}>
                     <Icon size={20} weight="regular" className={iconClass} />
                 </div>
+                {compact && (
+                    <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                        {title}
+                    </span>
+                )}
                 {!compact && (
                     <div>
-                        <div className={`font-bold text-sm text-gray-100 transition-colors ${titleHoverClass}`}>{title}</div>
-                        <div className="text-[10px] text-slate-400 font-mono tracking-tight uppercase">{subtitle}</div>
+                        <div className={`font-semibold text-sm text-gray-100 transition-colors ${titleHoverClass}`}>{title}</div>
+                        <div className="text-xs font-normal text-slate-400">{subtitle}</div>
                     </div>
                 )}
             </div>
@@ -100,7 +105,7 @@ export default function Sidebar() {
 
     return (
         <aside
-            className={`h-full bg-[#2C2C34] border-r border-[#14213D]/15 flex flex-col gap-4 shadow-xl z-30 overflow-hidden shrink-0 transition-[width] duration-300 ease-in-out ${expanded ? 'w-64 p-4' : 'w-[72px] p-2'}`}
+            className={`h-full bg-chrome-surface border-r border-[#14213D]/15 flex flex-col gap-4 shadow-xl z-30 shrink-0 font-sans transition-[width] duration-300 ease-in-out ${expanded ? 'w-64 overflow-hidden p-4' : 'w-[72px] overflow-visible p-2'}`}
         >
             <div className={`flex items-center ${expanded ? 'justify-end' : 'justify-center'}`}>
                 <button
@@ -114,34 +119,49 @@ export default function Sidebar() {
                 </button>
             </div>
 
-            <nav className="flex flex-col gap-0.5">
+            <nav className="flex flex-col gap-1.5">
                 <div
-                    className={`flex items-center rounded-lg text-sm font-medium text-white bg-white/10 ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-semibold text-white bg-chrome-navy/40 ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Home"
                 >
                     <HouseIcon size={16} weight="regular" className="shrink-0" />
                     {expanded && 'Home'}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Home
+                        </span>
+                    )}
                 </div>
                 <div
-                    className={`flex items-center rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-semibold text-white hover:bg-white/5 transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Favourites"
                 >
                     <StarIcon size={16} weight="regular" className="shrink-0" />
                     {expanded && 'Favourites'}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Favourites
+                        </span>
+                    )}
                 </div>
                 <div
-                    className={`flex items-center rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-semibold text-white hover:bg-white/5 transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Documentation"
                 >
                     <BookOpenIcon size={16} weight="regular" className="shrink-0" />
                     {expanded && 'Documentation'}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Documentation
+                        </span>
+                    )}
                 </div>
             </nav>
 
             <div className={`flex items-center border-t border-white/10 pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
                 <StackIcon size={14} weight="regular" className="text-white shrink-0" />
                 {expanded && (
-                    <span className="text-white font-bold tracking-widest text-xs uppercase whitespace-nowrap">Component Library</span>
+                    <span className="text-xs font-medium tracking-normal text-slate-400 whitespace-nowrap">Component Library</span>
                 )}
             </div>
 

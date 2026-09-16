@@ -43,7 +43,7 @@ export default function AiCopilot({
                     <div
                         role="dialog"
                         aria-label={AI_ASSISTANT_TITLE}
-                        className="pointer-events-auto flex max-h-[70vh] w-full origin-bottom-right flex-col overflow-hidden rounded-2xl border border-chrome-navy/20 bg-chrome-surface/95 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-300"
+                        className="pointer-events-auto flex max-h-[70vh] w-full origin-bottom-right flex-col overflow-hidden rounded-2xl border border-chrome-navy/20 bg-chrome-surface/95 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-300 font-sans"
                     >
                         <div className="flex shrink-0 items-center justify-between bg-chrome-elevated/40 px-6 py-5">
                             <div className="flex items-center gap-3">
@@ -51,10 +51,10 @@ export default function AiCopilot({
                                     <SparkleIcon size={20} weight="regular" className="text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="font-[family-name:var(--font-orbitron)] text-lg font-bold tracking-wide text-white">
+                                    <h2 className="font-sans text-lg font-semibold text-white">
                                         {AI_ASSISTANT_TITLE}
                                     </h2>
-                                    <p className="text-xs text-chrome-subtitle">{AI_ASSISTANT_SUBTITLE}</p>
+                                    <p className="text-xs font-normal text-chrome-subtitle">{AI_ASSISTANT_SUBTITLE}</p>
                                 </div>
                             </div>
                             <button
