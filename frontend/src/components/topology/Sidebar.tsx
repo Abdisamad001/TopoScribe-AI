@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { GlobeIcon, ShareNetworkIcon, DesktopIcon, DotsSixVerticalIcon, StackIcon, CursorClickIcon, HouseIcon, StarIcon, BookOpenIcon, SidebarSimpleIcon, type Icon } from '@phosphor-icons/react';
+import { GlobeIcon, ShareNetworkIcon, DesktopIcon, CursorClickIcon, HouseIcon, StarIcon, BookOpenIcon, SidebarSimpleIcon, type Icon } from '@phosphor-icons/react';
 
 type DeviceCardConfig = {
     type: string;
@@ -19,8 +19,8 @@ const DEVICE_CARDS: DeviceCardConfig[] = [
         title: 'Router',
         subtitle: 'L3 Networking',
         Icon: GlobeIcon,
-        iconWrapClass: 'bg-teal-500/10 border-teal-500/20',
-        iconClass: 'text-teal-400',
+        iconWrapClass: 'bg-teal-500',
+        iconClass: 'text-white',
         titleHoverClass: 'group-hover:text-teal-300',
     },
     {
@@ -28,8 +28,8 @@ const DEVICE_CARDS: DeviceCardConfig[] = [
         title: 'Switch',
         subtitle: 'L2 Switching',
         Icon: ShareNetworkIcon,
-        iconWrapClass: 'bg-blue-500/10 border-blue-500/20',
-        iconClass: 'text-blue-400',
+        iconWrapClass: 'bg-blue-500',
+        iconClass: 'text-white',
         titleHoverClass: 'group-hover:text-blue-300',
     },
     {
@@ -37,8 +37,8 @@ const DEVICE_CARDS: DeviceCardConfig[] = [
         title: 'End Device',
         subtitle: 'Workstation / Server',
         Icon: DesktopIcon,
-        iconWrapClass: 'bg-purple-500/10 border-purple-500/20',
-        iconClass: 'text-purple-400',
+        iconWrapClass: 'bg-purple-500',
+        iconClass: 'text-white',
         titleHoverClass: 'group-hover:text-purple-300',
     },
 ];
@@ -55,22 +55,17 @@ function DeviceCard({
     const { type, title, subtitle, Icon, iconWrapClass, iconClass, titleHoverClass } = card;
     return (
         <div
-            className={`group bg-[#212127] hover:bg-[#292931] border border-[#14213D]/10 hover:border-[#14213D]/40 rounded-xl cursor-grab transition-all duration-300 relative shadow-md shadow-black/20 ${compact ? 'overflow-visible p-2 flex justify-center' : 'overflow-hidden p-3'}`}
+            className={`group bg-[#212127] hover:bg-[#292931] rounded-xl cursor-grab transition-all duration-300 relative ${compact ? 'overflow-visible p-2 flex justify-center' : 'overflow-hidden p-3'}`}
             onDragStart={(event) => onDragStart(event, type)}
             draggable
             title={compact ? title : undefined}
         >
-            {!compact && (
-                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <DotsSixVerticalIcon size={14} weight="regular" className="text-slate-500" />
-                </div>
-            )}
             <div className={`flex items-center ${compact ? 'justify-center' : 'gap-3'}`}>
-                <div className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform ${iconWrapClass}`}>
+                <div className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} rounded-lg flex items-center justify-center ${iconWrapClass}`}>
                     <Icon size={20} weight="regular" className={iconClass} />
                 </div>
                 {compact && (
-                    <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                         {title}
                     </span>
                 )}
@@ -119,9 +114,15 @@ export default function Sidebar() {
                 </button>
             </div>
 
+            <div className={`flex items-center pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
+                {expanded && (
+                    <span className="text-xs font-bold tracking-wide text-slate-300 whitespace-nowrap">EXPLORE</span>
+                )}
+            </div>
+
             <nav className="flex flex-col gap-1.5">
                 <div
-                    className={`relative group flex items-center rounded-lg text-sm font-semibold text-white bg-chrome-navy/40 ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-medium text-white bg-white/8 ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Home"
                 >
                     <HouseIcon size={16} weight="regular" className="shrink-0" />
@@ -133,7 +134,7 @@ export default function Sidebar() {
                     )}
                 </div>
                 <div
-                    className={`relative group flex items-center rounded-lg text-sm font-semibold text-white hover:bg-white/5 transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Favourites"
                 >
                     <StarIcon size={16} weight="regular" className="shrink-0" />
@@ -145,7 +146,7 @@ export default function Sidebar() {
                     )}
                 </div>
                 <div
-                    className={`relative group flex items-center rounded-lg text-sm font-semibold text-white hover:bg-white/5 transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Documentation"
                 >
                     <BookOpenIcon size={16} weight="regular" className="shrink-0" />
@@ -158,10 +159,9 @@ export default function Sidebar() {
                 </div>
             </nav>
 
-            <div className={`flex items-center border-t border-white/10 pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
-                <StackIcon size={14} weight="regular" className="text-white shrink-0" />
+            <div className={`flex items-center pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
                 {expanded && (
-                    <span className="text-xs font-medium tracking-normal text-slate-400 whitespace-nowrap">Component Library</span>
+                    <span className="text-xs font-bold tracking-wide text-slate-300 whitespace-nowrap">COMPONENTS</span>
                 )}
             </div>
 

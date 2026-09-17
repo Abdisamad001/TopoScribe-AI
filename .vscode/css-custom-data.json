@@ -1,0 +1,9 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 theme. Declares design tokens (colors, fonts, etc.) used by utilities like bg-chrome-surface and font-sans."
+    }
+  ]
+}

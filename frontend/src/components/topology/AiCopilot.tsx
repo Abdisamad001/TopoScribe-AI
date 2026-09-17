@@ -95,7 +95,7 @@ export default function AiCopilot({
                         title={AI_ASSISTANT_TITLE}
                         className="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-white/20 bg-chrome-navy text-white shadow-xl transition-all duration-300 hover:bg-chrome-navy-hover hover:brightness-110 active:scale-95"
                     >
-                        <SparkleIcon size={22} weight="regular" />
+                        <img src="/icon.png" alt={AI_ASSISTANT_TITLE} className="h-7 w-7 object-contain" />
                     </button>
                 )}
             </div>
