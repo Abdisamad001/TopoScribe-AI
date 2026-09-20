@@ -19,7 +19,6 @@ import {
 import RouterNode from './nodes/RouterNode';
 import SwitchNode from './nodes/SwitchNode';
 import HostNode from './nodes/HostNode';
-import Sidebar from './Sidebar';
 import ConfigPanel from './ConfigPanel';
 import ReportModal from './ReportModal';
 import AiCopilot from './AiCopilot';
@@ -276,7 +275,6 @@ export default function TopologyEditor() {
 
     return (
         <div className="flex h-full w-full relative">
-            <Sidebar />
             <div className="flex-grow h-full relative" onDrop={onDrop} onDragOver={onDragOver}>
                 <ReactFlow
                     nodes={nodes}

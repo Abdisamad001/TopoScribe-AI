@@ -1,4 +1,4 @@
-import TopologyEditor from '@/components/topology/TopologyEditor';
+import AppWorkspace from '@/components/app/AppWorkspace';
 import { MagnifyingGlassIcon, QuestionIcon, BellIcon, UserCircleIcon } from '@phosphor-icons/react/ssr';
 
 export default function Home() {
@@ -71,7 +71,7 @@ export default function Home() {
 
       {/* Main Workspace */}
       <div className="flex-grow w-full relative overflow-hidden">
-        <TopologyEditor />
+        <AppWorkspace />
       </div>
     </main>
   );

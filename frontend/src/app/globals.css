@@ -19,7 +19,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-chrome-navy: #2563EB;
+  --color-chrome-navy:rgb(57, 117, 247);
   --color-chrome-navy-hover: #3B82F6;
   --color-chrome-charcoal: #2C2C34;
   --color-chrome-surface: #17171B;

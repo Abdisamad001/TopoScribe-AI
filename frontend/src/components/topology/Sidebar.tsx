@@ -80,7 +80,15 @@ function DeviceCard({
     );
 }
 
-export default function Sidebar() {
+export type AppView = 'home' | 'canvas' | 'favourites' | 'documentation';
+
+export default function Sidebar({
+    activeView,
+    onNavigate,
+}: {
+    activeView: AppView;
+    onNavigate: (view: 'home' | 'favourites' | 'documentation') => void;
+}) {
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
@@ -122,8 +130,9 @@ export default function Sidebar() {
 
             <nav className="flex flex-col gap-1.5">
                 <div
-                    className={`relative group flex items-center rounded-lg text-sm font-medium text-white bg-white/8 ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-pointer ${activeView === 'home' ? 'text-white bg-white/8' : 'text-slate-300 hover:bg-white/5 hover:text-white'} ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Home"
+                    onClick={() => onNavigate('home')}
                 >
                     <HouseIcon size={16} weight="regular" className="shrink-0" />
                     {expanded && 'Home'}
@@ -134,8 +143,9 @@ export default function Sidebar() {
                     )}
                 </div>
                 <div
-                    className={`relative group flex items-center rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-pointer transition-colors ${activeView === 'favourites' ? 'text-white bg-white/8' : 'text-slate-300 hover:bg-white/5 hover:text-white'} ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Favourites"
+                    onClick={() => onNavigate('favourites')}
                 >
                     <StarIcon size={16} weight="regular" className="shrink-0" />
                     {expanded && 'Favourites'}
@@ -146,8 +156,9 @@ export default function Sidebar() {
                     )}
                 </div>
                 <div
-                    className={`relative group flex items-center rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-pointer transition-colors ${activeView === 'documentation' ? 'text-white bg-white/8' : 'text-slate-300 hover:bg-white/5 hover:text-white'} ${expanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'}`}
                     title="Documentation"
+                    onClick={() => onNavigate('documentation')}
                 >
                     <BookOpenIcon size={16} weight="regular" className="shrink-0" />
                     {expanded && 'Documentation'}
