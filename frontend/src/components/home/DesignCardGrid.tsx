@@ -18,12 +18,16 @@ function formatUpdatedAt(iso: string): string {
 export default function DesignCardGrid({
     designs,
     emptyMessage,
+    emptyDescription,
+    emptyIcon = 'network',
     onOpen,
     onToggleFavourite,
     onDelete,
 }: {
     designs: Design[];
     emptyMessage: string;
+    emptyDescription: string;
+    emptyIcon?: 'network' | 'star';
     onOpen: (id: string) => void;
     onToggleFavourite: (id: string) => void;
     onDelete: (id: string) => void;
@@ -31,65 +35,85 @@ export default function DesignCardGrid({
     const [pendingDelete, setPendingDelete] = useState<Design | null>(null);
 
     if (designs.length === 0) {
-        return <p className="text-sm text-slate-400">{emptyMessage}</p>;
+        const Icon = emptyIcon === 'star' ? StarIcon : ShareNetworkIcon;
+        return (
+            <div className="flex flex-1 flex-col items-center justify-center text-center">
+                <div className="rounded-lg bg-chrome-navy/30 p-2.5">
+                    <Icon size={48} weight="regular" className="text-chrome-navy" />
+                </div>
+                <div className="mt-4 space-y-1">
+                    <p className="text-lg font-semibold text-white">{emptyMessage}</p>
+                    <p className="max-w-[280px] text-sm text-slate-400">{emptyDescription}</p>
+                </div>
+            </div>
+        );
     }
 
     return (
         <>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
             {designs.map((design) => (
                 <button
                     key={design.id}
                     type="button"
                     onClick={() => onOpen(design.id)}
-                    className="group relative min-h-[160px] rounded-xl border border-white/10 bg-chrome-elevated p-5 text-left transition-colors hover:border-chrome-navy/40 hover:bg-white/[0.03]"
+                    className="group relative flex min-h-[200px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-chrome-elevated text-left transition-all hover:-translate-y-1 hover:border-white/25 hover:bg-[#292931] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chrome-navy/40"
                 >
-                    <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Delete design"
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            setPendingDelete(design);
-                        }}
-                        onKeyDown={(event) => {
-                            if (event.key !== 'Enter' && event.key !== ' ') return;
-                            event.preventDefault();
-                            event.stopPropagation();
-                            setPendingDelete(design);
-                        }}
-                        className="absolute top-4 right-12 rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-white/10 hover:text-red-400 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
-                    >
-                        <TrashIcon size={16} weight="regular" />
-                    </span>
-                    <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label={design.is_favourite ? 'Remove from favourites' : 'Add to favourites'}
-                        aria-pressed={design.is_favourite}
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            onToggleFavourite(design.id);
-                        }}
-                        onKeyDown={(event) => {
-                            if (event.key !== 'Enter' && event.key !== ' ') return;
-                            event.preventDefault();
-                            event.stopPropagation();
-                            onToggleFavourite(design.id);
-                        }}
-                        className="absolute top-4 right-4 rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
-                    >
-                        <StarIcon
-                            size={16}
-                            weight={design.is_favourite ? 'fill' : 'regular'}
-                            className={design.is_favourite ? 'text-chrome-navy' : undefined}
-                        />
-                    </span>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chrome-navy">
-                        <ShareNetworkIcon size={20} weight="regular" className="text-white" />
+                    <div className="absolute top-3 right-3 z-10 flex items-center">
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Delete design"
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                setPendingDelete(design);
+                            }}
+                            onKeyDown={(event) => {
+                                if (event.key !== 'Enter' && event.key !== ' ') return;
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setPendingDelete(design);
+                            }}
+                            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg p-2.5 text-slate-400 opacity-0 transition-opacity hover:bg-white/10 hover:text-red-400 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
+                        >
+                            <TrashIcon size={16} weight="regular" />
+                        </span>
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label={design.is_favourite ? 'Remove from favourites' : 'Add to favourites'}
+                            aria-pressed={design.is_favourite}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                onToggleFavourite(design.id);
+                            }}
+                            onKeyDown={(event) => {
+                                if (event.key !== 'Enter' && event.key !== ' ') return;
+                                event.preventDefault();
+                                event.stopPropagation();
+                                onToggleFavourite(design.id);
+                            }}
+                            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg p-2.5 text-slate-400 hover:bg-white/10 hover:text-white"
+                        >
+                            <StarIcon
+                                size={16}
+                                weight={design.is_favourite ? 'fill' : 'regular'}
+                                className={design.is_favourite ? 'text-chrome-navy' : undefined}
+                            />
+                        </span>
                     </div>
-                    <h3 className="mt-4 truncate pr-16 text-base font-semibold text-white">{design.name}</h3>
-                    <p className="mt-1 text-xs text-slate-400">{formatUpdatedAt(design.last_opened_at ?? design.created_at)}</p>
+                    <div className="relative min-h-[120px] flex-1 overflow-hidden bg-[#10131c]">
+                        <img
+                            src="/cards-thumbnail.svg"
+                            alt=""
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] object-contain object-center"
+                        />
+                    </div>
+                    <div className="px-5 py-4">
+                        <h3 className="truncate text-base font-semibold text-white">{design.name}</h3>
+                        <p className="mt-1 text-sm text-slate-300">{formatUpdatedAt(design.last_opened_at ?? design.created_at)}</p>
+                    </div>
                 </button>
             ))}
         </div>
