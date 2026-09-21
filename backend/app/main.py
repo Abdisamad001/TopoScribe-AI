@@ -30,9 +30,19 @@ _setup_langwatch()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import design, clarify, simulate
+from app.api import design, clarify, simulate, saved_designs
+from app.db import Base, engine
 
 app = FastAPI(title="TopoScribe AI Backend")
+
+
+@app.on_event("startup")
+def create_tables():
+    """Best-effort table creation. An unreachable DB must not block the app."""
+    try:
+        Base.metadata.create_all(engine)
+    except Exception as e:
+        print(f"Designs table setup skipped (database unreachable): {e}")
 
 # Allow CORS for frontend
 app.add_middleware(
@@ -47,6 +57,7 @@ app.add_middleware(
 app.include_router(design.router, prefix="/api/design", tags=["design"])
 app.include_router(clarify.router, prefix="/api/design", tags=["design"]) # Mounted at /api/design/clarify by router decoration? No, router has /clarify. Prefix adds /api/design -> /api/design/clarify
 app.include_router(simulate.router, prefix="/api/simulate", tags=["simulation"])
+app.include_router(saved_designs.router, prefix="/api/designs", tags=["designs"])
 
 @app.get("/")
 def read_root():

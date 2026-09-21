@@ -1,22 +1,70 @@
+'use client';
+
+import { useState } from 'react';
 import AppWorkspace from '@/components/app/AppWorkspace';
+import type { AppView } from '@/components/topology/Sidebar';
+import { updateDesign } from '@/lib/api';
 import { MagnifyingGlassIcon, QuestionIcon, BellIcon, UserCircleIcon } from '@phosphor-icons/react/ssr';
 
 export default function Home() {
+  const [view, setView] = useState<AppView>('home');
+  const [activeDesign, setActiveDesign] = useState<{ id: string | null; name: string }>({
+    id: null,
+    name: 'Untitled Design',
+  });
+  const [editingTitle, setEditingTitle] = useState(false);
+
+  const saveTitle = (rawName: string) => {
+    setEditingTitle(false);
+    const name = rawName.trim();
+    if (!name || name === activeDesign.name) return;
+    setActiveDesign((current) => ({ ...current, name }));
+    if (activeDesign.id) {
+      updateDesign(activeDesign.id, { name }).catch(() => {});
+    }
+  };
+
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-white dark:bg-zinc-950">
       {/* App Header */}
       <header className="relative flex-shrink-0 z-50 flex w-full items-center justify-between border-b border-chrome-navy/40 bg-[#212127]/95 backdrop-blur-md px-6 py-2 shadow-lg shadow-black/20">
         <div className="flex items-center gap-1.5">
-          <div className="relative h-10 w-10 shrink-0">
-            <img
-              src="/icon.png"
-              alt="TopoScribe Logo"
-              className="h-full w-full object-contain"
-            />
-          </div>
-          <h1 className="font-bold text-2xl md:text-3xl leading-none tracking-tight text-white font-[family-name:var(--font-orbitron)]">
-            TopoScribe
-          </h1>
+          {view === 'canvas' ? (
+            editingTitle ? (
+              <input
+                autoFocus
+                defaultValue={activeDesign.name}
+                aria-label="Design name"
+                onBlur={(event) => saveTitle(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') event.currentTarget.blur();
+                }}
+                className="h-10 bg-transparent px-1 text-xl font-semibold text-white border-b border-chrome-navy/60 focus:outline-none"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingTitle(true)}
+                title="Rename design"
+                className="h-10 rounded-lg px-1 text-xl font-semibold text-white hover:bg-white/5 transition-colors"
+              >
+                {activeDesign.name}
+              </button>
+            )
+          ) : (
+            <>
+              <div className="relative h-10 w-10 shrink-0">
+                <img
+                  src="/icon.png"
+                  alt="TopoScribe Logo"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <h1 className="font-bold text-2xl md:text-3xl leading-none tracking-tight text-white font-[family-name:var(--font-orbitron)]">
+                TopoScribe
+              </h1>
+            </>
+          )}
         </div>
 
         <div className="absolute left-1/2 top-1/2 hidden w-[min(28rem,36vw)] -translate-x-1/2 -translate-y-1/2 md:flex items-center rounded-full border border-white/15 bg-[#14213D]/20 px-3 py-1.5">
@@ -71,7 +119,12 @@ export default function Home() {
 
       {/* Main Workspace */}
       <div className="flex-grow w-full relative overflow-hidden">
-        <AppWorkspace />
+        <AppWorkspace
+          view={view}
+          onViewChange={setView}
+          activeDesign={activeDesign}
+          onActiveDesignChange={setActiveDesign}
+        />
       </div>
     </main>
   );

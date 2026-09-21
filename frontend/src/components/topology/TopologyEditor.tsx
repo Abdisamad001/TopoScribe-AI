@@ -70,9 +70,15 @@ const convertEdges = (netLinks: any[]): Edge[] => {
     }));
 };
 
-export default function TopologyEditor() {
-    const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+export default function TopologyEditor({
+    initialTopology,
+    onSave,
+}: {
+    initialTopology?: any;
+    onSave: (topology: any) => Promise<void>;
+}) {
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
     const [isReportOpen, setIsReportOpen] = React.useState(false);
     const [topologyMeta, setTopologyMeta] = React.useState<TopologyMetadata | undefined>(undefined);
@@ -85,6 +91,7 @@ export default function TopologyEditor() {
     const [chatMessages, setChatMessages] = React.useState<{ role: 'user' | 'assistant', content: string }[]>([]);
     const [chatLoading, setChatLoading] = React.useState(false);
     const [currentPrompt, setCurrentPrompt] = React.useState('');
+    const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -225,6 +232,28 @@ export default function TopologyEditor() {
         setChatMessages([]);
     }, [setNodes, setEdges, onSimulationPath]);
 
+    // Load a saved design's topology through the same path as AI generation
+    React.useEffect(() => {
+        if (initialTopology) onTopologyGenerated(initialTopology);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const onSaveClick = async () => {
+        setSaveState('saving');
+        try {
+            await onSave({
+                nodes: convertNodesToDomain(nodes),
+                links: convertEdgesToDomain(edges),
+                protocols: topologyProtocols,
+                metadata: topologyMeta,
+            });
+            setSaveState('saved');
+        } catch {
+            setSaveState('error');
+        }
+        setTimeout(() => setSaveState('idle'), 2000);
+    };
+
     const onDeleteNode = useCallback((nodeId: string) => {
         setNodes((nds) => nds.filter((node) => node.id !== nodeId));
         setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
@@ -309,6 +338,13 @@ export default function TopologyEditor() {
 
                     {hasTopology && (
                         <div className="absolute top-4 right-16 z-50 flex gap-2">
+                            <button
+                                onClick={onSaveClick}
+                                disabled={saveState === 'saving'}
+                                className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2 disabled:opacity-60"
+                            >
+                                💾 {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Save failed' : 'Save'}
+                            </button>
                             <button
                                 onClick={() => setIsReportOpen(true)}
                                 className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"

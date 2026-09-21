@@ -1,7 +1,8 @@
 'use client';
 
-import { ShareNetworkIcon, StarIcon } from '@phosphor-icons/react';
-import type { DesignSummary } from '@/lib/designs';
+import { useState } from 'react';
+import { ShareNetworkIcon, StarIcon, TrashIcon } from '@phosphor-icons/react';
+import type { Design } from '@/lib/api';
 
 function formatUpdatedAt(iso: string): string {
     const deltaSec = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
@@ -19,17 +20,22 @@ export default function DesignCardGrid({
     emptyMessage,
     onOpen,
     onToggleFavourite,
+    onDelete,
 }: {
-    designs: DesignSummary[];
+    designs: Design[];
     emptyMessage: string;
     onOpen: (id: string) => void;
     onToggleFavourite: (id: string) => void;
+    onDelete: (id: string) => void;
 }) {
+    const [pendingDelete, setPendingDelete] = useState<Design | null>(null);
+
     if (designs.length === 0) {
         return <p className="text-sm text-slate-400">{emptyMessage}</p>;
     }
 
     return (
+        <>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
             {designs.map((design) => (
                 <button
@@ -41,8 +47,26 @@ export default function DesignCardGrid({
                     <span
                         role="button"
                         tabIndex={0}
-                        aria-label={design.favourited ? 'Remove from favourites' : 'Add to favourites'}
-                        aria-pressed={design.favourited}
+                        aria-label="Delete design"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            setPendingDelete(design);
+                        }}
+                        onKeyDown={(event) => {
+                            if (event.key !== 'Enter' && event.key !== ' ') return;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setPendingDelete(design);
+                        }}
+                        className="absolute top-4 right-12 rounded-lg p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-white/10 hover:text-red-400 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
+                    >
+                        <TrashIcon size={16} weight="regular" />
+                    </span>
+                    <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={design.is_favourite ? 'Remove from favourites' : 'Add to favourites'}
+                        aria-pressed={design.is_favourite}
                         onClick={(event) => {
                             event.stopPropagation();
                             onToggleFavourite(design.id);
@@ -57,17 +81,54 @@ export default function DesignCardGrid({
                     >
                         <StarIcon
                             size={16}
-                            weight={design.favourited ? 'fill' : 'regular'}
-                            className={design.favourited ? 'text-chrome-navy' : undefined}
+                            weight={design.is_favourite ? 'fill' : 'regular'}
+                            className={design.is_favourite ? 'text-chrome-navy' : undefined}
                         />
                     </span>
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chrome-navy">
                         <ShareNetworkIcon size={20} weight="regular" className="text-white" />
                     </div>
-                    <h3 className="mt-4 truncate pr-8 text-base font-semibold text-white">{design.name}</h3>
-                    <p className="mt-1 text-xs text-slate-400">{formatUpdatedAt(design.updatedAt)}</p>
+                    <h3 className="mt-4 truncate pr-16 text-base font-semibold text-white">{design.name}</h3>
+                    <p className="mt-1 text-xs text-slate-400">{formatUpdatedAt(design.last_opened_at ?? design.created_at)}</p>
                 </button>
             ))}
         </div>
+
+        {pendingDelete && (
+            <div
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                onClick={() => setPendingDelete(null)}
+            >
+                <div
+                    className="mx-4 w-full max-w-sm rounded-xl border border-red-500/20 bg-[#1C2F45] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-top-2 duration-300"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <h3 className="text-lg font-semibold text-white tracking-tight">Delete Design?</h3>
+                    <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+                        Are you sure you want to delete &quot;{pendingDelete.name}&quot;? This action cannot be undone.
+                    </p>
+                    <div className="mt-6 flex gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setPendingDelete(null)}
+                            className="flex-1 bg-[#142338] hover:bg-slate-700/50 border border-white/10 text-slate-300 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onDelete(pendingDelete.id);
+                                setPendingDelete(null);
+                            }}
+                            className="flex-1 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 }

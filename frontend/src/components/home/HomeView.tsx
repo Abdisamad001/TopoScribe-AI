@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusIcon } from '@phosphor-icons/react';
-import type { DesignSummary } from '@/lib/designs';
+import type { Design } from '@/lib/api';
 import DesignCardGrid from './DesignCardGrid';
 
 export default function HomeView({
@@ -9,11 +9,13 @@ export default function HomeView({
     onCreate,
     onOpen,
     onToggleFavourite,
+    onDelete,
 }: {
-    designs: DesignSummary[];
+    designs: Design[];
     onCreate: () => void;
     onOpen: (id: string) => void;
     onToggleFavourite: (id: string) => void;
+    onDelete: (id: string) => void;
 }) {
     return (
         <div className="h-full overflow-y-auto bg-chrome-surface font-sans">
@@ -37,6 +39,7 @@ export default function HomeView({
                     emptyMessage="No designs yet"
                     onOpen={onOpen}
                     onToggleFavourite={onToggleFavourite}
+                    onDelete={onDelete}
                 />
             </div>
         </div>
