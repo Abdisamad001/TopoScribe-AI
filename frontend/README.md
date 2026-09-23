@@ -44,18 +44,12 @@ It combines a **React Flow** frontend with a **Next.js** backend, powered by **G
    npm install
    ```
 
-2. **Set API Key**
-   Create a `.env.local` file and add your Groq API Key:
-   ```env
-   GROQ_API_KEY=gsk_...
-   ```
-
-3. **Run Development Server**
+2. **Run Development Server**
    ```bash
    npm run dev
    ```
 
-4. **Build for Production**
+3. **Build for Production**
    ```bash
    npm run build
    npm start

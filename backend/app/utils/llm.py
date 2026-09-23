@@ -25,7 +25,7 @@ Tier = Literal["planning", "primary", "escalated"]
 ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
 
 # qwen/qwen3.6-27b is the default model for Groq.
-GROQ_DEFAULT_MODEL = "qwen/qwen3.6-27b"
+GROQ_DEFAULT_MODEL = "qwen/qwen3.8-27b"
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
 
 _groq_client: Optional[Groq] = None

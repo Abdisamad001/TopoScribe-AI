@@ -1,0 +1,39 @@
+# Environment
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+coverage/
+
+# Tooling logs (not a blanket *.log)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/css-custom-data.json
+!.vscode/extensions.json
+
+# Misc (from frontend/.gitignore)
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+.vercel
