@@ -1,84 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { GlobeIcon, ShareNetworkIcon, DesktopIcon, CursorClickIcon, HouseIcon, StarIcon, BookOpenIcon, SidebarSimpleIcon, type Icon } from '@phosphor-icons/react';
-
-type DeviceCardConfig = {
-    type: string;
-    title: string;
-    subtitle: string;
-    Icon: Icon;
-    iconWrapClass: string;
-    iconClass: string;
-    titleHoverClass: string;
-};
-
-const DEVICE_CARDS: DeviceCardConfig[] = [
-    {
-        type: 'router',
-        title: 'Router',
-        subtitle: 'L3 Networking',
-        Icon: GlobeIcon,
-        iconWrapClass: 'bg-teal-500',
-        iconClass: 'text-white',
-        titleHoverClass: 'group-hover:text-teal-300',
-    },
-    {
-        type: 'switch',
-        title: 'Switch',
-        subtitle: 'L2 Switching',
-        Icon: ShareNetworkIcon,
-        iconWrapClass: 'bg-blue-500',
-        iconClass: 'text-white',
-        titleHoverClass: 'group-hover:text-blue-300',
-    },
-    {
-        type: 'host',
-        title: 'End Device',
-        subtitle: 'Workstation / Server',
-        Icon: DesktopIcon,
-        iconWrapClass: 'bg-purple-500',
-        iconClass: 'text-white',
-        titleHoverClass: 'group-hover:text-purple-300',
-    },
-];
-
-function DeviceCard({
-    card,
-    onDragStart,
-    compact,
-}: {
-    card: DeviceCardConfig;
-    onDragStart: (event: React.DragEvent, nodeType: string) => void;
-    compact: boolean;
-}) {
-    const { type, title, subtitle, Icon, iconWrapClass, iconClass, titleHoverClass } = card;
-    return (
-        <div
-            className={`group bg-[#212127] hover:bg-[#292931] rounded-xl cursor-grab transition-all duration-300 relative ${compact ? 'overflow-visible px-2 py-3 flex justify-center' : 'overflow-hidden px-3 py-3'}`}
-            onDragStart={(event) => onDragStart(event, type)}
-            draggable
-            title={compact ? title : undefined}
-        >
-            <div className={`flex items-center ${compact ? 'justify-center' : 'gap-3.5'}`}>
-                <div className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} rounded-lg flex items-center justify-center ${iconWrapClass}`}>
-                    <Icon size={20} weight="regular" className={iconClass} />
-                </div>
-                {compact && (
-                    <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                        {title}
-                    </span>
-                )}
-                {!compact && (
-                    <div>
-                        <div className={`font-semibold text-sm text-gray-100 transition-colors ${titleHoverClass}`}>{title}</div>
-                        <div className="text-xs font-normal text-slate-300">{subtitle}</div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
+import { useEffect, useState } from 'react';
+import { HouseIcon, StarIcon, BookOpenIcon, SidebarSimpleIcon, FolderIcon, FileTextIcon, ChatCircleIcon, CheckCircleIcon } from '@phosphor-icons/react';
 
 export type AppView = 'home' | 'canvas' | 'favourites' | 'documentation';
 
@@ -100,11 +23,6 @@ export default function Sidebar({
         mediaQuery.addEventListener('change', collapseIfNeeded);
         return () => mediaQuery.removeEventListener('change', collapseIfNeeded);
     }, []);
-
-    const onDragStart = (event: React.DragEvent, nodeType: string) => {
-        event.dataTransfer.setData('application/reactflow', nodeType);
-        event.dataTransfer.effectAllowed = 'move';
-    };
 
     return (
         <aside
@@ -156,6 +74,84 @@ export default function Sidebar({
                     )}
                 </div>
                 <div
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-not-allowed text-slate-500 ${expanded ? 'gap-3.5 px-3 py-3' : 'justify-center px-2 py-3'}`}
+                    title="Coming soon"
+                >
+                    <FolderIcon size={20} weight="regular" className="shrink-0" />
+                    {expanded && 'Projects'}
+                    {expanded && (
+                        <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">Soon</span>
+                    )}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Projects (coming soon)
+                        </span>
+                    )}
+                </div>
+            </nav>
+
+            <div className={`flex items-center pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
+                {expanded && (
+                    <span className="text-xs font-bold tracking-wide text-slate-300 whitespace-nowrap">WORKSPACE</span>
+                )}
+            </div>
+
+            <nav className="flex flex-col gap-1.5">
+                <div
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-not-allowed text-slate-500 ${expanded ? 'gap-3.5 px-3 py-3' : 'justify-center px-2 py-3'}`}
+                    title="Coming soon"
+                >
+                    <FileTextIcon size={20} weight="regular" className="shrink-0" />
+                    {expanded && 'Reports'}
+                    {expanded && (
+                        <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">Soon</span>
+                    )}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Reports (coming soon)
+                        </span>
+                    )}
+                </div>
+                <div
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-not-allowed text-slate-500 ${expanded ? 'gap-3.5 px-3 py-3' : 'justify-center px-2 py-3'}`}
+                    title="Coming soon"
+                >
+                    <ChatCircleIcon size={20} weight="regular" className="shrink-0" />
+                    {expanded && 'Chats'}
+                    {expanded && (
+                        <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">Soon</span>
+                    )}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Chats (coming soon)
+                        </span>
+                    )}
+                </div>
+                <div
+                    className={`relative group flex items-center rounded-lg text-sm font-medium cursor-not-allowed text-slate-500 ${expanded ? 'gap-3.5 px-3 py-3' : 'justify-center px-2 py-3'}`}
+                    title="Coming soon"
+                >
+                    <CheckCircleIcon size={20} weight="regular" className="shrink-0" />
+                    {expanded && 'Validation'}
+                    {expanded && (
+                        <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">Soon</span>
+                    )}
+                    {!expanded && (
+                        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border border-chrome-navy/40 bg-chrome-elevated px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                            Validation (coming soon)
+                        </span>
+                    )}
+                </div>
+            </nav>
+
+            <div className={`flex items-center pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
+                {expanded && (
+                    <span className="text-xs font-bold tracking-wide text-slate-300 whitespace-nowrap">SUPPORT</span>
+                )}
+            </div>
+
+            <nav className="flex flex-col gap-1.5">
+                <div
                     className={`relative group flex items-center rounded-lg text-sm font-medium cursor-pointer transition-colors ${activeView === 'documentation' ? 'text-white bg-white/8' : 'text-slate-300 hover:bg-white/5 hover:text-white'} ${expanded ? 'gap-3.5 px-3 py-3' : 'justify-center px-2 py-3'}`}
                     title="Documentation"
                     onClick={() => onNavigate('documentation')}
@@ -170,30 +166,6 @@ export default function Sidebar({
                 </div>
             </nav>
 
-            {activeView === 'canvas' && (
-                <>
-                    <div className={`flex items-center pt-3 pb-3 ${expanded ? 'gap-2' : 'justify-center'}`}>
-                        {expanded && (
-                            <span className="text-xs font-bold tracking-wide text-slate-300 whitespace-nowrap">COMPONENTS</span>
-                        )}
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                        {DEVICE_CARDS.map((card) => (
-                            <DeviceCard key={card.type} card={card} onDragStart={onDragStart} compact={!expanded} />
-                        ))}
-                    </div>
-
-                    {expanded && (
-                        <div className="mt-auto p-3 rounded-lg bg-[#212127]/50 border border-[#14213D]/10 flex items-start gap-2.5">
-                            <CursorClickIcon size={14} weight="regular" className="text-slate-500 mt-0.5 shrink-0" />
-                            <p className="text-xs text-slate-300 leading-relaxed">
-                                Drag components to the canvas to build your topology manually or use AI generation.
-                            </p>
-                        </div>
-                    )}
-                </>
-            )}
         </aside>
     );
 }

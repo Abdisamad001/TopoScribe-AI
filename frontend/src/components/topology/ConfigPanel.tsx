@@ -142,19 +142,18 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
         <aside
             aria-hidden={!isOpen}
             className={`
-                shrink-0 backdrop-blur-md flex flex-col
+                shrink-0 flex flex-col bg-[#111]
                 transition-all duration-300 ease-in-out
                 ${isOpen
                     ? `
-                        border-[#14213D]/15 gap-6 overflow-y-auto
-                        max-[1023px]:fixed max-[1023px]:inset-x-0 max-[1023px]:bottom-0 max-[1023px]:h-[min(70vh,32rem)] max-[1023px]:w-full max-[1023px]:z-50 max-[1023px]:rounded-t-2xl max-[1023px]:border-l-0 max-[1023px]:border-t max-[1023px]:p-6
-                        min-[1024px]:max-[1439px]:fixed min-[1024px]:max-[1439px]:top-0 min-[1024px]:max-[1439px]:right-0 min-[1024px]:max-[1439px]:h-full min-[1024px]:max-[1439px]:w-80 min-[1024px]:max-[1439px]:z-50 min-[1024px]:max-[1439px]:border-l min-[1024px]:max-[1439px]:p-6
-                        min-[1440px]:relative min-[1440px]:w-80 min-[1440px]:h-full min-[1440px]:border-l min-[1440px]:p-6
+                        border-white/10 gap-5 overflow-y-auto custom-scrollbar
+                        max-[1023px]:fixed max-[1023px]:inset-x-0 max-[1023px]:bottom-0 max-[1023px]:h-[min(70vh,32rem)] max-[1023px]:w-full max-[1023px]:z-50 max-[1023px]:rounded-t-2xl max-[1023px]:border-l-0 max-[1023px]:border-t max-[1023px]:p-5
+                        min-[1024px]:max-[1439px]:fixed min-[1024px]:max-[1439px]:top-0 min-[1024px]:max-[1439px]:right-0 min-[1024px]:max-[1439px]:h-full min-[1024px]:max-[1439px]:w-80 min-[1024px]:max-[1439px]:z-50 min-[1024px]:max-[1439px]:border-l min-[1024px]:max-[1439px]:p-5
+                        min-[1440px]:relative min-[1440px]:w-80 min-[1440px]:h-full min-[1440px]:border-l min-[1440px]:p-5
                     `
                     : 'relative w-0 h-full p-0 border-0 pointer-events-none overflow-hidden'
                 }
             `}
-            style={{ backgroundColor: '#1C2F45', boxShadow: isOpen ? '-8px 0 32px rgba(0, 0, 0, 0.2)' : 'none' }}
         >
 
             {selectedNode && (
@@ -164,33 +163,33 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                     type="button"
                     aria-label="Collapse panel"
                     onClick={() => setManuallyCollapsed(true)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
                 >
                     <CaretRightIcon size={18} weight="regular" />
                 </button>
             </div>
 
-            <div className="border-b border-[#14213D]/20 pb-4">
-                <div className="flex items-center gap-3 mb-1">
-                    <div className="p-2 rounded-lg bg-slate-800/50 border border-white/10 shadow-inner">
+            <div className="border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5">
                         <NodeTypeIcon />
                     </div>
                     <div>
-                        <h2 className="text-lg font-semibold text-white tracking-tight">{selectedNode.data.label as string}</h2>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-white/80 bg-[#14213D]/20 px-2 py-0.5 rounded-full border border-[#14213D]/20">
+                        <h2 className="text-sm font-semibold text-white tracking-tight">{selectedNode.data.label as string}</h2>
+                        <span className="text-[10px] uppercase tracking-wider font-medium text-zinc-500">
                             {selectedNode.type}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <div className="flex flex-col gap-5">
-                <div className="group">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider group-hover:text-white/70 transition-colors">
-                        Hostname
+            <div className="flex flex-col gap-4">
+                <div>
+                    <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                        HOSTNAME
                     </label>
                     <input
-                        className="w-full bg-[#142338] border border-[#14213D]/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-[#14213D] focus:ring-1 focus:ring-[#14213D]/20 transition-all duration-300 hover:border-[#14213D]/40 placeholder-slate-600"
+                        className="w-full rounded-lg border border-white/10 bg-white/5 p-2.5 text-sm text-white placeholder-zinc-600 transition-colors focus:border-white/20 focus:outline-none"
                         value={label}
                         onChange={(e) => setLabel(e.target.value)}
                         placeholder="Device Name"
@@ -198,12 +197,12 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                 </div>
 
                 {selectedNode.type !== 'switch' && (
-                    <div className="group">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider group-hover:text-white/70 transition-colors">
-                            Management IP
+                    <div>
+                        <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                            MANAGEMENT IP
                         </label>
                         <input
-                            className="w-full bg-[#142338] border border-[#14213D]/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-[#14213D] focus:ring-1 focus:ring-[#14213D]/20 transition-all duration-300 hover:border-[#14213D]/40 placeholder-slate-600 font-mono"
+                            className="w-full rounded-lg border border-white/10 bg-white/5 p-2.5 font-mono text-sm text-white placeholder-zinc-600 transition-colors focus:border-white/20 focus:outline-none"
                             value={ip}
                             onChange={(e) => setIp(e.target.value)}
                             placeholder="0.0.0.0"
@@ -213,83 +212,79 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
 
                 <button
                     onClick={handleSave}
-                    className="w-full mt-2 bg-gradient-to-br from-[#14213D] to-[#14213D] hover:from-[#14213D] hover:to-[#14213D] text-white p-3 rounded-lg shadow-lg shadow-[#14213D]/20 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 font-semibold text-sm"
+                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white p-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200"
                 >
                     <FloppyDiskIcon size={16} weight="regular" /> Apply Configuration
                 </button>
             </div>
 
-            {/* Logical Divider */}
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-[#14213D]/20 to-transparent my-2"></div>
+            <div className="h-px w-full bg-white/10"></div>
 
-            {/* Simulation Section */}
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 text-slate-400">
-                    <PulseIcon size={14} weight="regular" className="text-white" />
-                    <h3 className="text-[10px] uppercase font-bold tracking-wider">Simulation Interface</h3>
+            <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-zinc-500">
+                    <PulseIcon size={14} weight="regular" />
+                    <h3 className="text-[10px] font-semibold uppercase tracking-wider">SIMULATION INTERFACE</h3>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                    <div className="group">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block tracking-wider group-hover:text-blue-400/70 transition-colors">Target Node</label>
-                        <select
-                            className="w-full bg-[#142338] border border-[#14213D]/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 transition-all duration-300 cursor-pointer hover:border-blue-400/40 appearance-none"
-                            value={pingTarget}
-                            onChange={(e) => setPingTarget(e.target.value)}
-                        >
-                            <option value="" className="text-slate-500">Select Destination...</option>
-                            {allNodes
-                                .filter(n => n.id !== selectedNode.id)
-                                .map(n => (
-                                    <option key={n.id} value={n.id} className="bg-[#1C2F45]">
-                                        {n.data.label as string} ({n.id})
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-
-                    <button
-                        onClick={handlePing}
-                        disabled={!pingTarget || loading}
-                        className="w-full bg-[#142338] hover:bg-[#14213D]/10 border border-[#14213D]/30 text-white p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-sm hover:border-[#14213D] active:bg-[#14213D]/20"
+                <div>
+                    <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">TARGET NODE</label>
+                    <select
+                        className="w-full cursor-pointer appearance-none rounded-lg border border-white/10 bg-white/5 p-2.5 text-sm text-white transition-colors focus:border-white/20 focus:outline-none"
+                        value={pingTarget}
+                        onChange={(e) => setPingTarget(e.target.value)}
                     >
-                        {loading ? (
-                            <span className="flex items-center gap-2">
-                                <PulseIcon weight="regular" className="animate-spin" size={16} /> Transmitting...
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-2">
-                                <ShareNetworkIcon size={16} weight="regular" /> Send Packet
-                            </span>
-                        )}
-                    </button>
-
-                    {pingResult && (
-                        <div className={`mt-2 p-3 rounded-lg border text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-2 duration-300 ${pingResult.startsWith('Path')
-                            ? 'bg-[#14213D]/10 border-[#14213D]/30 text-teal-300 shadow-[0_0_15px_rgba(20,33,61,0.1)]'
-                            : 'bg-red-500/10 border-red-500/30 text-red-300'
-                            }`}>
-                            {pingResult.startsWith('Path')
-                                ? <CheckCircleIcon size={16} weight="regular" className="mt-0.5 flex-shrink-0" />
-                                : <ShieldIcon size={16} weight="regular" className="mt-0.5 flex-shrink-0" />
-                            }
-                            <span className="leading-relaxed font-mono">{pingResult}</span>
-                        </div>
-                    )}
+                        <option value="" className="bg-[#111] text-zinc-500">Select Destination ...</option>
+                        {allNodes
+                            .filter(n => n.id !== selectedNode.id)
+                            .map(n => (
+                                <option key={n.id} value={n.id} className="bg-[#111]">
+                                    {n.data.label as string} ({n.id})
+                                </option>
+                            ))}
+                    </select>
                 </div>
+
+                <button
+                    onClick={handlePing}
+                    disabled={!pingTarget || loading}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 p-2.5 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    {loading ? (
+                        <span className="flex items-center gap-2">
+                            <PulseIcon weight="regular" className="animate-spin" size={16} /> Transmitting...
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-2">
+                            <ShareNetworkIcon size={16} weight="regular" /> Send Packet
+                        </span>
+                    )}
+                </button>
+
+                {pingResult && (
+                    <div className={`mt-1 flex items-start gap-2 rounded-lg border p-2.5 text-xs ${pingResult.startsWith('Path')
+                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                        : 'border-red-500/20 bg-red-500/10 text-red-300'
+                        }`}>
+                        {pingResult.startsWith('Path')
+                            ? <CheckCircleIcon size={16} weight="regular" className="mt-0.5 flex-shrink-0" />
+                            : <ShieldIcon size={16} weight="regular" className="mt-0.5 flex-shrink-0" />
+                        }
+                        <span className="font-mono leading-relaxed">{pingResult}</span>
+                    </div>
+                )}
             </div>
 
-            <div className="mt-8 px-1">
+            <div className="mt-4">
                 <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2 rounded-lg transition-all text-xs font-semibold"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
                 >
                     <TrashIcon size={14} weight="regular" /> Delete Device
                 </button>
             </div>
 
-            <div className="mt-auto pt-6 text-[10px] text-slate-600 text-center border-t border-[#14213D]/5">
-                System Status: <span className="text-white font-bold">ONLINE</span>
+            <div className="mt-auto border-t border-white/5 pt-4 text-center text-[10px] text-zinc-600">
+                System Status: <span className="font-semibold text-zinc-400">ONLINE</span>
             </div>
             </>
             )}
@@ -301,7 +296,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                 onClick={() => setShowDeleteConfirm(false)}
             >
                 <div
-                    className="mx-4 w-full max-w-sm rounded-xl border border-red-500/20 bg-[#1C2F45] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-top-2 duration-300"
+                    className="mx-4 w-full max-w-sm rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <h3 className="text-lg font-semibold text-white tracking-tight">Delete Device?</h3>
@@ -312,7 +307,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                         <button
                             type="button"
                             onClick={() => setShowDeleteConfirm(false)}
-                            className="flex-1 bg-[#142338] hover:bg-slate-700/50 border border-white/10 text-slate-300 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                            className="flex-1 rounded-lg border border-white/10 bg-white/5 p-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/10"
                         >
                             Cancel
                         </button>

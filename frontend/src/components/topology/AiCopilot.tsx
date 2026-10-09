@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SparkleIcon, XIcon } from '@phosphor-icons/react';
+import { Bot, X } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import ImmersiveChatPanel, {
     AI_ASSISTANT_SUBTITLE,
@@ -30,6 +30,16 @@ export default function AiCopilot({
     onRequestClarification,
 }: AiCopilotProps) {
     const isReplyMode = messages.length > 0;
+    const [generating, setGenerating] = React.useState(false);
+
+    React.useEffect(() => {
+        if (!isOpen) return;
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [isOpen, onClose]);
 
     const handleTopologyGenerated = (topology: any, runtime?: any) => {
         onTopologyGenerated(topology, runtime);
@@ -37,68 +47,68 @@ export default function AiCopilot({
     };
 
     return (
-        <div className="pointer-events-none absolute inset-0 z-50">
-            <div className="absolute bottom-6 right-6 left-6 flex flex-col items-end gap-3 sm:left-auto sm:w-full sm:max-w-sm">
-                {isOpen && (
-                    <div
-                        role="dialog"
-                        aria-label={AI_ASSISTANT_TITLE}
-                        className="pointer-events-auto flex max-h-[70vh] w-full origin-bottom-right flex-col overflow-hidden rounded-2xl border border-chrome-navy/20 bg-chrome-surface/95 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-300 font-sans"
-                    >
-                        <div className="flex shrink-0 items-center justify-between bg-chrome-elevated/40 px-6 py-5">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-gradient-to-br from-chrome-navy to-chrome-navy p-2 shadow-lg shadow-chrome-navy/20">
-                                    <SparkleIcon size={20} weight="regular" className="text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="font-sans text-lg font-semibold text-white">
-                                        {AI_ASSISTANT_TITLE}
-                                    </h2>
-                                    <p className="text-xs font-normal text-chrome-subtitle">{AI_ASSISTANT_SUBTITLE}</p>
-                                </div>
+        <>
+            {isOpen && (
+                <div
+                    role="dialog"
+                    aria-label={AI_ASSISTANT_TITLE}
+                    className="absolute inset-y-0 right-0 z-50 flex w-[min(22rem,100%)] flex-col border-l border-white/10 bg-[#111] font-sans shadow-2xl"
+                >
+                    <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+                                <Bot size={15} className="text-zinc-200" />
+                            </span>
+                            <div className="min-w-0">
+                                <h2 className="text-sm font-semibold text-white">
+                                    {AI_ASSISTANT_TITLE}
+                                </h2>
+                                <p className="text-[11px] leading-none text-zinc-500">{AI_ASSISTANT_SUBTITLE}</p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                aria-label="Close"
-                                className="rounded-lg p-2 text-chrome-muted transition-all hover:bg-white/10 hover:text-white"
-                            >
-                                <XIcon size={20} weight="regular" />
-                            </button>
                         </div>
-
-                        <ImmersiveChatPanel
-                            isOpen={isOpen}
-                            onClose={onClose}
-                            messages={messages}
-                            onSendMessage={onSendMessage}
-                            loading={loading}
-                            showComposer={isReplyMode}
-                        />
-
-                        {!isReplyMode && (
-                            <div className="shrink-0 bg-chrome-elevated/80 px-6 py-5">
-                                <ChatInterface
-                                    onTopologyGenerated={handleTopologyGenerated}
-                                    onRequestClarification={onRequestClarification}
-                                />
-                            </div>
-                        )}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label="Close"
+                            className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                            <X size={16} />
+                        </button>
                     </div>
-                )}
 
-                {!isOpen && (
-                    <button
-                        type="button"
-                        onClick={onOpen}
-                        aria-label={AI_ASSISTANT_TITLE}
-                        title={AI_ASSISTANT_TITLE}
-                        className="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-white/20 bg-chrome-navy text-white shadow-xl transition-all duration-300 hover:bg-chrome-navy-hover hover:brightness-110 active:scale-95"
-                    >
-                        <img src="/icon.png" alt={AI_ASSISTANT_TITLE} className="h-7 w-7 object-contain" />
-                    </button>
-                )}
-            </div>
-        </div>
+                    <ImmersiveChatPanel
+                        isOpen={isOpen}
+                        onClose={onClose}
+                        messages={messages}
+                        onSendMessage={onSendMessage}
+                        loading={loading || generating}
+                        showComposer={isReplyMode}
+                    />
+
+                    {!isReplyMode && (
+                        <div className="shrink-0 border-t border-white/10 px-3 py-3">
+                            <ChatInterface
+                                onTopologyGenerated={handleTopologyGenerated}
+                                onRequestClarification={onRequestClarification}
+                                onLoadingChange={setGenerating}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {!isOpen && (
+                <button
+                    type="button"
+                    onClick={onOpen}
+                    aria-label="Ask assistant"
+                    title="Ask assistant"
+                    className="absolute bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-[#111]/90 px-3 py-2 text-xs font-medium text-zinc-300 shadow-lg backdrop-blur-md transition-colors hover:border-white/25 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                >
+                    <Bot size={14} />
+                    Ask assistant
+                </button>
+            )}
+        </>
     );
 }

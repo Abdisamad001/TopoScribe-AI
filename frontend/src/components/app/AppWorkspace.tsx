@@ -21,11 +21,13 @@ export default function AppWorkspace({
     onViewChange,
     activeDesign,
     onActiveDesignChange,
+    onRenameDesign,
 }: {
     view: AppView;
     onViewChange: (view: AppView) => void;
     activeDesign: { id: string | null; name: string };
     onActiveDesignChange: (design: { id: string | null; name: string }) => void;
+    onRenameDesign: (name: string) => void;
 }) {
     const [canvasKey, setCanvasKey] = useState(0);
     const [designs, setDesigns] = useState<Design[]>([]);
@@ -94,7 +96,9 @@ export default function AppWorkspace({
 
     return (
         <div className="flex h-full w-full">
-            <Sidebar activeView={view} onNavigate={onViewChange} />
+            {view !== 'canvas' && (
+                <Sidebar activeView={view} onNavigate={onViewChange} />
+            )}
             <div className="relative h-full min-w-0 flex-1">
                 {deleteError && (
                     <div className="pointer-events-none absolute top-4 left-1/2 z-50 -translate-x-1/2">
@@ -117,6 +121,9 @@ export default function AppWorkspace({
                         key={canvasKey}
                         initialTopology={pendingTopology}
                         onSave={handleSave}
+                        designName={activeDesign.name}
+                        onRename={onRenameDesign}
+                        onBack={() => onViewChange('home')}
                     />
                 )}
                 {view === 'favourites' && (

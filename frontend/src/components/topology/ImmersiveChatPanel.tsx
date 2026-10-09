@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PaperPlaneRightIcon, ChatIcon, WarningIcon } from '@phosphor-icons/react';
+import { PaperPlaneRightIcon, WarningIcon } from '@phosphor-icons/react';
 
 export const AI_ASSISTANT_TITLE = 'AI Assistant';
-export const AI_ASSISTANT_SUBTITLE = 'Design & Clarification';
+export const AI_ASSISTANT_SUBTITLE = 'Network design assistant';
 export const REPLY_PLACEHOLDER = 'Type your reply...';
 
 const FRIENDLY_ERROR_COPY =
@@ -60,23 +60,25 @@ export default function ImmersiveChatPanel({ isOpen, messages, onSendMessage, lo
     if (!isOpen) return null;
 
     return (
-        <div className="flex min-h-0 flex-col font-sans">
-            {/* Chat Area */}
-            <div className="min-h-0 overflow-y-auto px-6 py-5 space-y-5 custom-scrollbar">
-                {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center text-center space-y-1.5 py-1">
-                        <div className="rounded-lg bg-chrome-navy/30 p-2.5">
-                            <ChatIcon size={48} weight="regular" className="text-white" />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-sm font-semibold text-white">Ready to help!</p>
-                            <p className="text-xs font-normal text-slate-400 max-w-[250px]">
-                                I can clarify requirements and refine your network design.
-                            </p>
-                        </div>
+        <div className="flex min-h-0 flex-1 flex-col font-sans">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 custom-scrollbar">
+                {messages.length === 0 && !loading ? (
+                    <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+                        <img
+                            src="/assitant-welcoming-image.svg"
+                            alt=""
+                            width={96}
+                            height={96}
+                            className="h-24 w-24 object-contain"
+                        />
+                        <p className="mt-3 text-sm font-medium text-white">Ready to help!</p>
+                        <p className="mt-1 max-w-[200px] text-xs leading-relaxed text-zinc-500">
+                            I can clarify requirements and refine your network design.
+                        </p>
                     </div>
                 ) : (
-                    messages.map((msg, i) => {
+                    <div className="space-y-3">
+                    {messages.map((msg, i) => {
                         const isError = msg.role === 'assistant' && isTechnicalErrorMessage(msg.content);
                         const display = isError ? getDisplayContent(msg.content) : msg.content;
                         return (
@@ -86,13 +88,13 @@ export default function ImmersiveChatPanel({ isOpen, messages, onSendMessage, lo
                             >
                                 <div
                                     className={`
-                                        max-w-[85%] rounded-2xl px-5 py-4 leading-relaxed shadow-lg
+                                        max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed
                                         break-words [overflow-wrap:anywhere] max-h-64 overflow-y-auto
                                         ${msg.role === 'user'
-                                            ? 'bg-[#14213D] text-white text-sm font-medium rounded-tr-sm'
+                                            ? 'bg-zinc-200 text-zinc-900'
                                             : isError
-                                                ? 'bg-[#2C2C34] text-rose-200/90 text-xs border border-rose-400/20 border-l-2 border-l-rose-400/80 rounded-tl-sm'
-                                                : 'bg-[#2C2C34] text-slate-200 text-sm border border-[#14213D]/10 rounded-tl-sm'}
+                                                ? 'bg-white/5 text-rose-200/90 border border-rose-400/20'
+                                                : 'bg-white/10 text-zinc-100'}
                                     `}
                                 >
                                     {isError ? (
@@ -106,14 +108,15 @@ export default function ImmersiveChatPanel({ isOpen, messages, onSendMessage, lo
                                 </div>
                             </div>
                         );
-                    })
+                    })}
+                    </div>
                 )}
                 {loading && (
                     <div className="flex justify-start">
-                        <div className="bg-[#2C2C34] rounded-2xl rounded-tl-sm px-6 py-4 border border-[#14213D]/10 flex gap-2 items-center">
-                            <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                            <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                            <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-white/5 bg-white/5 px-4 py-2.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:-0.3s]"></span>
+                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:-0.15s]"></span>
+                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce"></span>
                         </div>
                     </div>
                 )}
@@ -121,24 +124,25 @@ export default function ImmersiveChatPanel({ isOpen, messages, onSendMessage, lo
             </div>
 
             {showComposer && (
-            <div className="shrink-0 bg-[#212127] px-6 py-5">
-                <form onSubmit={handleSubmit} className="relative">
+            <div className="shrink-0 border-t border-white/10 px-3 py-3">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                     <textarea
-                        rows={1}
+                        rows={3}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={submitOnEnter}
                         placeholder={REPLY_PLACEHOLDER}
                         aria-label={REPLY_PLACEHOLDER}
                         disabled={loading}
-                        className="w-full bg-[#0F0F11] border border-[#14213D]/20 rounded-xl py-4 pl-5 pr-14 text-white placeholder-[#6B7A8F] focus:outline-none focus:border-chrome-navy focus:ring-2 focus:ring-chrome-navy/40 focus:shadow-lg focus:shadow-chrome-navy/25 transition-all duration-300 disabled:opacity-50 field-sizing-content resize-none max-h-[35vh] overflow-y-auto custom-scrollbar"
+                        className="w-full resize-none rounded-xl border border-white/10 bg-transparent px-3 py-2.5 text-sm text-white placeholder-zinc-600 field-sizing-content min-h-[72px] max-h-[35vh] overflow-y-auto custom-scrollbar transition-colors focus:border-white/20 focus:outline-none disabled:opacity-50"
                     />
                     <button
                         type="submit"
                         disabled={!input.trim() || loading}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[#14213D] hover:bg-[#14213D] text-white border border-white/20 rounded-lg transition-all disabled:opacity-0 disabled:scale-90"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                        <PaperPlaneRightIcon size={18} weight="regular" />
+                        <PaperPlaneRightIcon size={14} weight="regular" />
+                        Send message
                     </button>
                 </form>
             </div>
