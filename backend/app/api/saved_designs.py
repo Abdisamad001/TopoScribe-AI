@@ -26,6 +26,7 @@ def _to_dict(design: Design) -> Dict[str, Any]:
         "name": design.name,
         "topology": design.topology,
         "is_favourite": design.is_favourite,
+        "is_template": bool(getattr(design, "is_template", False)),
         "created_at": design.created_at.isoformat() if design.created_at else None,
         "last_opened_at": design.last_opened_at.isoformat() if design.last_opened_at else None,
     }
@@ -92,6 +93,24 @@ def toggle_favourite(design_id: str, db: Session = Depends(get_db)):
     try:
         design = _get_or_404(db, design_id)
         design.is_favourite = not design.is_favourite
+        db.commit()
+        db.refresh(design)
+        return _to_dict(design)
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/{design_id}/template")
+def toggle_template(design_id: str, db: Session = Depends(get_db)):
+    """
+    Marks or unmarks a saved design as a reusable template.
+    """
+    try:
+        design = _get_or_404(db, design_id)
+        design.is_template = not design.is_template
         db.commit()
         db.refresh(design)
         return _to_dict(design)

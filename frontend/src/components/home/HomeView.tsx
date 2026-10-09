@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { PlusIcon, ShareNetworkIcon, GlobeIcon, DesktopIcon, NoteIcon, StarIcon, CaretDownIcon } from '@phosphor-icons/react';
 import type { Design } from '@/lib/api';
 import DesignCardGrid from './DesignCardGrid';
@@ -11,11 +12,14 @@ const LIBRARY_CARDS = [
     { title: 'End Device', subtitle: 'Workstation / Server', Icon: DesktopIcon, chipClass: 'bg-amber-500/20 text-amber-300' },
 ];
 
+type SortMode = 'az' | 'za';
+
 export default function HomeView({
     designs,
     onCreate,
     onOpen,
     onToggleFavourite,
+    onToggleTemplate,
     onDelete,
     onOpenFavourites,
     searchQuery = '',
@@ -24,14 +28,25 @@ export default function HomeView({
     onCreate: () => void;
     onOpen: (id: string) => void;
     onToggleFavourite: (id: string) => void;
+    onToggleTemplate: (id: string) => void;
     onDelete: (id: string) => void;
     onOpenFavourites: () => void;
     searchQuery?: string;
 }) {
+    const [sortMode, setSortMode] = useState<SortMode>('az');
+
     const query = searchQuery.trim().toLowerCase();
-    const filtered = query
-        ? designs.filter((design) => design.name.toLowerCase().includes(query))
-        : designs;
+    const filtered = useMemo(() => {
+        const list = query
+            ? designs.filter((design) => design.name.toLowerCase().includes(query))
+            : [...designs];
+
+        list.sort((a, b) => {
+            const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+            return sortMode === 'az' ? cmp : -cmp;
+        });
+        return list;
+    }, [designs, query, sortMode]);
 
     return (
         <div className="h-full overflow-y-auto bg-[#0a0a0a] font-sans">
@@ -40,7 +55,6 @@ export default function HomeView({
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5">
                         <ShareNetworkIcon size={18} weight="regular" className="text-zinc-300" />
                     </div>
-                    <p className="mt-2.5 text-xs font-medium text-zinc-500">Network design workspace</p>
                     <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">Create a network design</h2>
                     <p className="mt-1.5 max-w-md text-sm text-zinc-500">
                         Design a topology manually or generate one with AI.
@@ -70,12 +84,11 @@ export default function HomeView({
                         </div>
                         <button
                             type="button"
-                            disabled
-                            title="Coming soon"
-                            className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-500"
+                            onClick={() => setSortMode((mode) => (mode === 'az' ? 'za' : 'az'))}
+                            title="Toggle A–Z / Z–A"
+                            className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2.5 py-1 text-xs text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
                         >
-                            <span className="text-[10px] opacity-70">⌘</span>
-                            Sort
+                            Sort {sortMode === 'az' ? 'A–Z' : 'Z–A'}
                             <CaretDownIcon size={12} weight="regular" />
                         </button>
                     </div>
@@ -90,6 +103,7 @@ export default function HomeView({
                         emptyIcon="network"
                         onOpen={onOpen}
                         onToggleFavourite={onToggleFavourite}
+                        onToggleTemplate={onToggleTemplate}
                         onDelete={onDelete}
                     />
                 </section>

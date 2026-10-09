@@ -35,6 +35,7 @@ export type Design = {
     name: string;
     topology: any;
     is_favourite: boolean;
+    is_template: boolean;
     created_at: string;
     last_opened_at: string | null;
 };
@@ -74,6 +75,12 @@ export async function openDesign(id: string): Promise<Design> {
 export async function toggleFavourite(id: string): Promise<Design> {
     const response = await fetch(`${API_BASE_URL}/api/designs/${id}/favourite`, { method: 'PATCH' });
     if (!response.ok) throw new Error('Failed to update favourite');
+    return response.json();
+}
+
+export async function toggleTemplate(id: string): Promise<Design> {
+    const response = await fetch(`${API_BASE_URL}/api/designs/${id}/template`, { method: 'PATCH' });
+    if (!response.ok) throw new Error('Failed to update template');
     return response.json();
 }
 

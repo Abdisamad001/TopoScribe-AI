@@ -6,12 +6,12 @@ import {
     FolderIcon,
     FileTextIcon,
     PlusIcon,
-    TreeStructureIcon,
+    CopySimpleIcon,
     BookOpenIcon,
 } from '@phosphor-icons/react';
 import { LayoutGrid, Bot, Zap, ChevronDown } from 'lucide-react';
 
-export type AppView = 'home' | 'canvas' | 'favourites' | 'documentation';
+export type AppView = 'home' | 'canvas' | 'favourites' | 'templates' | 'documentation';
 
 function NavTooltip({ label }: { label: string }) {
     return (
@@ -27,7 +27,7 @@ export default function Sidebar({
     onCreate,
 }: {
     activeView: AppView;
-    onNavigate: (view: 'home' | 'favourites' | 'documentation') => void;
+    onNavigate: (view: 'home' | 'favourites' | 'templates' | 'documentation') => void;
     onCreate: () => void;
 }) {
     const [expanded, setExpanded] = useState(false);
@@ -120,9 +120,10 @@ export default function Sidebar({
                     icon: <FolderIcon size={18} weight="regular" className="shrink-0" />,
                 })}
                 {navItem({
-                    label: 'Components',
-                    disabled: true,
-                    icon: <TreeStructureIcon size={18} weight="regular" className="shrink-0" />,
+                    label: 'Templates',
+                    active: activeView === 'templates',
+                    onClick: () => onNavigate('templates'),
+                    icon: <CopySimpleIcon size={18} weight="regular" className="shrink-0" />,
                 })}
             </nav>
 

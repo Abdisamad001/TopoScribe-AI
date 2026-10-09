@@ -50,7 +50,7 @@ export default function Home() {
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search projects or ask anything"
+            placeholder="Search projects or designs"
             aria-label="Search projects"
             className="ml-2 w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none"
           />

@@ -31,6 +31,8 @@ _setup_langwatch()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import design, clarify, simulate, saved_designs
+from sqlalchemy import text
+
 from app.db import Base, engine
 
 app = FastAPI(title="TopoScribe AI Backend")
@@ -41,6 +43,13 @@ def create_tables():
     """Best-effort table creation. An unreachable DB must not block the app."""
     try:
         Base.metadata.create_all(engine)
+       
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE designs ADD COLUMN IF NOT EXISTS is_template boolean NOT NULL DEFAULT false"
+                )
+            )
     except Exception as e:
         print(f"Designs table setup skipped (database unreachable): {e}")
 

@@ -7,12 +7,14 @@ export default function FavouritesView({
     designs,
     onOpen,
     onToggleFavourite,
+    onToggleTemplate,
     onDelete,
     searchQuery = '',
 }: {
     designs: Design[];
     onOpen: (id: string) => void;
     onToggleFavourite: (id: string) => void;
+    onToggleTemplate?: (id: string) => void;
     onDelete: (id: string) => void;
     searchQuery?: string;
 }) {
@@ -37,6 +39,7 @@ export default function FavouritesView({
                     emptyIcon="star"
                     onOpen={onOpen}
                     onToggleFavourite={onToggleFavourite}
+                    onToggleTemplate={onToggleTemplate}
                     onDelete={onDelete}
                 />
             </div>

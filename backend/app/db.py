@@ -17,6 +17,7 @@ class Design(Base):
     name = Column(Text, nullable=False)
     topology = Column(JSONB, nullable=False)
     is_favourite = Column(Boolean, nullable=False, server_default=text("false"), index=True)
+    is_template = Column(Boolean, nullable=False, server_default=text("false"), index=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), index=True)
     last_opened_at = Column(DateTime(timezone=True), nullable=True, index=True)
     user_id = Column(UUID(as_uuid=True), nullable=True)
