@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShareNetworkIcon, StarIcon, TrashIcon } from '@phosphor-icons/react';
 import type { Design } from '@/lib/api';
 
@@ -13,6 +13,15 @@ function formatUpdatedAt(iso: string): string {
     if (abs < 86400) return rtf.format(Math.round(deltaSec / 3600), 'hour');
     if (abs < 86400 * 30) return rtf.format(Math.round(deltaSec / 86400), 'day');
     return rtf.format(Math.round(deltaSec / (86400 * 30)), 'month');
+}
+
+function UpdatedLabel({ iso }: { iso: string }) {
+    const [label, setLabel] = useState('');
+    useEffect(() => {
+        setLabel(formatUpdatedAt(iso));
+    }, [iso]);
+    if (!label) return <span className="invisible">Updated</span>;
+    return <>Updated {label}</>;
 }
 
 export default function DesignCardGrid({
@@ -37,13 +46,13 @@ export default function DesignCardGrid({
     if (designs.length === 0) {
         const Icon = emptyIcon === 'star' ? StarIcon : ShareNetworkIcon;
         return (
-            <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <div className="rounded-lg bg-chrome-navy/30 p-2.5">
-                    <Icon size={48} weight="regular" className="text-chrome-navy" />
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 px-6 py-12 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#141414]">
+                    <Icon size={20} weight="regular" className="text-zinc-400" />
                 </div>
-                <div className="mt-4 space-y-1">
-                    <p className="text-lg font-semibold text-white">{emptyMessage}</p>
-                    <p className="max-w-[280px] text-sm text-slate-400">{emptyDescription}</p>
+                <div className="mt-3 space-y-1">
+                    <p className="text-sm font-semibold text-white">{emptyMessage}</p>
+                    <p className="max-w-[260px] text-xs text-zinc-500">{emptyDescription}</p>
                 </div>
             </div>
         );
@@ -51,15 +60,15 @@ export default function DesignCardGrid({
 
     return (
         <>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {designs.map((design) => (
                 <button
                     key={design.id}
                     type="button"
                     onClick={() => onOpen(design.id)}
-                    className="group relative flex min-h-[200px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-chrome-elevated text-left transition-all hover:-translate-y-1 hover:border-white/25 hover:bg-[#292931] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chrome-navy/40"
+                    className="group relative flex min-h-[148px] flex-col justify-between rounded-xl border border-white/10 bg-[#141414] p-4 text-left transition-colors hover:border-white/20 hover:bg-[#1a1a1a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                 >
-                    <div className="absolute top-3 right-3 z-10 flex items-center">
+                    <div className="absolute top-2.5 right-2.5 z-10 flex items-center">
                         <span
                             role="button"
                             tabIndex={0}
@@ -74,9 +83,9 @@ export default function DesignCardGrid({
                                 event.stopPropagation();
                                 setPendingDelete(design);
                             }}
-                            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg p-2.5 text-slate-400 opacity-0 transition-opacity hover:bg-white/10 hover:text-red-400 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
+                            className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-md p-1 text-zinc-500 opacity-0 transition-opacity hover:bg-white/10 hover:text-red-400 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
                         >
-                            <TrashIcon size={16} weight="regular" />
+                            <TrashIcon size={13} weight="regular" />
                         </span>
                         <span
                             role="button"
@@ -93,26 +102,25 @@ export default function DesignCardGrid({
                                 event.stopPropagation();
                                 onToggleFavourite(design.id);
                             }}
-                            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg p-2.5 text-slate-400 hover:bg-white/10 hover:text-white"
+                            className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-md p-1 text-zinc-500 hover:bg-white/10 hover:text-white"
                         >
                             <StarIcon
-                                size={16}
+                                size={13}
                                 weight={design.is_favourite ? 'fill' : 'regular'}
-                                className={design.is_favourite ? 'text-chrome-navy' : undefined}
+                                className={design.is_favourite ? 'text-amber-400' : undefined}
                             />
                         </span>
                     </div>
-                    <div className="relative min-h-[120px] flex-1 overflow-hidden bg-[#10131c]">
-                        <img
-                            src="/cards-thumbnail.svg"
-                            alt=""
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] object-contain object-center"
-                        />
+
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0a0a0a] ring-1 ring-white/10">
+                        <ShareNetworkIcon size={16} weight="regular" className="text-zinc-200" />
                     </div>
-                    <div className="px-5 py-4">
-                        <h3 className="truncate text-base font-semibold text-white">{design.name}</h3>
-                        <p className="mt-1 text-sm text-slate-300">{formatUpdatedAt(design.last_opened_at ?? design.created_at)}</p>
+
+                    <div className="mt-8 min-w-0 pr-6">
+                        <h3 className="truncate text-sm font-semibold text-white">{design.name}</h3>
+                        <p className="mt-1 text-xs text-zinc-500">
+                            <UpdatedLabel iso={design.last_opened_at ?? design.created_at} />
+                        </p>
                     </div>
                 </button>
             ))}
@@ -124,18 +132,18 @@ export default function DesignCardGrid({
                 onClick={() => setPendingDelete(null)}
             >
                 <div
-                    className="mx-4 w-full max-w-sm rounded-xl border border-red-500/20 bg-[#1C2F45] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-top-2 duration-300"
+                    className="mx-4 w-full max-w-sm rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <h3 className="text-lg font-semibold text-white tracking-tight">Delete Design?</h3>
-                    <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+                    <h3 className="text-lg font-semibold tracking-tight text-white">Delete Design?</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-400">
                         Are you sure you want to delete &quot;{pendingDelete.name}&quot;? This action cannot be undone.
                     </p>
                     <div className="mt-6 flex gap-3">
                         <button
                             type="button"
                             onClick={() => setPendingDelete(null)}
-                            className="flex-1 bg-[#142338] hover:bg-slate-700/50 border border-white/10 text-slate-300 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                            className="flex-1 rounded-lg border border-white/10 bg-white/5 p-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/10"
                         >
                             Cancel
                         </button>
@@ -145,7 +153,7 @@ export default function DesignCardGrid({
                                 onDelete(pendingDelete.id);
                                 setPendingDelete(null);
                             }}
-                            className="flex-1 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 p-2.5 rounded-lg transition-all text-sm font-semibold"
+                            className="flex-1 rounded-lg border border-red-500/20 bg-red-500/10 p-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
                         >
                             Delete
                         </button>

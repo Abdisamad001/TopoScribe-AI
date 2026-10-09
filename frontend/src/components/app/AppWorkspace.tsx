@@ -22,12 +22,14 @@ export default function AppWorkspace({
     activeDesign,
     onActiveDesignChange,
     onRenameDesign,
+    searchQuery = '',
 }: {
     view: AppView;
     onViewChange: (view: AppView) => void;
     activeDesign: { id: string | null; name: string };
     onActiveDesignChange: (design: { id: string | null; name: string }) => void;
     onRenameDesign: (name: string) => void;
+    searchQuery?: string;
 }) {
     const [canvasKey, setCanvasKey] = useState(0);
     const [designs, setDesigns] = useState<Design[]>([]);
@@ -38,6 +40,12 @@ export default function AppWorkspace({
         if (view !== 'home' && view !== 'favourites') return;
         listDesigns().then(setDesigns).catch(() => {});
     }, [view]);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) return;
+        if (view === 'home' || view === 'favourites') return;
+        onViewChange('home');
+    }, [searchQuery, view, onViewChange]);
 
     const openBlankCanvas = () => {
         setPendingTopology(null);
@@ -54,7 +62,7 @@ export default function AppWorkspace({
             setCanvasKey((key) => key + 1);
             onViewChange('canvas');
         } catch {
-            // stay on the current view if the design cannot be opened
+            
         }
     };
 
@@ -97,7 +105,11 @@ export default function AppWorkspace({
     return (
         <div className="flex h-full w-full">
             {view !== 'canvas' && (
-                <Sidebar activeView={view} onNavigate={onViewChange} />
+                <Sidebar
+                    activeView={view}
+                    onNavigate={onViewChange}
+                    onCreate={openBlankCanvas}
+                />
             )}
             <div className="relative h-full min-w-0 flex-1">
                 {deleteError && (
@@ -114,6 +126,8 @@ export default function AppWorkspace({
                         onOpen={openExistingDesign}
                         onToggleFavourite={onToggleFavourite}
                         onDelete={onDeleteDesign}
+                        onOpenFavourites={() => onViewChange('favourites')}
+                        searchQuery={searchQuery}
                     />
                 )}
                 {view === 'canvas' && (
@@ -132,6 +146,7 @@ export default function AppWorkspace({
                         onOpen={openExistingDesign}
                         onToggleFavourite={onToggleFavourite}
                         onDelete={onDeleteDesign}
+                        searchQuery={searchQuery}
                     />
                 )}
                 {view === 'documentation' && <DocumentationView />}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AppWorkspace from '@/components/app/AppWorkspace';
 import type { AppView } from '@/components/topology/Sidebar';
 import { updateDesign } from '@/lib/api';
@@ -8,6 +8,8 @@ import { Search, CircleHelp, Bell, User } from 'lucide-react';
 
 export default function Home() {
   const [view, setView] = useState<AppView>('home');
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
   const [activeDesign, setActiveDesign] = useState<{ id: string | null; name: string }>({
     id: null,
     name: 'Untitled Design',
@@ -22,6 +24,17 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-[#0a0a0a]">
       <header className="relative z-50 flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a0a0a] px-4">
@@ -30,11 +43,15 @@ export default function Home() {
           <h1 className="text-sm font-semibold tracking-tight text-white">TopoScribe</h1>
         </div>
 
-        <div className="absolute left-1/2 top-1/2 hidden w-[min(28rem,40vw)] -translate-x-1/2 -translate-y-1/2 md:flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+        <div className="absolute left-1/2 top-1/2 hidden w-[min(28rem,40vw)] -translate-x-1/2 -translate-y-1/2 md:flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 focus-within:border-white/20">
           <Search size={14} className="shrink-0 text-zinc-500" />
           <input
-            type="text"
+            ref={searchRef}
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search projects or ask anything"
+            aria-label="Search projects"
             className="ml-2 w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none"
           />
           <kbd className="ml-2 hidden shrink-0 rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-500 sm:inline">⌘K</kbd>
@@ -82,6 +99,7 @@ export default function Home() {
           activeDesign={activeDesign}
           onActiveDesignChange={setActiveDesign}
           onRenameDesign={saveTitle}
+          searchQuery={searchQuery}
         />
       </div>
     </main>
