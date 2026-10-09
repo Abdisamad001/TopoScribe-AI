@@ -30,7 +30,7 @@ _setup_langwatch()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import design, clarify, simulate, saved_designs
+from app.api import design, clarify, simulate, saved_designs, projects, reports, chats
 from sqlalchemy import text
 
 from app.db import Base, engine
@@ -43,7 +43,7 @@ def create_tables():
     """Best-effort table creation. An unreachable DB must not block the app."""
     try:
         Base.metadata.create_all(engine)
-       
+
         with engine.begin() as conn:
             conn.execute(
                 text(
@@ -67,6 +67,9 @@ app.include_router(design.router, prefix="/api/design", tags=["design"])
 app.include_router(clarify.router, prefix="/api/design", tags=["design"]) # Mounted at /api/design/clarify by router decoration? No, router has /clarify. Prefix adds /api/design -> /api/design/clarify
 app.include_router(simulate.router, prefix="/api/simulate", tags=["simulation"])
 app.include_router(saved_designs.router, prefix="/api/designs", tags=["designs"])
+app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
+app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
+app.include_router(chats.router, prefix="/api/chats", tags=["chats"])
 
 @app.get("/")
 def read_root():

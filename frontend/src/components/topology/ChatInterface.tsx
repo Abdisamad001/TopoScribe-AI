@@ -28,6 +28,10 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
             const data = await generateDesign(prompt);
 
             if (data.status === 'complete' && data.topology) {
+                // Seed chat so reopening Ask assistant still shows this turn.
+                onRequestClarification(prompt, [
+                    'Design generated. Re-open Ask assistant anytime to see this chat again.',
+                ]);
                 onTopologyGenerated(data.topology, data.runtime);
                 setPrompt(''); // Clear input on success
             } else if (data.status === 'needs_clarification') {

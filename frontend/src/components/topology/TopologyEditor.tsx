@@ -22,7 +22,7 @@ import HostNode from './nodes/HostNode';
 import ConfigPanel from './ConfigPanel';
 import ReportModal from './ReportModal';
 import AiCopilot from './AiCopilot';
-import { clarifyRequirements } from '@/lib/api';
+import { clarifyRequirements, createChat, updateChat, type ChatMessage } from '@/lib/api';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
 import { GlobeIcon, ShareNetworkIcon, DesktopIcon, NoteIcon, CaretLeftIcon } from '@phosphor-icons/react';
 import { ChevronLeft, Layers, FileText, Share2, Save } from 'lucide-react';
@@ -83,15 +83,21 @@ const convertEdges = (netLinks: any[]): Edge[] => {
 export default function TopologyEditor({
     initialTopology,
     onSave,
+    designId = null,
     designName,
     onRename,
     onBack,
+    onSaveReport,
+    initialChat = null,
 }: {
     initialTopology?: any;
     onSave: (topology: any) => Promise<void>;
+    designId?: string | null;
     designName: string;
     onRename: (name: string) => void;
     onBack: () => void;
+    onSaveReport?: (name: string, markdown: string) => void;
+    initialChat?: { id: string; messages: ChatMessage[] } | null;
 }) {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -104,11 +110,41 @@ export default function TopologyEditor({
     const [editingTitle, setEditingTitle] = React.useState(false);
 
     // Chat State
-    const [isChatOpen, setIsChatOpen] = React.useState(false);
-    const [chatMessages, setChatMessages] = React.useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+    const [isChatOpen, setIsChatOpen] = React.useState(Boolean(initialChat?.messages?.length));
+    const [chatMessages, setChatMessages] = React.useState<ChatMessage[]>(initialChat?.messages ?? []);
+    const [chatId, setChatId] = React.useState<string | null>(initialChat?.id ?? null);
     const [chatLoading, setChatLoading] = React.useState(false);
-    const [currentPrompt, setCurrentPrompt] = React.useState('');
+    const [currentPrompt, setCurrentPrompt] = React.useState(
+        () => initialChat?.messages?.find((m) => m.role === 'user')?.content ?? '',
+    );
     const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+    // Keep Sidebar → Chats in sync whenever the assistant thread grows.
+    React.useEffect(() => {
+        if (chatMessages.length === 0) return;
+        const title =
+            chatMessages.find((m) => m.role === 'user')?.content.trim().slice(0, 80) || 'Chat';
+        const timer = window.setTimeout(() => {
+            if (chatId) {
+                updateChat(chatId, {
+                    title,
+                    messages: chatMessages,
+                    design_id: designId,
+                    design_name: designName,
+                }).catch(() => {});
+            } else {
+                createChat({
+                    title,
+                    messages: chatMessages,
+                    design_id: designId,
+                    design_name: designName,
+                })
+                    .then((saved) => setChatId(saved.id))
+                    .catch(() => {});
+            }
+        }, 600);
+        return () => window.clearTimeout(timer);
+    }, [chatMessages, chatId, designId, designName]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -244,6 +280,7 @@ export default function TopologyEditor({
         onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
+    // Apply topology to the canvas. Does not touch chat — clarification history must stay.
     const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
@@ -252,7 +289,6 @@ export default function TopologyEditor({
         setGenerationRuntime(runtime);
         onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
-        setChatMessages([]);
     }, [setNodes, setEdges, onSimulationPath]);
 
     // Load a saved design's topology through the same path as AI generation
@@ -302,6 +338,13 @@ export default function TopologyEditor({
             const data = await clarifyRequirements(currentPrompt, newHistory);
 
             if (data.status === 'complete' && data.topology) {
+                setChatMessages((prev) => [
+                    ...prev,
+                    {
+                        role: 'assistant',
+                        content: 'Design generated. Re-open Ask assistant anytime to see this chat again.',
+                    },
+                ]);
                 onTopologyGenerated(data.topology, data.runtime);
                 setIsChatOpen(false);
             } else if (data.status === 'needs_clarification') {
@@ -508,6 +551,7 @@ export default function TopologyEditor({
             <ReportModal
                 isOpen={isReportOpen}
                 onClose={() => setIsReportOpen(false)}
+                onSaveReport={onSaveReport}
                 topology={{
                     nodes: convertNodesToDomain(nodes),
                     links: convertEdgesToDomain(edges),

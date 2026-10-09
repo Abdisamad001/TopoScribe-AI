@@ -6,16 +6,31 @@ import TopologyEditor from '@/components/topology/TopologyEditor';
 import HomeView from '@/components/home/HomeView';
 import FavouritesView from '@/components/home/FavouritesView';
 import TemplatesView from '@/components/home/TemplatesView';
+import ProjectsView from '@/components/home/ProjectsView';
+import ReportsView from '@/components/home/ReportsView';
+import ChatsView from '@/components/home/ChatsView';
 import DocumentationView from '@/components/home/DocumentationView';
 import {
     createDesign,
+    createProject,
+    createReport,
+    deleteChat,
     deleteDesign,
+    deleteProject,
+    deleteReport,
+    listChats,
     listDesigns,
+    listProjects,
+    listReports,
     openDesign,
     toggleFavourite,
     toggleTemplate,
     updateDesign,
+    updateProject,
     type Design,
+    type Project,
+    type SavedChat,
+    type SavedReport,
 } from '@/lib/api';
 
 export default function AppWorkspace({
@@ -35,22 +50,38 @@ export default function AppWorkspace({
 }) {
     const [canvasKey, setCanvasKey] = useState(0);
     const [designs, setDesigns] = useState<Design[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [reports, setReports] = useState<SavedReport[]>([]);
+    const [chats, setChats] = useState<SavedChat[]>([]);
     const [pendingTopology, setPendingTopology] = useState<any>(null);
+    const [pendingChat, setPendingChat] = useState<{ id: string; messages: SavedChat['messages'] } | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     useEffect(() => {
         if (view === 'canvas' || view === 'documentation') return;
         listDesigns().then(setDesigns).catch(() => {});
+        if (view === 'projects') listProjects().then(setProjects).catch(() => {});
+        if (view === 'reports') listReports().then(setReports).catch(() => {});
+        if (view === 'chats') listChats().then(setChats).catch(() => {});
     }, [view]);
 
     useEffect(() => {
         if (!searchQuery.trim()) return;
-        if (view === 'home' || view === 'favourites' || view === 'templates') return;
+        const searchable: AppView[] = [
+            'home',
+            'favourites',
+            'templates',
+            'projects',
+            'reports',
+            'chats',
+        ];
+        if (searchable.includes(view)) return;
         onViewChange('home');
     }, [searchQuery, view, onViewChange]);
 
     const openBlankCanvas = () => {
         setPendingTopology(null);
+        setPendingChat(null);
         onActiveDesignChange({ id: null, name: 'Untitled Design' });
         setCanvasKey((key) => key + 1);
         onViewChange('canvas');
@@ -60,6 +91,14 @@ export default function AppWorkspace({
         try {
             const design = await openDesign(id);
             setPendingTopology(design.topology);
+            // Restore the latest Ask-assistant thread linked to this design, if any.
+            try {
+                const allChats = await listChats();
+                const linked = allChats.find((chat) => chat.design_id === id);
+                setPendingChat(linked ? { id: linked.id, messages: linked.messages } : null);
+            } catch {
+                setPendingChat(null);
+            }
             onActiveDesignChange({ id: design.id, name: design.name });
             setCanvasKey((key) => key + 1);
             onViewChange('canvas');
@@ -73,11 +112,33 @@ export default function AppWorkspace({
         try {
             const design = await openDesign(id);
             setPendingTopology(design.topology);
+            setPendingChat(null);
             onActiveDesignChange({ id: null, name: `${design.name} copy` });
             setCanvasKey((key) => key + 1);
             onViewChange('canvas');
         } catch {
             // stay on templates if open fails
+        }
+    };
+
+    const openSavedChat = async (chat: SavedChat) => {
+        try {
+            if (chat.design_id) {
+                const design = await openDesign(chat.design_id);
+                setPendingTopology(design.topology);
+                onActiveDesignChange({ id: design.id, name: design.name });
+            } else {
+                setPendingTopology(null);
+                onActiveDesignChange({
+                    id: null,
+                    name: chat.design_name || 'Untitled Design',
+                });
+            }
+            setPendingChat({ id: chat.id, messages: chat.messages });
+            setCanvasKey((key) => key + 1);
+            onViewChange('canvas');
+        } catch {
+            // stay on chats if open fails
         }
     };
 
@@ -133,6 +194,12 @@ export default function AppWorkspace({
         }
     };
 
+    const handleSaveReport = (name: string, markdown: string) => {
+        createReport(name, markdown, activeDesign.id)
+            .then((saved) => setReports((current) => [saved, ...current]))
+            .catch(() => {});
+    };
+
     return (
         <div className="flex h-full w-full">
             {view !== 'canvas' && (
@@ -167,9 +234,12 @@ export default function AppWorkspace({
                         key={canvasKey}
                         initialTopology={pendingTopology}
                         onSave={handleSave}
+                        designId={activeDesign.id}
                         designName={activeDesign.name}
                         onRename={onRenameDesign}
                         onBack={() => onViewChange('home')}
+                        onSaveReport={handleSaveReport}
+                        initialChat={pendingChat}
                     />
                 )}
                 {view === 'favourites' && (
@@ -190,6 +260,74 @@ export default function AppWorkspace({
                         onToggleTemplate={onToggleTemplate}
                         onDelete={onRemoveFromTemplates}
                         searchQuery={searchQuery}
+                    />
+                )}
+                {view === 'projects' && (
+                    <ProjectsView
+                        projects={projects}
+                        designs={designs}
+                        searchQuery={searchQuery}
+                        onCreate={(name) => {
+                            createProject(name)
+                                .then((created) => setProjects((current) => [created, ...current]))
+                                .catch(() => {});
+                        }}
+                        onDelete={(id) => {
+                            setProjects((current) => current.filter((p) => p.id !== id));
+                            deleteProject(id).catch(() => {
+                                listProjects().then(setProjects).catch(() => {});
+                            });
+                        }}
+                        onAddDesign={(projectId, designId) => {
+                            const project = projects.find((p) => p.id === projectId);
+                            if (!project || project.design_ids.includes(designId)) return;
+                            const design_ids = [...project.design_ids, designId];
+                            updateProject(projectId, { design_ids })
+                                .then((updated) =>
+                                    setProjects((current) =>
+                                        current.map((p) => (p.id === updated.id ? updated : p)),
+                                    ),
+                                )
+                                .catch(() => {});
+                        }}
+                        onRemoveDesign={(projectId, designId) => {
+                            const project = projects.find((p) => p.id === projectId);
+                            if (!project) return;
+                            const design_ids = project.design_ids.filter((id) => id !== designId);
+                            updateProject(projectId, { design_ids })
+                                .then((updated) =>
+                                    setProjects((current) =>
+                                        current.map((p) => (p.id === updated.id ? updated : p)),
+                                    ),
+                                )
+                                .catch(() => {});
+                        }}
+                        onOpenDesign={openExistingDesign}
+                    />
+                )}
+                {view === 'reports' && (
+                    <ReportsView
+                        reports={reports}
+                        searchQuery={searchQuery}
+                        onDelete={(id) => {
+                            setReports((current) => current.filter((r) => r.id !== id));
+                            deleteReport(id).catch(() => {
+                                listReports().then(setReports).catch(() => {});
+                            });
+                        }}
+                    />
+                )}
+                {view === 'chats' && (
+                    <ChatsView
+                        chats={chats}
+                        searchQuery={searchQuery}
+                        onOpen={openSavedChat}
+                        onDelete={(id) => {
+                            setChats((current) => current.filter((c) => c.id !== id));
+                            deleteChat(id).catch(() => {
+                                listChats().then(setChats).catch(() => {});
+                            });
+                        }}
                     />
                 )}
                 {view === 'documentation' && <DocumentationView />}

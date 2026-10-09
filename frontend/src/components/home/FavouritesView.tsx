@@ -25,9 +25,11 @@ export default function FavouritesView({
         : favourites;
 
     return (
-        <div className="h-full overflow-y-auto bg-[#0a0a0a] font-sans">
-            <div className="mx-auto flex min-h-full max-w-5xl flex-col px-6 py-8">
-                <h2 className="mb-4 border-b border-white/10 pb-3 text-base font-semibold text-white">Favorites</h2>
+        <div className="app-page">
+            <div className="app-page__inner">
+                <div className="app-page__header">
+                    <h2 className="app-page__title">Favorites</h2>
+                </div>
                 <DesignCardGrid
                     designs={filtered}
                     emptyMessage={query ? 'No matching favorites' : 'No favourites yet'}

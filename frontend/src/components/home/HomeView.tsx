@@ -49,34 +49,30 @@ export default function HomeView({
     }, [designs, query, sortMode]);
 
     return (
-        <div className="h-full overflow-y-auto bg-[#0a0a0a] font-sans">
-            <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-8 px-6 py-6">
-                <section className="flex flex-col items-center text-center">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5">
-                        <ShareNetworkIcon size={18} weight="regular" className="text-zinc-300" />
+        <div className="app-page">
+            <div className="app-page__inner app-page__inner--home">
+                <section className="home-hero">
+                    <div className="home-hero__icon">
+                        <ShareNetworkIcon size={18} weight="regular" />
                     </div>
                     <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">Create a network design</h2>
                     <p className="mt-1.5 max-w-md text-sm text-zinc-500">
                         Design a topology manually or generate one with AI.
                     </p>
-                    <button
-                        type="button"
-                        onClick={onCreate}
-                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200"
-                    >
+                    <button type="button" onClick={onCreate} className="ui-btn-primary mt-4 px-4">
                         <PlusIcon size={16} weight="regular" />
                         Create design
                     </button>
                 </section>
 
                 <section>
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+                    <div className="home-section-bar">
                         <div className="flex items-center gap-1">
-                            <h3 className="text-base font-semibold text-white">Your designs</h3>
+                            <h3 className="app-page__title">Your designs</h3>
                             <button
                                 type="button"
                                 onClick={onOpenFavourites}
-                                className="ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300"
+                                className="ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
                             >
                                 <StarIcon size={13} weight="regular" />
                                 Favorites
@@ -86,7 +82,7 @@ export default function HomeView({
                             type="button"
                             onClick={() => setSortMode((mode) => (mode === 'az' ? 'za' : 'az'))}
                             title="Toggle A–Z / Z–A"
-                            className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2.5 py-1 text-xs text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
+                            className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2.5 py-1 text-xs text-zinc-300 hover:bg-white/5 hover:text-white"
                         >
                             Sort {sortMode === 'az' ? 'A–Z' : 'Z–A'}
                             <CaretDownIcon size={12} weight="regular" />
@@ -110,19 +106,19 @@ export default function HomeView({
 
                 <section>
                     <div className="mb-4">
-                        <h3 className="text-base font-semibold text-white">Component library</h3>
-                        <p className="mt-0.5 text-xs text-zinc-500">
+                        <h3 className="app-page__title">Component library</h3>
+                        <p className="app-page__subtitle">
                             Open a design and drag components onto the canvas.
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="ui-grid">
                         {LIBRARY_CARDS.map(({ title, subtitle, Icon, chipClass, disabled }) => (
                             <div
                                 key={title}
                                 title={disabled ? 'Coming soon' : undefined}
-                                className={`flex items-center gap-3 rounded-xl border border-white/10 bg-[#141414] p-3 ${disabled ? 'opacity-50' : ''}`}
+                                className={`library-card ${disabled ? 'opacity-50' : ''}`}
                             >
-                                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${chipClass}`}>
+                                <div className={`library-card__chip ${chipClass}`}>
                                     <Icon size={16} weight="regular" />
                                 </div>
                                 <div className="min-w-0">

@@ -11,7 +11,15 @@ import {
 } from '@phosphor-icons/react';
 import { LayoutGrid, Bot, Zap, ChevronDown } from 'lucide-react';
 
-export type AppView = 'home' | 'canvas' | 'favourites' | 'templates' | 'documentation';
+export type AppView =
+    | 'home'
+    | 'canvas'
+    | 'favourites'
+    | 'templates'
+    | 'projects'
+    | 'reports'
+    | 'chats'
+    | 'documentation';
 
 function NavTooltip({ label }: { label: string }) {
     return (
@@ -27,7 +35,7 @@ export default function Sidebar({
     onCreate,
 }: {
     activeView: AppView;
-    onNavigate: (view: 'home' | 'favourites' | 'templates' | 'documentation') => void;
+    onNavigate: (view: AppView) => void;
     onCreate: () => void;
 }) {
     const [expanded, setExpanded] = useState(false);
@@ -116,7 +124,8 @@ export default function Sidebar({
                 })}
                 {navItem({
                     label: 'Projects',
-                    disabled: true,
+                    active: activeView === 'projects',
+                    onClick: () => onNavigate('projects'),
                     icon: <FolderIcon size={18} weight="regular" className="shrink-0" />,
                 })}
                 {navItem({
@@ -129,17 +138,8 @@ export default function Sidebar({
 
             <div className={`mt-4 mb-2 ${expanded ? 'px-1' : 'flex justify-center'}`}>
                 {expanded ? (
-                    <div className="flex items-center justify-between border-t border-white/10 px-2 pt-3">
+                    <div className="border-t border-white/10 px-2 pt-3">
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Workspace</span>
-                        <button
-                            type="button"
-                            disabled
-                            title="Coming soon"
-                            aria-label="Add workspace item"
-                            className="rounded p-0.5 text-zinc-500 cursor-not-allowed"
-                        >
-                            <PlusIcon size={12} weight="regular" />
-                        </button>
                     </div>
                 ) : (
                     <div className="h-px w-6 bg-white/10" />
@@ -149,12 +149,14 @@ export default function Sidebar({
             <nav className="flex flex-col gap-0.5">
                 {navItem({
                     label: 'Reports',
-                    disabled: true,
+                    active: activeView === 'reports',
+                    onClick: () => onNavigate('reports'),
                     icon: <FileTextIcon size={18} weight="regular" className="shrink-0" />,
                 })}
                 {navItem({
                     label: 'Chats',
-                    disabled: true,
+                    active: activeView === 'chats',
+                    onClick: () => onNavigate('chats'),
                     icon: <Bot size={18} className="shrink-0" />,
                 })}
                 {navItem({

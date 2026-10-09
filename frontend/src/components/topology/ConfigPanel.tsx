@@ -283,9 +283,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
                 </button>
             </div>
 
-            <div className="mt-auto border-t border-white/5 pt-4 text-center text-[10px] text-zinc-600">
-                System Status: <span className="font-semibold text-zinc-400">ONLINE</span>
-            </div>
+           
             </>
             )}
         </aside>

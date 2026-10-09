@@ -23,6 +23,43 @@ class Design(Base):
     user_id = Column(UUID(as_uuid=True), nullable=True)
 
 
+class Project(Base):
+    """A named folder of design ids. Deleting a project does not delete designs."""
+
+    __tablename__ = "projects"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    name = Column(Text, nullable=False)
+    design_ids = Column(JSONB, nullable=False, server_default=text("'[]'::jsonb"))
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), index=True)
+
+
+class Report(Base):
+    """Saved markdown report from Export report. Independent from designs."""
+
+    __tablename__ = "reports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    name = Column(Text, nullable=False)
+    markdown = Column(Text, nullable=False)
+    design_id = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), index=True)
+
+
+class Chat(Base):
+    """Saved Ask-assistant thread. Independent from designs."""
+
+    __tablename__ = "chats"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    title = Column(Text, nullable=False)
+    messages = Column(JSONB, nullable=False, server_default=text("'[]'::jsonb"))
+    design_id = Column(Text, nullable=True)
+    design_name = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), index=True)
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), index=True)
+
+
 def get_db():
     db = SessionLocal()
     try:
