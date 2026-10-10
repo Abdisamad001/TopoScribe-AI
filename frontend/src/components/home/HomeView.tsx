@@ -8,7 +8,7 @@ import DesignCardGrid from './DesignCardGrid';
 const LIBRARY_CARDS = [
     { title: 'Router', subtitle: 'L3 Networking', Icon: GlobeIcon, chipClass: 'bg-teal-500/20 text-teal-300' },
     { title: 'Switch', subtitle: 'L2 Switching', Icon: ShareNetworkIcon, chipClass: 'bg-blue-500/20 text-blue-300' },
-    { title: 'Notes', subtitle: 'Annotation', Icon: NoteIcon, chipClass: 'bg-violet-500/20 text-violet-300', disabled: true },
+    { title: 'Notes', subtitle: 'Annotation', Icon: NoteIcon, chipClass: 'bg-violet-500/20 text-violet-300' },
     { title: 'End Device', subtitle: 'Workstation / Server', Icon: DesktopIcon, chipClass: 'bg-amber-500/20 text-amber-300' },
 ];
 
@@ -112,12 +112,8 @@ export default function HomeView({
                         </p>
                     </div>
                     <div className="ui-grid">
-                        {LIBRARY_CARDS.map(({ title, subtitle, Icon, chipClass, disabled }) => (
-                            <div
-                                key={title}
-                                title={disabled ? 'Coming soon' : undefined}
-                                className={`library-card ${disabled ? 'opacity-50' : ''}`}
-                            >
+                        {LIBRARY_CARDS.map(({ title, subtitle, Icon, chipClass }) => (
+                            <div key={title} className="library-card">
                                 <div className={`library-card__chip ${chipClass}`}>
                                     <Icon size={16} weight="regular" />
                                 </div>

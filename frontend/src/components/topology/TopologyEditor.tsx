@@ -497,7 +497,6 @@ export default function TopologyEditor({
                                         key={type}
                                         draggable={!disabled}
                                         onDragStart={disabled ? undefined : (event) => onDragStart(event, type)}
-                                        title={disabled ? 'Coming soon' : undefined}
                                         className={`group flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] p-2.5 transition-colors ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab hover:bg-white/[0.06]'}`}
                                     >
                                         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${chipClass}`}>
@@ -507,9 +506,6 @@ export default function TopologyEditor({
                                             <div className={`text-sm font-medium text-zinc-100 transition-colors ${titleHoverClass}`}>{title}</div>
                                             <div className="text-[11px] text-zinc-500">{subtitle}</div>
                                         </div>
-                                        {disabled && (
-                                            <span className="ml-auto rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-500">Soon</span>
-                                        )}
                                     </div>
                                 ))}
                             </div>
