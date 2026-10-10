@@ -179,8 +179,9 @@ export default function Sidebar({
             <nav className="flex flex-col gap-0.5">
                 {navItem({
                     label: 'Documentation',
-                    active: activeView === 'documentation',
-                    onClick: () => onNavigate('documentation'),
+                    onClick: () => {
+                        window.open('https://topos.mintlify.site/', '_blank', 'noopener,noreferrer');
+                    },
                     icon: <BookOpenIcon size={18} weight="regular" className="shrink-0" />,
                 })}
             </nav>
