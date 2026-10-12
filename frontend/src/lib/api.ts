@@ -30,6 +30,17 @@ export async function simulateNetwork(topology: any, source: string, target: str
     return response.json();
 }
 
+/** Run canvas topology through backend config_node; returns topology with report metadata. */
+export async function configureTopology(topology: any, designPlan: Record<string, unknown> = {}) {
+    const response = await fetch(`${API_BASE_URL}/api/topology/configure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topology, design_plan: designPlan }),
+    });
+    if (!response.ok) throw new Error('Topology configure failed');
+    return response.json();
+}
+
 export type Design = {
     id: string;
     name: string;

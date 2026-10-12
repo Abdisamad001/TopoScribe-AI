@@ -22,7 +22,7 @@ import HostNode from './nodes/HostNode';
 import ConfigPanel from './ConfigPanel';
 import ReportModal from './ReportModal';
 import AiCopilot from './AiCopilot';
-import { clarifyRequirements, createChat, updateChat, type ChatMessage } from '@/lib/api';
+import { clarifyRequirements, createChat, updateChat, configureTopology, type ChatMessage } from '@/lib/api';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
 import { GlobeIcon, ShareNetworkIcon, DesktopIcon, NoteIcon, CaretLeftIcon } from '@phosphor-icons/react';
 import { ChevronLeft, Layers, FileText, Share2, Save } from 'lucide-react';
@@ -118,6 +118,7 @@ export default function TopologyEditor({
         () => initialChat?.messages?.find((m) => m.role === 'user')?.content ?? '',
     );
     const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [exportState, setExportState] = React.useState<'idle' | 'configuring' | 'error'>('idle');
 
     // Keep Sidebar → Chats in sync whenever the assistant thread grows.
     React.useEffect(() => {
@@ -313,6 +314,35 @@ export default function TopologyEditor({
         setTimeout(() => setSaveState('idle'), 2000);
     };
 
+    const onExportClick = async () => {
+        const configs = (topologyMeta as { configurations?: Record<string, unknown> } | undefined)
+            ?.configurations;
+        const hasConfigs = Boolean(configs && Object.keys(configs).length > 0);
+        if (hasConfigs) {
+            setIsReportOpen(true);
+            return;
+        }
+        setExportState('configuring');
+        try {
+            const data = await configureTopology({
+                nodes: convertNodesToDomain(nodes),
+                links: convertEdgesToDomain(edges),
+                protocols: topologyProtocols,
+                metadata: topologyMeta || {},
+            });
+            const enriched = data?.topology;
+            if (!enriched?.metadata) {
+                throw new Error('Configure returned no metadata');
+            }
+            setTopologyMeta(enriched.metadata);
+            setExportState('idle');
+            setIsReportOpen(true);
+        } catch {
+            setExportState('error');
+            window.setTimeout(() => setExportState('idle'), 2500);
+        }
+    };
+
     const onDeleteNode = useCallback((nodeId: string) => {
         setNodes((nds) => nds.filter((node) => node.id !== nodeId));
         setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
@@ -437,11 +467,16 @@ export default function TopologyEditor({
                     </button>
                     <button
                         type="button"
-                        onClick={() => setIsReportOpen(true)}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
+                        onClick={onExportClick}
+                        disabled={exportState === 'configuring'}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
                     >
                         <FileText size={13} />
-                        Export report
+                        {exportState === 'configuring'
+                            ? 'Preparing…'
+                            : exportState === 'error'
+                              ? 'Export failed'
+                              : 'Export report'}
                     </button>
                     <button
                         type="button"
