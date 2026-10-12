@@ -118,7 +118,7 @@ Return ONLY valid JSON:
     # tokens and ~29% lower mean wall time. Topology escalation is left at the
     # model default — do not copy this override there without a separate study.
     try:
-        with langwatch.span(name="Planning Agent", capture_input=False, capture_output=False):
+        with langwatch.span(name="Planning Agent"):
             langwatch.get_current_span().update(
                 tier="planning",
                 reasoning_effort="low",

@@ -69,7 +69,7 @@ def _topology_span_meta(
     )
 
 
-@langwatch.span(name="Topology Agent", capture_input=False, capture_output=False)
+@langwatch.span(name="Topology Agent")
 def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     """
     Topology Agent: Converts design plan into network topology.

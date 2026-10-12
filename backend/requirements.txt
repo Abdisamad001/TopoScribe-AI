@@ -9,7 +9,7 @@ pydantic>=2.7.0,<3.0.0
 groq==0.37.1
 openai==2.48.0
 langgraph==0.4.0
-langwatch
+langwatch>=0.2.0,<1.0.0
 openinference-instrumentation-groq
 openinference-instrumentation-openai
 
