@@ -293,6 +293,9 @@ def vlan_catalog_from_state(topology, design_plan: Optional[dict]) -> List[Dict[
             if 2 <= c <= 4094:
                 add(c, f"VLAN_{c}")
 
+    if not out:
+        out = [{"id": 1, "name": "Default"}]
+
     return out
 
 def _catalog_id_set(catalog: List[Dict[str, Any]]) -> set:
@@ -459,6 +462,10 @@ def _allocate_vlan_networks(
     for i, vid in enumerate(vlan_ids):
         u = users_by_vlan.get(vid)
         pl = _prefix_len_for_department_users(u if u is not None and u >= 0 else None)
+        # Fallback Default VLAN 1: align with classic Gi0/0 gateway 192.168.1.1/24.
+        if int(vid) == 1:
+            out[vid] = ipaddress.IPv4Network("192.168.1.0/24")
+            continue
         third = 10 + (i % 25) * 10
         start = ipaddress.IPv4Address(f"192.168.{third}.0")
         net = ipaddress.IPv4Network((start, pl), strict=False)
@@ -675,7 +682,7 @@ def _assign_host_vlan_membership(
     for h in host_nodes:
         connected_switch = _connected_switch_for_host(topology, h)
         vid = _resolve_vlan_for_host(h, connected_switch, catalog or [], rr)
-        # Write back host config for downstream generators (frontend report + VLAN name lookups)
+       
         h.config = {
             "vlan_id": int(vid),
             "vlan_name": vlan_name_by_id.get(int(vid), f"VLAN_{int(vid)}"),
