@@ -22,18 +22,8 @@ import HostNode from './nodes/HostNode';
 import ConfigPanel from './ConfigPanel';
 import ReportModal from './ReportModal';
 import AiCopilot from './AiCopilot';
-import { clarifyRequirements, createChat, updateChat, configureTopology, type ChatMessage } from '@/lib/api';
+import { clarifyRequirements } from '@/lib/api';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
-import { GlobeIcon, ShareNetworkIcon, DesktopIcon, NoteIcon, CaretLeftIcon } from '@phosphor-icons/react';
-import { ChevronLeft, Layers, FileText, Share2, Save } from 'lucide-react';
-
-// Component shelf cards. The Notes card is a visual placeholder: no node type exists for it yet.
-const DEVICE_CARDS = [
-    { type: 'router', title: 'Router', subtitle: 'L3 Networking', Icon: GlobeIcon, chipClass: 'bg-teal-500', titleHoverClass: 'group-hover:text-teal-300', disabled: false },
-    { type: 'switch', title: 'Switch', subtitle: 'L2 Switching', Icon: ShareNetworkIcon, chipClass: 'bg-blue-500', titleHoverClass: 'group-hover:text-blue-300', disabled: false },
-    { type: 'host', title: 'End Device', subtitle: 'Workstation / Server', Icon: DesktopIcon, chipClass: 'bg-purple-500', titleHoverClass: 'group-hover:text-purple-300', disabled: false },
-    { type: 'note', title: 'Notes', subtitle: 'Annotation', Icon: NoteIcon, chipClass: 'bg-slate-600', titleHoverClass: '', disabled: true },
-];
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -83,21 +73,9 @@ const convertEdges = (netLinks: any[]): Edge[] => {
 export default function TopologyEditor({
     initialTopology,
     onSave,
-    designId = null,
-    designName,
-    onRename,
-    onBack,
-    onSaveReport,
-    initialChat = null,
 }: {
     initialTopology?: any;
     onSave: (topology: any) => Promise<void>;
-    designId?: string | null;
-    designName: string;
-    onRename: (name: string) => void;
-    onBack: () => void;
-    onSaveReport?: (name: string, markdown: string) => void;
-    initialChat?: { id: string; messages: ChatMessage[] } | null;
 }) {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -106,46 +84,14 @@ export default function TopologyEditor({
     const [topologyMeta, setTopologyMeta] = React.useState<TopologyMetadata | undefined>(undefined);
     const [topologyProtocols, setTopologyProtocols] = React.useState<ProtocolConfig[]>([]);
     const [generationRuntime, setGenerationRuntime] = React.useState<GenerationRuntime | undefined>(undefined);
-    const [shelfOpen, setShelfOpen] = React.useState(false);
-    const [editingTitle, setEditingTitle] = React.useState(false);
+    const hasTopology = nodes.length > 0;
 
     // Chat State
-    const [isChatOpen, setIsChatOpen] = React.useState(Boolean(initialChat?.messages?.length));
-    const [chatMessages, setChatMessages] = React.useState<ChatMessage[]>(initialChat?.messages ?? []);
-    const [chatId, setChatId] = React.useState<string | null>(initialChat?.id ?? null);
+    const [isChatOpen, setIsChatOpen] = React.useState(false);
+    const [chatMessages, setChatMessages] = React.useState<{ role: 'user' | 'assistant', content: string }[]>([]);
     const [chatLoading, setChatLoading] = React.useState(false);
-    const [currentPrompt, setCurrentPrompt] = React.useState(
-        () => initialChat?.messages?.find((m) => m.role === 'user')?.content ?? '',
-    );
+    const [currentPrompt, setCurrentPrompt] = React.useState('');
     const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-    const [exportState, setExportState] = React.useState<'idle' | 'configuring' | 'error'>('idle');
-
-    // Keep Sidebar → Chats in sync whenever the assistant thread grows.
-    React.useEffect(() => {
-        if (chatMessages.length === 0) return;
-        const title =
-            chatMessages.find((m) => m.role === 'user')?.content.trim().slice(0, 80) || 'Chat';
-        const timer = window.setTimeout(() => {
-            if (chatId) {
-                updateChat(chatId, {
-                    title,
-                    messages: chatMessages,
-                    design_id: designId,
-                    design_name: designName,
-                }).catch(() => {});
-            } else {
-                createChat({
-                    title,
-                    messages: chatMessages,
-                    design_id: designId,
-                    design_name: designName,
-                })
-                    .then((saved) => setChatId(saved.id))
-                    .catch(() => {});
-            }
-        }, 600);
-        return () => window.clearTimeout(timer);
-    }, [chatMessages, chatId, designId, designName]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -156,12 +102,6 @@ export default function TopologyEditor({
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
     }, []);
-
-    // Same drag payload the sidebar shelf used; onDrop below is unchanged.
-    const onDragStart = (event: React.DragEvent, nodeType: string) => {
-        event.dataTransfer.setData('application/reactflow', nodeType);
-        event.dataTransfer.effectAllowed = 'move';
-    };
 
     const onDrop = useCallback(
         (event: React.DragEvent) => {
@@ -281,7 +221,6 @@ export default function TopologyEditor({
         onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
-    // Apply topology to the canvas.
     const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
@@ -290,9 +229,10 @@ export default function TopologyEditor({
         setGenerationRuntime(runtime);
         onSimulationPath({ path: [], success: true });
         setSelectedNodeId(null);
+        setChatMessages([]);
     }, [setNodes, setEdges, onSimulationPath]);
 
-    // Load a saved design's topology 
+    // Load a saved design's topology through the same path as AI generation
     React.useEffect(() => {
         if (initialTopology) onTopologyGenerated(initialTopology);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -312,35 +252,6 @@ export default function TopologyEditor({
             setSaveState('error');
         }
         setTimeout(() => setSaveState('idle'), 2000);
-    };
-
-    const onExportClick = async () => {
-        const configs = (topologyMeta as { configurations?: Record<string, unknown> } | undefined)
-            ?.configurations;
-        const hasConfigs = Boolean(configs && Object.keys(configs).length > 0);
-        if (hasConfigs) {
-            setIsReportOpen(true);
-            return;
-        }
-        setExportState('configuring');
-        try {
-            const data = await configureTopology({
-                nodes: convertNodesToDomain(nodes),
-                links: convertEdgesToDomain(edges),
-                protocols: topologyProtocols,
-                metadata: topologyMeta || {},
-            });
-            const enriched = data?.topology;
-            if (!enriched?.metadata) {
-                throw new Error('Configure returned no metadata');
-            }
-            setTopologyMeta(enriched.metadata);
-            setExportState('idle');
-            setIsReportOpen(true);
-        } catch {
-            setExportState('error');
-            window.setTimeout(() => setExportState('idle'), 2500);
-        }
     };
 
     const onDeleteNode = useCallback((nodeId: string) => {
@@ -368,31 +279,8 @@ export default function TopologyEditor({
             const data = await clarifyRequirements(currentPrompt, newHistory);
 
             if (data.status === 'complete' && data.topology) {
-                setChatMessages((prev) => [
-                    ...prev,
-                    {
-                        role: 'assistant',
-                        content: (data.validation_result && data.validation_result.status === 'failed_fatal'
-                            && data.validation_result.errors && data.validation_result.errors.length)
-                            ? `Configuration failed:\n${data.validation_result.errors.join('\n')}`
-                            : 'Design generated. Re-open Ask assistant anytime to see this chat again.',
-                    },
-                ]);
-                onTopologyGenerated(
-                    {
-                        ...data.topology,
-                        metadata: {
-                            ...(data.topology.metadata || {}),
-                            cisco_configs: data.cisco_configs,
-                            configurations: data.configurations,
-                        },
-                    },
-                    data.runtime,
-                );
-                if (!(data.validation_result && data.validation_result.status === 'failed_fatal'
-                    && data.validation_result.errors && data.validation_result.errors.length)) {
-                    setIsChatOpen(false);
-                }
+                onTopologyGenerated(data.topology, data.runtime);
+                setIsChatOpen(false);
             } else if (data.status === 'needs_clarification') {
                 const q = data.questions ? data.questions.join('\n\n') : 'Please clarify.';
                 setChatMessages(prev => [...prev, { role: 'assistant', content: q }]);
@@ -415,82 +303,7 @@ export default function TopologyEditor({
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
     return (
-        <div className="flex h-full w-full flex-col bg-[#0a0a0a]">
-            <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a0a0a] px-3">
-                <div className="flex min-w-0 items-center gap-1">
-                    <button
-                        type="button"
-                        onClick={onBack}
-                        aria-label="Back to designs"
-                        title="Back to designs"
-                        className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
-                    >
-                        <ChevronLeft size={18} />
-                    </button>
-                    <div className="min-w-0">
-                        {editingTitle ? (
-                            <input
-                                autoFocus
-                                defaultValue={designName}
-                                aria-label="Design name"
-                                onBlur={(event) => {
-                                    setEditingTitle(false);
-                                    onRename(event.target.value);
-                                }}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter') event.currentTarget.blur();
-                                }}
-                                className="h-7 w-full bg-transparent text-sm font-semibold text-white outline-none"
-                            />
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => setEditingTitle(true)}
-                                title="Rename design"
-                                className="block truncate text-left text-sm font-semibold text-white hover:text-zinc-200"
-                            >
-                                {designName}
-                            </button>
-                        )}
-                        <p className="text-[11px] leading-none text-zinc-500">Design workspace</p>
-                    </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={onSaveClick}
-                        disabled={saveState === 'saving'}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
-                    >
-                        <Save size={13} />
-                        {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Save failed' : 'Save'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onExportClick}
-                        disabled={exportState === 'configuring'}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
-                    >
-                        <FileText size={13} />
-                        {exportState === 'configuring'
-                            ? 'Preparing…'
-                            : exportState === 'error'
-                              ? 'Export failed'
-                              : 'Export report'}
-                    </button>
-                    <button
-                        type="button"
-                        disabled
-                        title="Coming soon"
-                        className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-900 opacity-70"
-                    >
-                        <Share2 size={13} />
-                        Share design
-                    </button>
-                </div>
-            </div>
-
-            <div className="relative flex min-h-0 flex-1">
+        <div className="flex h-full w-full relative">
             <div className="flex-grow h-full relative" onDrop={onDrop} onDragOver={onDragOver}>
                 <ReactFlow
                     nodes={nodes}
@@ -502,77 +315,45 @@ export default function TopologyEditor({
                     onPaneClick={onPaneClick}
                     nodeTypes={nodeTypes}
                     fitView
-                    style={{ background: '#0a0a0a' }}
+                    style={{ background: '#000000' }}
                 >
                     <Background
                         variant={BackgroundVariant.Dots}
-                        gap={20}
-                        size={1.4}
-                        color="rgba(255,255,255,0.08)"
-                        bgColor="#0a0a0a"
+                        gap={18}
+                        size={2}
+                        color="rgba(255,255,255,0.12)"
+                        bgColor="#000000"
                     />
                     <Controls
-                        position="bottom-left"
-                        showInteractive={false}
-                        className="!m-4 !shadow-none !rounded-lg !overflow-hidden !border !border-white/10"
+                        position="top-right"
+                        className="!m-4"
                         style={{
-                            '--xy-controls-button-background-color': '#111111',
-                            '--xy-controls-button-background-color-hover': '#1a1a1a',
-                            '--xy-controls-button-color': '#a1a1aa',
-                            '--xy-controls-button-color-hover': '#ffffff',
-                            '--xy-controls-button-border-color': 'rgba(255,255,255,0.08)',
+                            '--xy-controls-button-background-color': 'var(--chrome-navy)',
+                            '--xy-controls-button-background-color-hover': 'var(--chrome-navy-hover)',
+                            '--xy-controls-button-color': '#E5E7EB',
+                            '--xy-controls-button-color-hover': '#FFFFFF',
+                            '--xy-controls-button-border-color': 'rgba(255,255,255,0.12)',
                         } as React.CSSProperties}
                     />
-                </ReactFlow>
 
-                <div className="absolute top-3 left-3 z-40">
-                    {shelfOpen ? (
-                        <div className="w-56 rounded-xl border border-white/10 bg-[#111]/95 shadow-xl backdrop-blur-md">
-                            <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                                <div>
-                                    <h3 className="text-sm font-semibold text-white">Components</h3>
-                                    <p className="text-[11px] text-zinc-500">Drag to canvas</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    aria-label="Collapse component library"
-                                    onClick={() => setShelfOpen(false)}
-                                    className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
-                                >
-                                    <CaretLeftIcon size={16} weight="regular" />
-                                </button>
-                            </div>
-                            <div className="flex flex-col gap-1.5 p-2">
-                                {DEVICE_CARDS.map(({ type, title, subtitle, Icon, chipClass, titleHoverClass, disabled }) => (
-                                    <div
-                                        key={type}
-                                        draggable={!disabled}
-                                        onDragStart={disabled ? undefined : (event) => onDragStart(event, type)}
-                                        className={`group flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] p-2.5 transition-colors ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab hover:bg-white/[0.06]'}`}
-                                    >
-                                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${chipClass}`}>
-                                            <Icon size={16} weight="regular" className="text-white" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className={`text-sm font-medium text-zinc-100 transition-colors ${titleHoverClass}`}>{title}</div>
-                                            <div className="text-[11px] text-zinc-500">{subtitle}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                    {hasTopology && (
+                        <div className="absolute top-4 right-16 z-50 flex gap-2">
+                            <button
+                                onClick={onSaveClick}
+                                disabled={saveState === 'saving'}
+                                className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2 disabled:opacity-60"
+                            >
+                                💾 {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Save failed' : 'Save'}
+                            </button>
+                            <button
+                                onClick={() => setIsReportOpen(true)}
+                                className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 rounded shadow-lg font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
+                            >
+                                📄 Export Report
+                            </button>
                         </div>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={() => setShelfOpen(true)}
-                            aria-label="Expand component library"
-                            className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#111]/95 px-2.5 py-1.5 text-xs font-medium text-zinc-300 shadow-lg backdrop-blur-md transition-colors hover:bg-white/5 hover:text-white"
-                        >
-                            <Layers size={14} />
-                            Components
-                        </button>
                     )}
-                </div>
+                </ReactFlow>
 
                 <AiCopilot
                     isOpen={isChatOpen}
@@ -595,23 +376,23 @@ export default function TopologyEditor({
                 onDeselect={() => setSelectedNodeId(null)}
             />
 
-            <ReportModal
-                isOpen={isReportOpen}
-                onClose={() => setIsReportOpen(false)}
-                onSaveReport={onSaveReport}
-                topology={{
-                    nodes: convertNodesToDomain(nodes),
-                    links: convertEdgesToDomain(edges),
-                    protocols: topologyProtocols,
-                    metadata: topologyMeta,
-                    runtime: generationRuntime,
-                    name: designName,
-                    id: "topo-gen-1",
-                    version: 1,
-                    lastUpdated: new Date().toISOString()
-                }}
-            />
-            </div>
+            {hasTopology && (
+                <ReportModal
+                    isOpen={isReportOpen}
+                    onClose={() => setIsReportOpen(false)}
+                    topology={{
+                        nodes: convertNodesToDomain(nodes),
+                        links: convertEdgesToDomain(edges),
+                        protocols: topologyProtocols,
+                        metadata: topologyMeta,
+                        runtime: generationRuntime,
+                        name: "My Generated Network",
+                        id: "topo-gen-1",
+                        version: 1,
+                        lastUpdated: new Date().toISOString()
+                    }}
+                />
+            )}
         </div>
     );
 }
