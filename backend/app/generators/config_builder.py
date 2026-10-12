@@ -582,18 +582,67 @@ def _write_vlan_gateways_metadata(
     topology,
     vlan_ids_in_order: List[int],
     vlan_networks: Dict[int, Any],
+    users_by_vlan: Optional[Dict[int, int]] = None,
 ) -> None:
     if not isinstance(topology.metadata, dict):
         return
-    topology.metadata["vlan_gateways"] = [
-        {
+    users_by_vlan = users_by_vlan or {}
+    rows: List[Dict[str, Any]] = []
+    for vid in vlan_ids_in_order:
+        if vid not in vlan_networks:
+            continue
+        net = vlan_networks[vid]
+        row: Dict[str, Any] = {
             "vlan_id": int(vid),
-            "gateway": str(vlan_networks[vid][1]),
-            "mask": str(vlan_networks[vid].netmask),
+            "gateway": str(net[1]),
+            "mask": str(net.netmask),
+            "network": str(net.network_address),
+            "prefix_len": int(net.prefixlen),
         }
-        for vid in vlan_ids_in_order
-        if vid in vlan_networks
-    ]
+        if vid in users_by_vlan:
+            row["users"] = int(users_by_vlan[vid])
+        rows.append(row)
+    topology.metadata["vlan_gateways"] = rows
+
+
+def _write_host_addresses_metadata(topology) -> None:
+    if not isinstance(topology.metadata, dict):
+        return
+    gw_by_vlan = {
+        int(r["vlan_id"]): r
+        for r in (topology.metadata.get("vlan_gateways") or [])
+        if isinstance(r, dict) and r.get("vlan_id") is not None
+    }
+    rows: List[Dict[str, Any]] = []
+    for n in topology.nodes:
+        if _is_router(n.type or "") or _is_switch(n.type or ""):
+            continue
+        iface = (getattr(n, "interfaces", None) or [None])[0]
+        ip = mask = None
+        name = "FastEthernet0"
+        if iface is not None:
+            ip, mask = _iface_ip_mask(iface)
+            iname = iface.get("name") if isinstance(iface, dict) else getattr(iface, "name", None)
+            if iname:
+                name = str(iname)
+        vid = None
+        cfg = getattr(n, "config", None) or {}
+        if isinstance(cfg, dict) and cfg.get("vlan_id") is not None:
+            try:
+                vid = int(cfg["vlan_id"])
+            except (TypeError, ValueError):
+                vid = None
+        gw = (gw_by_vlan.get(vid) or {}).get("gateway") if vid is not None else None
+        rows.append({
+            "id": n.id,
+            "label": n.label or n.id,
+            "interface": name,
+            "ip": ip,
+            "mask": mask,
+            "gateway": gw,
+            "vlan_id": vid,
+        })
+    topology.metadata["host_addresses"] = rows
 
 
 def _collect_host_nodes(topology) -> List[Any]:

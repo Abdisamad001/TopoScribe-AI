@@ -28,7 +28,7 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
             const data = await generateDesign(prompt);
 
             if (data.status === 'complete' && data.topology) {
-                // Seed chat so reopening Ask assistant still shows this turn.
+                
                 onRequestClarification(prompt, [
                     (data.validation_result && data.validation_result.status === 'failed_fatal'
                         && data.validation_result.errors && data.validation_result.errors.length)

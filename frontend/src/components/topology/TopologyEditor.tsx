@@ -280,7 +280,7 @@ export default function TopologyEditor({
         onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
-    // Apply topology to the canvas. Does not touch chat — clarification history must stay.
+    // Apply topology to the canvas.
     const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
@@ -291,7 +291,7 @@ export default function TopologyEditor({
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
 
-    // Load a saved design's topology through the same path as AI generation
+    // Load a saved design's topology 
     React.useEffect(() => {
         if (initialTopology) onTopologyGenerated(initialTopology);
         // eslint-disable-next-line react-hooks/exhaustive-deps

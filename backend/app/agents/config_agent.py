@@ -12,6 +12,7 @@ from app.generators.config_builder import (
     _sync_topology_vlan_catalog,
     _users_by_vlan_from_plan,
     _vlan_maps_from_catalog,
+    _write_host_addresses_metadata,
     _write_vlan_gateways_metadata,
 )
 from typing import Dict, Any
@@ -43,7 +44,7 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
     plan_dict = design_plan if isinstance(design_plan, dict) else {}
     users_by_vlan = _users_by_vlan_from_plan(plan_dict)
     vlan_networks = _allocate_vlan_networks(vlan_ids_in_order, users_by_vlan)
-    _write_vlan_gateways_metadata(topology, vlan_ids_in_order, vlan_networks)
+    _write_vlan_gateways_metadata(topology, vlan_ids_in_order, vlan_networks, users_by_vlan)
 
     # Hosts that don't match anything will be assigned in deterministic RR order.
     rr = [0]
@@ -53,6 +54,7 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
     )
     _assign_host_ips_from_networks(hosts_by_vlan, vlan_ids_in_order, vlan_networks)
     _assign_design_ports(topology)
+    _write_host_addresses_metadata(topology)
 
     configurations: Dict[str, Any] = {}
     subnet_base = "192.168"

@@ -46,7 +46,33 @@ export interface ProtocolConfig {
 export interface TopologyMetadata {
   vlans?: Array<{ id: number; name: string }>;
   /** Per-VLAN default gateway + mask (aligned with config_agent subnet allocation). */
-  vlan_gateways?: Array<{ vlan_id: number; gateway: string; mask: string }>;
+  vlan_gateways?: Array<{
+    vlan_id: number;
+    gateway: string;
+    mask: string;
+    network?: string;
+    prefix_len?: number;
+    users?: number;
+  }>;
+  cabling?: Array<{
+    link_id: string;
+    a_id: string;
+    a_port: string;
+    b_id: string;
+    b_port: string;
+    cable: string;
+  }>;
+  configurations?: Record<string, any>;
+  cisco_configs?: Record<string, string>;
+  host_addresses?: Array<{
+    id: string;
+    label: string;
+    interface: string;
+    ip?: string | null;
+    mask?: string | null;
+    gateway?: string | null;
+    vlan_id?: number | null;
+  }>;
 }
 
 export interface GenerationRuntime {
