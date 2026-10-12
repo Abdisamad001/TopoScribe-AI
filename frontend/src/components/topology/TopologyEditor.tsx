@@ -70,13 +70,27 @@ const convertEdges = (netLinks: any[]): Edge[] => {
     }));
 };
 
+type TopologyEditorProps = {
+    initialTopology?: any;
+    onSave: (topology: any) => Promise<void>;
+    designId?: string | null;
+    designName?: string;
+    onRename?: (name: string) => void;
+    onBack?: () => void;
+    onSaveReport?: (name: string, markdown: string) => void;
+    initialChat?: { id: string; messages: { role: 'user' | 'assistant'; content: string }[] } | null;
+};
+
 export default function TopologyEditor({
     initialTopology,
     onSave,
-}: {
-    initialTopology?: any;
-    onSave: (topology: any) => Promise<void>;
-}) {
+    designId = null,
+    designName = 'Untitled Design',
+    onRename,
+    onBack,
+    onSaveReport,
+    initialChat = null,
+}: TopologyEditorProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
@@ -92,6 +106,11 @@ export default function TopologyEditor({
     const [chatLoading, setChatLoading] = React.useState(false);
     const [currentPrompt, setCurrentPrompt] = React.useState('');
     const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [titleDraft, setTitleDraft] = React.useState(designName);
+
+    React.useEffect(() => {
+        setTitleDraft(designName);
+    }, [designName]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -235,6 +254,10 @@ export default function TopologyEditor({
     // Load a saved design's topology through the same path as AI generation
     React.useEffect(() => {
         if (initialTopology) onTopologyGenerated(initialTopology);
+        if (initialChat?.messages?.length) {
+            setChatMessages(initialChat.messages);
+            setIsChatOpen(true);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -302,9 +325,41 @@ export default function TopologyEditor({
 
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
+    const commitTitle = () => {
+        const next = titleDraft.trim();
+        if (!next || next === designName) {
+            setTitleDraft(designName);
+            return;
+        }
+        onRename?.(next);
+    };
+
     return (
         <div className="flex h-full w-full relative">
             <div className="flex-grow h-full relative" onDrop={onDrop} onDragOver={onDragOver}>
+                <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
+                    {onBack && (
+                        <button
+                            type="button"
+                            onClick={onBack}
+                            className="rounded bg-zinc-900 px-3 py-2 text-sm font-semibold text-white shadow-lg hover:bg-zinc-800"
+                        >
+                            ← Back
+                        </button>
+                    )}
+                    <input
+                        value={titleDraft}
+                        onChange={(event) => setTitleDraft(event.target.value)}
+                        onBlur={commitTitle}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.currentTarget.blur();
+                            }
+                        }}
+                        aria-label="Design name"
+                        className="max-w-[16rem] rounded border border-white/10 bg-zinc-900/90 px-3 py-2 text-sm font-semibold text-white shadow-lg outline-none focus:border-white/25"
+                    />
+                </div>
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
@@ -380,14 +435,15 @@ export default function TopologyEditor({
                 <ReportModal
                     isOpen={isReportOpen}
                     onClose={() => setIsReportOpen(false)}
+                    onSaveReport={onSaveReport}
                     topology={{
                         nodes: convertNodesToDomain(nodes),
                         links: convertEdgesToDomain(edges),
                         protocols: topologyProtocols,
                         metadata: topologyMeta,
                         runtime: generationRuntime,
-                        name: "My Generated Network",
-                        id: "topo-gen-1",
+                        name: designName || 'Untitled Design',
+                        id: designId || 'topo-gen-1',
                         version: 1,
                         lastUpdated: new Date().toISOString()
                     }}
