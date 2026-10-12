@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
-import { NetworkNode, Link } from '@/types/network';
+import { simulateNetwork } from '@/lib/api';
 import { ShareNetworkIcon, CheckCircleIcon, PulseIcon, FloppyDiskIcon, DesktopIcon, ShieldIcon, GlobeIcon, TrashIcon, CaretRightIcon } from '@phosphor-icons/react';
 
 interface ConfigPanelProps {
@@ -60,38 +60,25 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, allNodes, allE
         setPingResult(null);
 
         try {
-            // Convert React Flow nodes/edges back to our domain model
-            const simNodes: NetworkNode[] = allNodes.map(n => ({
-                id: n.id,
-                type: n.type as any,
-                name: n.data.label as string,
-                x: n.position.x,
-                y: n.position.y,
-                interfaces: [{
-                    id: 'eth0',
-                    name: 'Ethernet0',
-                    ipAddress: n.data.ip as string
-                }]
-            }));
+            const topology = {
+                nodes: allNodes.map((n) => ({
+                    id: n.id,
+                    type: n.type,
+                    label: (n.data.label as string) || n.id,
+                    interfaces: n.data.ip
+                        ? [{ name: 'Ethernet0', ip_address: n.data.ip as string }]
+                        : [],
+                    x: Math.round(n.position.x),
+                    y: Math.round(n.position.y),
+                })),
+                links: allEdges.map((e) => ({
+                    id: e.id,
+                    source: e.source,
+                    target: e.target,
+                })),
+            };
 
-            const simLinks: Link[] = allEdges.map(e => ({
-                id: e.id,
-                sourceNodeId: e.source,
-                targetNodeId: e.target,
-            }));
-
-            const res = await fetch('/api/simulate/ping', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nodes: simNodes,
-                    links: simLinks,
-                    sourceId: selectedNode.id,
-                    targetId: pingTarget
-                })
-            });
-
-            const data = await res.json();
+            const data = await simulateNetwork(topology, selectedNode.id, pingTarget);
 
             if (data.success) {
                 // Success case
