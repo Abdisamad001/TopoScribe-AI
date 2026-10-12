@@ -1,6 +1,11 @@
 import { Topology } from '@/types/network';
 import { generateCiscoConfig, isRouterType, isSwitchType } from './cisco';
 
+type MetaWithCli = {
+    cisco_configs?: Record<string, string>;
+    configurations?: Record<string, unknown>;
+};
+
 export function generateMarkdownReport(topology: Topology): string {
     const date = new Date().toLocaleDateString();
     const runtime = topology.runtime;
@@ -51,11 +56,18 @@ export function generateMarkdownReport(topology: Topology): string {
     md += `## 4. Device Configurations\n`;
     md += `The following configurations are generated for Cisco IOS devices.\n\n`;
 
+    const cliMap = (topology.metadata as MetaWithCli | undefined)?.cisco_configs;
+
     topology.nodes.forEach(node => {
         if (isRouterType(node.type) || isSwitchType(node.type)) {
             md += `### ${node.name} (${node.type.toUpperCase()})\n`;
             md += `\`\`\`cisco-cli\n`;
-            md += generateCiscoConfig(node, topology);
+            const cli = cliMap?.[node.id];
+            if (cli) {
+                md += cli.endsWith('\n') ? cli : `${cli}\n`;
+            } else {
+                md += `! No validated CLI for ${node.name}. Regenerate the design.\n`;
+            }
             md += `\`\`\`\n\n`;
         } else if (node.type === 'host') {
             md += `### ${node.name} (HOST)\n`;

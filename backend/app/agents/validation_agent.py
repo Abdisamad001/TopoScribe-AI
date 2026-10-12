@@ -26,6 +26,21 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
     
     # Validation checks
     errors = []
+    meta = getattr(topology, "metadata", None)
+    port_errors = []
+    if isinstance(meta, dict):
+        port_errors = [str(m) for m in (meta.get("port_errors") or []) if m]
+    if port_errors:
+        return {
+            "errors": port_errors,
+            "validation_result": {"status": "failed_fatal", "errors": port_errors},
+            "retry_count": int(state.get("retry_count", 0)),
+            "cisco_configs": {},
+            "conversation_history": [{
+                "role": "assistant",
+                "content": "Configuration failed: " + "; ".join(port_errors),
+            }],
+        }
     
     # Check 1: All links have valid endpoints
     node_ids = {node.id for node in topology.nodes}

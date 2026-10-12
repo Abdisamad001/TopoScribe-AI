@@ -72,3 +72,6 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 71,Yes,0,Yes,0,9.889,Success,groq,0,No
 72,No,1,No,0,5.737,Needs Clarification,,0,No
 73,Yes,0,Yes,0,10.063,Success,groq,0,No
+74,Yes,0,Yes,0,14.542,Success,groq,0,No
+75,Yes,0,Yes,0,10.101,Success,groq,0,No
+76,Yes,0,Yes,0,12.126,Success,groq,0,No

@@ -342,11 +342,27 @@ export default function TopologyEditor({
                     ...prev,
                     {
                         role: 'assistant',
-                        content: 'Design generated. Re-open Ask assistant anytime to see this chat again.',
+                        content: (data.validation_result && data.validation_result.status === 'failed_fatal'
+                            && data.validation_result.errors && data.validation_result.errors.length)
+                            ? `Configuration failed:\n${data.validation_result.errors.join('\n')}`
+                            : 'Design generated. Re-open Ask assistant anytime to see this chat again.',
                     },
                 ]);
-                onTopologyGenerated(data.topology, data.runtime);
-                setIsChatOpen(false);
+                onTopologyGenerated(
+                    {
+                        ...data.topology,
+                        metadata: {
+                            ...(data.topology.metadata || {}),
+                            cisco_configs: data.cisco_configs,
+                            configurations: data.configurations,
+                        },
+                    },
+                    data.runtime,
+                );
+                if (!(data.validation_result && data.validation_result.status === 'failed_fatal'
+                    && data.validation_result.errors && data.validation_result.errors.length)) {
+                    setIsChatOpen(false);
+                }
             } else if (data.status === 'needs_clarification') {
                 const q = data.questions ? data.questions.join('\n\n') : 'Please clarify.';
                 setChatMessages(prev => [...prev, { role: 'assistant', content: q }]);

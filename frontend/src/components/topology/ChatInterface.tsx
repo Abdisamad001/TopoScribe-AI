@@ -30,9 +30,22 @@ export default function ChatInterface({ onTopologyGenerated, onRequestClarificat
             if (data.status === 'complete' && data.topology) {
                 // Seed chat so reopening Ask assistant still shows this turn.
                 onRequestClarification(prompt, [
-                    'Design generated. Re-open Ask assistant anytime to see this chat again.',
+                    (data.validation_result && data.validation_result.status === 'failed_fatal'
+                        && data.validation_result.errors && data.validation_result.errors.length)
+                        ? `Configuration failed:\n${data.validation_result.errors.join('\n')}`
+                        : 'Design generated. Re-open Ask assistant anytime to see this chat again.',
                 ]);
-                onTopologyGenerated(data.topology, data.runtime);
+                onTopologyGenerated(
+                    {
+                        ...data.topology,
+                        metadata: {
+                            ...(data.topology.metadata || {}),
+                            cisco_configs: data.cisco_configs,
+                            configurations: data.configurations,
+                        },
+                    },
+                    data.runtime,
+                );
                 setPrompt(''); // Clear input on success
             } else if (data.status === 'needs_clarification') {
                 onRequestClarification(prompt, data.questions || []);

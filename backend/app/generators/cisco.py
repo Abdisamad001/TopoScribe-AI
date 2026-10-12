@@ -1,6 +1,8 @@
 from jinja2 import Template
 
 ROUTER_TEMPLATE_CLASSIC = """
+enable
+configure terminal
 hostname {{ hostname }}
 !
 {% for interface in interfaces %}
@@ -14,9 +16,12 @@ router ospf 1
  network 0.0.0.0 255.255.255.255 area 0
 !
 end
+write memory
 """
 
 ROUTER_TEMPLATE_SUBIFS = """
+enable
+configure terminal
 hostname {{ hostname }}
 !
 {% for t in trunk_interfaces %}
@@ -39,9 +44,12 @@ router ospf 1
 {% endfor %}
 !
 end
+write memory
 """
 
 SWITCH_TEMPLATE = """
+enable
+configure terminal
 hostname {{ hostname }}
 !
 {% for v in vlan_plan.vlans %}
@@ -53,7 +61,6 @@ vlan {{ v["id"] }}
 interface {{ p["interface"] }}
 {% if p["mode"] == "trunk" %}
  switchport mode trunk
- switchport trunk encapsulation dot1q
  switchport trunk allowed vlan {{ p["allowed_vlans_csv"] }}
 {% else %}
  switchport mode access
@@ -63,6 +70,7 @@ interface {{ p["interface"] }}
 !
 {% endfor %}
 end
+write memory
 """
 
 def _wildcard(mask: str) -> str:

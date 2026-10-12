@@ -1,7 +1,170 @@
 from typing import Dict, Any, List, Optional, Tuple
 import re
 import ipaddress
+from app.models.network import Interface
 
+_ROUTER_GI = [f"GigabitEthernet0/{i}" for i in range(2)]
+_SWITCH_FA = [f"FastEthernet0/{i}" for i in range(1, 25)]
+_SWITCH_GI = [f"GigabitEthernet0/{i}" for i in range(1, 3)]
+_PC_FA = "FastEthernet0"
+
+
+def sanitize_hostname(raw: str, used: Optional[set] = None) -> str:
+    s = re.sub(r"[^A-Za-z0-9-]", "-", (raw or "").strip())
+    s = re.sub(r"-+", "-", s).strip("-") or "Device"
+    s = s[:63]
+    if used is not None:
+        base = s
+        n = 2
+        while s.lower() in used:
+            suffix = f"-{n}"
+            s = base[: 63 - len(suffix)] + suffix
+            n += 1
+        used.add(s.lower())
+    return s
+
+def _node_by_id(topology, node_id: str):
+    return next((x for x in topology.nodes if x.id == node_id), None)
+
+def _end_kind(node_type: str) -> str:
+    t = (node_type or "").lower()
+    if _is_router(t):
+        return "router"
+    if _is_switch(t):
+        return "switch"
+    if t in ("host", "pc", "laptop"):
+        return "host"
+    return "unknown"
+
+def _port_free(counters, node_id: str, pool: List[str], kind: str):
+    idx = counters.get(node_id, {}).get(kind, 0)
+    if idx >= len(pool):
+        return None
+    return pool[idx]
+
+def _port_commit(counters, node_id: str, kind: str) -> None:
+    bucket = counters.setdefault(node_id, {})
+    bucket[kind] = bucket.get(kind, 0) + 1
+
+def _iface_ip_mask(o):
+    if o is None:
+        return None, None
+    if isinstance(o, dict):
+        return o.get("ip") or o.get("ip_address"), o.get("mask") or o.get("subnet_mask")
+    return (
+        getattr(o, "ip_address", None) or getattr(o, "ip", None),
+        getattr(o, "subnet_mask", None) or getattr(o, "mask", None),
+    )
+
+def _physical(name) -> str:
+    return str(name).split(".", 1)[0] if name else ""
+
+def _assign_design_ports(topology) -> List[str]:
+    errors: List[str] = []
+    counters: Dict[str, Dict[str, int]] = {}
+    cabling: List[Dict[str, Any]] = []
+    ports_by_node: Dict[str, List[str]] = {n.id: [] for n in topology.nodes}
+
+    def take_pair(a, b, a_pool, a_kind, b_pool, b_kind, cable, pool_a, pool_b, link):
+        pa = _port_free(counters, a.id, a_pool, a_kind)
+        pb = _port_free(counters, b.id, b_pool, b_kind)
+        if pa is None or pb is None:
+            if pa is None:
+                errors.append(
+                    f"Port exhaustion on {a.label or a.id}: no free port for link {link.id} "
+                    f"to {b.label or b.id} ({pool_a})."
+                )
+            if pb is None:
+                errors.append(
+                    f"Port exhaustion on {b.label or b.id}: no free port for link {link.id} "
+                    f"to {a.label or a.id} ({pool_b})."
+                )
+            return
+        _port_commit(counters, a.id, a_kind)
+        _port_commit(counters, b.id, b_kind)
+        ports_by_node[a.id].append(pa)
+        ports_by_node[b.id].append(pb)
+        cabling.append({
+            "link_id": link.id,
+            "a_id": a.id,
+            "a_port": pa,
+            "b_id": b.id,
+            "b_port": pb,
+            "cable": cable,
+        })
+
+    for link in topology.links:
+        a = _node_by_id(topology, link.source)
+        b = _node_by_id(topology, link.target)
+        if not a or not b:
+            missing = link.source if not a else link.target
+            errors.append(f"Link {link.id}: endpoint {missing} not found.")
+            continue
+        ka, kb = _end_kind(a.type or ""), _end_kind(b.type or "")
+        if ka == "unknown" or kb == "unknown":
+            errors.append(
+                f"Link {link.id}: cannot assign ports between {a.label or a.id} ({a.type}) "
+                f"and {b.label or b.id} ({b.type})."
+            )
+            continue
+        pair = tuple(sorted((ka, kb)))
+        if pair == ("router", "router"):
+            take_pair(a, b, _ROUTER_GI, "r_gi", _ROUTER_GI, "r_gi", "copper cross-over", "1941 Gi0/0-0/1", "1941 Gi0/0-0/1", link)
+        elif pair == ("router", "switch"):
+            if ka == "router":
+                take_pair(a, b, _ROUTER_GI, "r_gi", _SWITCH_GI, "s_gi", "copper straight-through", "1941 Gi0/0-0/1", "2960 Gi0/1-2", link)
+            else:
+                take_pair(a, b, _SWITCH_GI, "s_gi", _ROUTER_GI, "r_gi", "copper straight-through", "2960 Gi0/1-2", "1941 Gi0/0-0/1", link)
+        elif pair == ("switch", "switch"):
+            take_pair(a, b, _SWITCH_FA, "s_fa", _SWITCH_FA, "s_fa", "copper straight-through", "2960 Fa0/1-24", "2960 Fa0/1-24", link)
+        elif pair == ("host", "switch"):
+            if ka == "switch":
+                take_pair(a, b, _SWITCH_FA, "s_fa", [_PC_FA], "pc", "copper straight-through", "2960 Fa0/1-24", "PC FastEthernet0", link)
+            else:
+                take_pair(a, b, [_PC_FA], "pc", _SWITCH_FA, "s_fa", "copper straight-through", "PC FastEthernet0", "2960 Fa0/1-24", link)
+        elif pair == ("host", "router"):
+            if ka == "router":
+                take_pair(a, b, _ROUTER_GI, "r_gi", [_PC_FA], "pc", "copper straight-through", "1941 Gi0/0-0/1", "PC FastEthernet0", link)
+            else:
+                take_pair(a, b, [_PC_FA], "pc", _ROUTER_GI, "r_gi", "copper straight-through", "PC FastEthernet0", "1941 Gi0/0-0/1", link)
+        else:
+            errors.append(
+                f"Link {link.id}: cannot assign ports between {a.label or a.id} ({a.type}) "
+                f"and {b.label or b.id} ({b.type})."
+            )
+
+    for node in topology.nodes:
+        names = ports_by_node.get(node.id) or []
+        if not names:
+            continue
+        old = list(getattr(node, "interfaces", None) or [])
+        kind = _end_kind(node.type or "")
+        rebuilt: List[Interface] = []
+        if kind == "host":
+            ip, mask = _iface_ip_mask(old[0] if old else None)
+            rebuilt.append(Interface(name=names[0], ip=ip, mask=mask))
+        elif kind == "switch":
+            for name in names:
+                rebuilt.append(Interface(name=name))
+        elif kind == "router":
+            for name in names:
+                ip = mask = None
+                phys = _physical(name)
+                for o in old:
+                    oname = o.get("name") if isinstance(o, dict) else getattr(o, "name", None)
+                    if _physical(oname) == phys:
+                        ip, mask = _iface_ip_mask(o)
+                        break
+                rebuilt.append(Interface(name=name, ip=ip, mask=mask))
+        else:
+            continue
+        node.interfaces = rebuilt
+
+    if not isinstance(topology.metadata, dict):
+        topology.metadata = {}
+    topology.metadata["cabling"] = cabling
+    topology.metadata["port_errors"] = list(errors)
+    return errors
 
 def _is_switch(node_type: str) -> bool:
     t = (node_type or "").lower()
@@ -307,21 +470,36 @@ def _build_switch_vlan_plan(
     topology, switch_id: str, catalog: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
     sw = next((x for x in topology.nodes if x.id == switch_id), None)
-    neighbors = _neighbor_ids(topology, switch_id)
-    neighbors.sort()
-
     ports: List[Dict[str, Any]] = []
     used_vlan_ids: List[int] = []
     rr = [0]
-    port_idx = 1
-
-    for nid in neighbors:
-        peer = next((x for x in topology.nodes if x.id == nid), None)
+    cabling = []
+    if isinstance(topology.metadata, dict):
+        cabling = list(topology.metadata.get("cabling") or [])
+    for link in topology.links:
+        if link.source != switch_id and link.target != switch_id:
+            continue
+        peer_id = link.target if link.source == switch_id else link.source
+        peer = _node_by_id(topology, peer_id)
         if not peer:
             continue
         nt = peer.type or ""
-        ifname = f"FastEthernet0/{port_idx}"
-        port_idx += 1
+        ifname = None
+        for row in cabling:
+            if row.get("link_id") != link.id:
+                continue
+            if row.get("a_id") == switch_id:
+                ifname = row.get("a_port")
+            elif row.get("b_id") == switch_id:
+                ifname = row.get("b_port")
+            break
+        if not ifname:
+            if isinstance(topology.metadata, dict):
+                pe = topology.metadata.setdefault("port_errors", [])
+                pe.append(
+                    f"Switch {switch_id}: link {link.id} has no cabling port assignment."
+                )
+            continue
 
         if _is_router(nt) or _is_switch(nt):
             ports.append(
@@ -356,11 +534,24 @@ def _build_switch_vlan_plan(
 
     return {"vlans": vlan_rows, "ports": ports}
 
-def _router_trunk_parent(router_node) -> str:
+def _router_trunk_parent(router_node, topology=None) -> str:
+    if topology is not None and isinstance(getattr(topology, "metadata", None), dict):
+        for row in topology.metadata.get("cabling") or []:
+            for side, port, peer_id in (
+                (row.get("a_id"), row.get("a_port"), row.get("b_id")),
+                (row.get("b_id"), row.get("b_port"), row.get("a_id")),
+            ):
+                if side != router_node.id or not port:
+                    continue
+                peer = _node_by_id(topology, peer_id)
+                if peer and _is_switch(peer.type or ""):
+                    return str(port).split(".", 1)[0]
     ifaces = getattr(router_node, "interfaces", None) or []
     if ifaces:
-        return getattr(ifaces[0], "name", None) or "GigabitEthernet0/0"
-    return "GigabitEthernet0/0"
+        name = getattr(ifaces[0], "name", None) or "GigabitEthernet0/0"
+    else:
+        name = "GigabitEthernet0/0"
+    return str(name).split(".", 1)[0] or "GigabitEthernet0/0"
 
 
 def _sync_topology_vlan_catalog(topology, catalog: List[Dict[str, Any]]) -> None:
@@ -486,6 +677,8 @@ def _build_router_configuration(
     vlan_networks: Dict[int, Any],
     subnet_base: str,
     subnet_counter: int,
+    used_hostnames: Optional[set] = None,
+    topology=None,
 ) -> Tuple[Dict[str, Any], int]:
     """
     Build one router's configuration dict and advance subnet_counter exactly as before.
@@ -500,7 +693,25 @@ def _build_router_configuration(
         node_interfaces.append(
             {"name": interface.name, "ip": ip, "mask": mask}
         )
-    parent = _router_trunk_parent(node)
+    if catalog and topology is not None and isinstance(getattr(topology, "metadata", None), dict):
+        sw_uplinks = 0
+        for row in topology.metadata.get("cabling") or []:
+            for side, peer_id in (
+                (row.get("a_id"), row.get("b_id")),
+                (row.get("b_id"), row.get("a_id")),
+            ):
+                if side != node.id:
+                    continue
+                peer = _node_by_id(topology, peer_id)
+                if peer and _is_switch(peer.type or ""):
+                    sw_uplinks += 1
+        if sw_uplinks > 1:
+            pe = topology.metadata.setdefault("port_errors", [])
+            pe.append(
+                f"Router {node.label or node.id}: VLAN mode supports one switch uplink; "
+                f"found {sw_uplinks}."
+            )
+    parent = _router_trunk_parent(node, topology)
     subinterfaces = []
     trunk_interfaces = []
     if catalog:
@@ -525,14 +736,14 @@ def _build_router_configuration(
                 }
             )
         config = {
-            "hostname": node.label or node.id,
+            "hostname": sanitize_hostname(node.label or node.id, used_hostnames),
             "trunk_interfaces": trunk_interfaces,
             "subinterfaces": subinterfaces,
             "interfaces": [],
         }
     else:
         config = {
-            "hostname": node.label or node.id,
+            "hostname": sanitize_hostname(node.label or node.id, used_hostnames),
             "interfaces": node_interfaces,
             "trunk_interfaces": [],
             "subinterfaces": [],
@@ -540,8 +751,10 @@ def _build_router_configuration(
     return config, subnet_counter + 1
 
 
-def _build_switch_configuration(topology, node, catalog: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _build_switch_configuration(
+    topology, node, catalog: List[Dict[str, Any]], used_hostnames: Optional[set] = None
+) -> Dict[str, Any]:
     return {
-        "hostname": node.label or node.id,
+        "hostname": sanitize_hostname(node.label or node.id, used_hostnames),
         "vlan_plan": _build_switch_vlan_plan(topology, node.id, catalog),
     }
