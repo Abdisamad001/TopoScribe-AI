@@ -12,10 +12,10 @@ The UI is a Next.js app. Agents run in a FastAPI + LangGraph backend.
 
 ## How it works
 
-1. **Planning** (OpenAI) — extracts departments, devices, and protocols, or asks a clarifying question.
-2. **Topology** (Groq first; OpenAI if the quality gate rejects the draft) — builds nodes and links.
-3. **Configuration** (guardrails) — addressing and Cisco CLI.
-4. **Validation** (guardrails) — retries configuration when checks fail.
+1. **Planning** (OpenAI): Extracts departments, devices, and protocols, or asks a clarifying question.
+2. **Topology** (Groq first; OpenAI if the quality gate rejects the draft): Builds nodes and links.
+3. **Configuration** (guardrails): Addressing and Cisco CLI.
+4. **Validation** (guardrails): Retries configuration when checks fail.
 
 ## Repository layout
 
