@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="frontend/public/tag-image.jpeg" alt="TopoScribe AI — Agentic AI for Network Topology Design & Configuration" width="95%" />
+  <img src="frontend/public/tag-image.jpeg" alt="TopoScribe AI — Agentic AI for Network Topology Design & Configuration" width="100%" />
 </div>
 
 <br />
