@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="frontend/public/tag-image.jpeg" alt="TopoScribe AI — Agentic AI for Network Topology Design & Configuration" width="75%" />
+  <img src="frontend/public/tag-image.jpeg" alt="TopoScribe AI — Agentic AI for Network Topology Design & Configuration" width="95%" />
 </div>
 
 <br />
@@ -14,8 +14,8 @@ The UI is a Next.js app. Agents run in a FastAPI + LangGraph backend.
 
 1. **Planning** (OpenAI) — extracts departments, devices, and protocols, or asks a clarifying question.
 2. **Topology** (Groq first; OpenAI if the quality gate rejects the draft) — builds nodes and links.
-3. **Configuration** (deterministic Python) — addressing and Cisco CLI.
-4. **Validation** (deterministic Python) — retries configuration when checks fail.
+3. **Configuration** (guardrails) — addressing and Cisco CLI.
+4. **Validation** (guardrails) — retries configuration when checks fail.
 
 ## Repository layout
 
