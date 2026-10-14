@@ -90,7 +90,7 @@ def _state(retry_count=0, agent_trace=None):
 
 
 class _Recorder:
-    """Stand-in for call_llm that records the prompt/tier it was asked for."""
+   
 
     def __init__(self, payload):
         self.payload = payload
@@ -112,8 +112,6 @@ def patch_llm(monkeypatch):
 
     return _apply
 
-
-# --- reason strings (no longer plain booleans) --------------------------------
 
 
 def test_sparse_reason_reports_counts():
@@ -159,7 +157,7 @@ def test_parse_and_validate_accepts_good_topology():
     assert topology_dict is not None
 
 
-# --- host-link quality gate ---------------------------------------------------
+# host-link quality gate 
 
 
 def test_missing_host_link_reason_none_when_every_host_is_linked():
@@ -167,10 +165,7 @@ def test_missing_host_link_reason_none_when_every_host_is_linked():
 
 
 def test_missing_host_link_reason_names_unlinked_host_for_unseen_departments():
-    """
-    Structural check: host id in the links list. Uses department names and a
-    host count (7) that do not appear elsewhere in the test suite.
-    """
+   
     plan = {
         "mode": "departmental",
         "departments": [
@@ -278,7 +273,7 @@ def test_flat_inventory_unlinked_host_is_also_rejected():
 
 
 def test_validation_agent_does_not_reject_unlinked_host():
-    """Downstream validation only checks that existing links point at real nodes."""
+   
     from app.agents.validation_agent import validation_node
     from app.models.network import Topology
 
@@ -305,7 +300,7 @@ def test_validation_agent_does_not_reject_unlinked_host():
     assert _missing_host_link_reason(topo.model_dump(), {"mode": "departmental"}) is not None
 
 
-# --- prompt threading ---------------------------------------------------------
+# prompt no rejection block without prior errors
 
 
 def test_prompt_has_no_rejection_block_without_prior_errors():
@@ -320,7 +315,7 @@ def test_prompt_lists_prior_errors_when_retrying():
     assert "2. VLAN 40 never created" in prompt
 
 
-# --- attempt / tier routing ---------------------------------------------------
+
 
 
 def test_attempt_zero_uses_primary_tier(patch_llm):
@@ -354,7 +349,7 @@ def test_success_trace_records_attempt_and_tier(patch_llm):
     assert trace["status"] == "success"
 
 
-# --- no fallback before the retry budget is spent -----------------------------
+# no fallback before the retry budget is spent 
 
 
 @pytest.mark.parametrize("retry_count", [0, 1, 2])
@@ -393,7 +388,7 @@ def test_fallback_topology_covers_plan_departments(patch_llm):
     assert "IT" in labels and "OP" in labels
 
 
-# --- no-blind-retry: prior reasons reach the next prompt ----------------------
+# no-blind-retry: 
 
 
 def test_prior_errors_threaded_into_escalated_prompt(patch_llm):
@@ -415,7 +410,7 @@ def test_prior_errors_threaded_into_escalated_prompt(patch_llm):
 
 
 def test_prior_errors_accumulate_across_attempts(patch_llm):
-    """Drive attempts 0->3 in sequence the way Phase 5's graph loop will."""
+  
     recorder = patch_llm(json.dumps(_sparse_topology_dict()))
     state = _state(retry_count=0)
 
@@ -451,8 +446,7 @@ def test_success_trace_not_replayed_as_a_failure_reason(patch_llm):
     assert "REJECTED" not in recorder.calls[0]["prompt"]
 
 
-# --- provider errors ----------------------------------------------------------
-
+# provider errors
 
 def test_provider_error_is_recorded_and_retried(patch_llm):
     patch_llm(Exception("OpenAI call failed: rate limit"))

@@ -1,14 +1,14 @@
-"""Tests for the Part 2 run log and the provenance fields exposed by the API."""
+"""Tests for the Part 2"""
 import csv
 
 import pytest
 
 from app.api import design
 
-
+# Redirects the run log so tests never touch the real dataset
 @pytest.fixture
 def run_log(tmp_path, monkeypatch):
-    """Redirects the run log so tests never touch the real dataset."""
+
     path = tmp_path / "scenario_runs_part2.csv"
     monkeypatch.setattr(design, "RUN_LOG_PATH", path)
     return path
@@ -19,7 +19,7 @@ def _rows(path):
         return list(csv.DictReader(f))
 
 
-# --- run log ------------------------------------------------------------------
+# --- run log 
 
 
 def test_headers_extend_part1_with_three_columns(run_log):
@@ -79,8 +79,7 @@ def test_topology_retries_recorded_separately_from_validation_retries(run_log):
     assert row["Topology Retries"] == "3"
 
 
-# --- agent_trace projection ---------------------------------------------------
-
+# --- agent_trace
 
 def test_compact_trace_keeps_only_documented_keys():
     out = design._compact_trace({

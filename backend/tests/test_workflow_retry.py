@@ -1,4 +1,3 @@
-"""Graph-level tests for the topology retry gate and the validation retry cap."""
 import json
 
 import pytest
@@ -111,7 +110,7 @@ def _initial_state():
     }
 
 
-# --- router unit behaviour ----------------------------------------------------
+# router unit behaviour 
 
 
 def test_router_sends_usable_topology_to_config():
@@ -143,7 +142,7 @@ def test_router_ends_when_budget_spent_without_topology():
     assert should_retry_topology(state) == "end_failed"
 
 
-# --- graph termination --------------------------------------------------------
+# graph termination 
 
 
 def test_success_on_first_attempt():
@@ -193,9 +192,9 @@ def test_fallback_exception_ends_without_reaching_config():
     assert result.get("topology") is None
     assert result["errors"] == ["Topology generation failed: too sparse"]
 
-
+#topology not producing graph 
 def test_topology_loop_cannot_outrun_the_recursion_limit():
-    """A node that never produces a topology must still be stopped by the gate."""
+    
     script = [_rejected(i) for i in range(10)]
     graph, calls = _build_graph(script)
     graph.invoke(_initial_state())
@@ -204,7 +203,7 @@ def test_topology_loop_cannot_outrun_the_recursion_limit():
     assert calls["config"] == 0
 
 
-# --- validation -> config cap -------------------------------------------------
+# validation -> config cap 
 
 
 def _always_failing_validation(i, state):
@@ -221,7 +220,7 @@ def test_validation_loop_stops_at_the_cap():
     )
     result = graph.invoke(_initial_state())
 
-    # First config pass plus MAX_VALIDATION_RETRIES trips back to config.
+    # First config pass plus MAX_VALIDATION_RETRIES
     assert calls["config"] == MAX_VALIDATION_RETRIES + 1
     assert calls["validation"] == MAX_VALIDATION_RETRIES + 1
     assert result["retry_count"] == MAX_VALIDATION_RETRIES + 1
@@ -243,7 +242,7 @@ def test_fatal_validation_still_ends_immediately():
     assert should_end_or_continue(state) == "end"
 
 
-# --- real nodes inside the real graph -----------------------------------------
+# real nodes inside the real graph 
 
 
 def _plan_json():
@@ -299,10 +298,7 @@ def _full_json():
 
 
 def test_real_topology_node_escalates_inside_the_production_graph(monkeypatch):
-    """
-    End to end over the compiled graph with only the LLM boundary mocked, so the
-    real topology_node, quality gate, router and config/validation agents all run.
-    """
+   
     from app.agents import planning_agent, topology_agent
     from app.graph.workflow import app as production_app
 
@@ -339,12 +335,12 @@ def test_real_topology_node_escalates_inside_the_production_graph(monkeypatch):
         "R1", "SW_CORE", "SW_IT", "H_IT", "SW_OP", "H_OP"
     ]
 
-    # The two rejections were fed forward, so neither retry repeated blindly.
+    # The two rejections no retry repeated blindly.
     rejections = [e for e in result["agent_trace"] if e.get("status") == "rejected"]
     assert len(rejections) == 2
 
 
-# --- production wiring --------------------------------------------------------
+# production wiring
 
 
 def test_production_graph_has_no_linear_topology_edge():

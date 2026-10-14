@@ -1,4 +1,4 @@
-"""Planning agent department scope, delegation, and label sanitization tests."""
+"""Planning agent department scope, delegation"""
 import pytest
 
 from app.agents.planning_agent import (

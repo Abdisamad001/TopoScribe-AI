@@ -1,4 +1,4 @@
-"""Unit tests for Topology escalated-tier reasoning_effort threshold (Lever 1)."""
+"""Unit tests for Topology escalated-tier reasoning_effort threshold (Lever 1/reasoning effort)."""
 import pytest
 
 from app.agents.topology_agent import (
