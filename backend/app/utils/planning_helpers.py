@@ -6,13 +6,9 @@ from app.utils.dept_labels import (
 from typing import Dict, Any, List, Optional
 import re
 
-
-# Small explicit device counts (PCs/hosts) are drawn as real nodes; larger counts
-# stay as one representative host per VLAN (users-style sizing).
 LITERAL_HOST_NODE_THRESHOLD = 8
 
-# Department words users actually write, so the free-text fallback is not limited
-# to bare uppercase acronyms and can see "finance" as readily as "IT".
+# Department words
 _DEPARTMENT_VOCABULARY = (
     "accounting", "administration", "admin", "customer service",
     "engineering", "facilities", "finance", "human resources", "hr", "it",
@@ -22,9 +18,7 @@ _DEPARTMENT_VOCABULARY = (
     "training", "warehouse",
 )
 
-# Words that describe the request itself, not an organisational unit. "Design"
-# in particular heads almost every prompt this system receives, so it must never
-# become a department however it is capitalised.
+# Words that describe the request 
 _NON_DEPARTMENT_WORDS = {
     "design", "network", "networks", "topology", "site", "sites", "office",
     "offices", "campus", "company", "business", "branch", "user", "users",
@@ -33,7 +27,7 @@ _NON_DEPARTMENT_WORDS = {
 
 _DEPARTMENT_ACRONYMS = {"hr", "it", "qa", "ops"}
 
-# Uppercase tokens that are domain vocabulary rather than department names.
+# Uppercase tokens 
 _ACRONYM_STOPWORDS = {
     "VLAN", "LAN", "WAN", "DHCP", "DNS", "TCP", "UDP", "API", "IP", "OSPF",
     "SME", "PC", "PCS", "LLM", "AI",
@@ -49,9 +43,9 @@ _SME_DEPARTMENT_LADDER = (
     "HR", "IT", "Finance", "Sales", "Operations", "Marketing", "Support", "Legal",
 )
 
-
+#Consistent display casing, acronyms like 'JS' to 'Js'
 def _canonical_department(word: str) -> str:
-    """Consistent display casing, without flattening acronyms like 'JS' to 'Js'."""
+    
     w = word.strip()
     low = w.lower()
     if low in _DEPARTMENT_ACRONYMS:
@@ -64,10 +58,6 @@ def _canonical_department(word: str) -> str:
 
 
 def _named_departments_in_text(text: str) -> List[str]:
-    """
-    Department names the user actually wrote, in the order written: recognised
-    department words in any casing, plus bare acronyms like "JS".
-    """
     if not text:
         return []
 
@@ -100,10 +90,6 @@ def _named_departments_in_text(text: str) -> List[str]:
 
 
 def _requested_department_count(text: str) -> int:
-    """
-    How many departments the request asks for by number, e.g. "4-department SME"
-    or "four departments". 0 when no count is stated.
-    """
     if not text:
         return 0
     m = re.search(
@@ -124,7 +110,7 @@ def _requested_department_count(text: str) -> int:
 
 
 def _requested_users_each(text: str) -> int:
-    """Users per department when the request states one, else 0."""
+   
     m = re.search(r"\b(\d{1,4})\s+users?\b", text or "", flags=re.IGNORECASE)
     if not m:
         return 0
@@ -142,9 +128,9 @@ _HOST_DEVICE_WORDS = (
     r"(?:pcs?|computers?|hosts?|laptops?|workstations?|end[- ]?devices?)"
 )
 
-
+#Digits, number-words
 def _parse_count_token(token: str) -> int:
-    """Digits, number-words, or a/an → positive int; 0 if unusable."""
+   
     t = (token or "").strip().lower()
     if t in ("a", "an"):
         return 1
@@ -158,10 +144,6 @@ def _parse_count_token(token: str) -> int:
 
 
 def _sum_device_role_counts(text: str, role_pattern: str) -> Optional[int]:
-    """
-    Sum every explicit count for a device role in free text.
-    None when the role is never mentioned (distinct from an explicit zero).
-    """
     if not text:
         return None
     total = 0
@@ -179,12 +161,8 @@ def _sum_device_role_counts(text: str, role_pattern: str) -> Optional[int]:
 
 
 def _extract_device_inventory(text: str) -> Optional[Dict[str, int]]:
-    """
-    Explicit router/switch/host inventory from free text.
-    Complete when at least one host/PC count and at least one L2/L3 device
-    count are stated. Returns None when the request is not a full flat inventory.
-    """
     routers = _sum_device_role_counts(text, r"(?:routers?|gateways?)")
+
     # switch(?:es)? — not switches? — because the latter is "switche" + optional s.
     switches = _sum_device_role_counts(text, r"switch(?:es)?")
     hosts = _sum_device_role_counts(text, _HOST_DEVICE_WORDS)
@@ -200,7 +178,7 @@ def _extract_device_inventory(text: str) -> Optional[Dict[str, int]]:
 
 
 def _has_organizational_language(text: str) -> bool:
-    """True when the request implies departments / org VLAN groups."""
+    
     if not text:
         return False
     if re.search(r"\bdepartments?\b", text, flags=re.IGNORECASE):
@@ -221,10 +199,6 @@ def _has_organizational_language(text: str) -> bool:
 
 
 def _is_flat_inventory_request(user_input: str, history: List[dict]) -> bool:
-    """
-    Explicit device-type counts, no org/department language, no delegation.
-    Only then is the departments fatal-gap skipped.
-    """
     if _is_user_delegation(user_input, history):
         return False
     text = _user_messages_text(user_input, history)
@@ -234,13 +208,9 @@ def _is_flat_inventory_request(user_input: str, history: List[dict]) -> bool:
 
 
 def _requested_literal_hosts_each(text: str) -> int:
-    """
-    Per-department host/PC device count from device phrasing (not 'N users').
-    0 when absent or when only user-count phrasing is present.
-    """
     if not text:
         return 0
-    # User-count phrasing wins for sizing; it must not become host_nodes.
+   
     if _requested_users_each(text):
         return 0
     patterns = (
@@ -261,10 +231,6 @@ def _requested_literal_hosts_each(text: str) -> int:
 def _annotate_department_host_nodes(
     depts: List[Dict[str, Any]], user_text: str
 ) -> List[Dict[str, Any]]:
-    """
-    Attach host_nodes for small literal device counts. Large counts and
-    'N users' phrasing keep the one-representative-host default.
-    """
     n = _requested_literal_hosts_each(user_text)
     if not n or n > LITERAL_HOST_NODE_THRESHOLD:
         return depts
@@ -275,9 +241,9 @@ def _annotate_department_host_nodes(
         out.append(row)
     return out
 
-
+# Dept mentioned in user text
 def _mentioned_in_user_text(name: str, user_text: str) -> bool:
-    """Whether a department name appears in the user's own words."""
+ 
     if not name or not user_text:
         return False
     if name.strip().lower() in _NON_DEPARTMENT_WORDS:
@@ -286,7 +252,7 @@ def _mentioned_in_user_text(name: str, user_text: str) -> bool:
 
 
 def _assign_vlan_ids(depts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Normalizes a department list to unique, in-range VLAN ids."""
+
     used: set = set()
     out: List[Dict[str, Any]] = []
     for i, d in enumerate(depts):
@@ -310,7 +276,7 @@ def _assign_vlan_ids(depts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 def _pad_to_requested_count(
     depts: List[Dict[str, Any]], requested: int, users_each: int
 ) -> List[Dict[str, Any]]:
-    """Tops a department list up to a requested count using the SME ladder."""
+
     out = list(depts)
     taken = {str(d.get("name", "")).strip().lower() for d in out}
     default_users = users_each or (out[0].get("users", 20) if out else 20)
@@ -332,18 +298,12 @@ def _pad_to_requested_count(
 
 
 def _infer_departments_from_free_text(text: str) -> List[str]:
-    """
-    Extract department names without requiring 'departments:' prefix.
-    Handles e.g. 'two departments IT, CS, 2 sites', 'IT and CS', 'department IT, Finance'.
-    """
     if not text:
         return []
     t = text.strip()
     candidates: List[str] = []
 
-    # A hyphenated "4-department SME" is a size adjective, not a list introducer —
-    # what follows it describes the organisation, not a department. The spaced
-    # form ("4 departments IT, HR") is still handled as a list below.
+  
     t = re.sub(
         r"\b(?:\d{1,2}|" + "|".join(_NUMBER_WORDS) + r")-departments?\b",
         " ",
@@ -419,7 +379,7 @@ def _infer_departments_from_free_text(text: str) -> List[str]:
 
 
 def _user_messages_text(user_input: str, history: List[dict]) -> str:
-    """User-only transcript (excludes assistant text) for inference and delegation."""
+
     parts = [user_input or ""]
     for m in history or []:
         if (m or {}).get("role") == "user":
@@ -428,7 +388,7 @@ def _user_messages_text(user_input: str, history: List[dict]) -> str:
 
 
 def _explicit_departments_from_user(user_input: str, history: List[dict]) -> List[str]:
-    """Department names the user explicitly named (never from assistant clarifying prompts)."""
+  
     text = _user_messages_text(user_input, history)
     inferred = _extract_department_names(text)
     if not inferred:
@@ -437,10 +397,6 @@ def _explicit_departments_from_user(user_input: str, history: List[dict]) -> Lis
 
 
 def _strip_trailing_list_qualifiers(raw: str) -> str:
-    """
-    Cut a trailing global qualifier off a department-list span before it is
-    split on commas. Otherwise ", with 5 PCs each" is treated as another name.
-    """
     if not raw:
         return raw
     qualifier_nouns = rf"(?:users?|{_HOST_DEVICE_WORDS}|employees?)"
@@ -455,15 +411,9 @@ def _strip_trailing_list_qualifiers(raw: str) -> str:
 
 
 def _extract_department_names(text: str) -> List[str]:
-    """
-    Heuristic extraction of department names from free text.
-    Supports patterns like:
-    - departments: HR, IT, Finance
-    - department HR, IT and Finance
-    """
     if not text:
         return []
-    # Same guard as the free-text inference: "4-department SME" introduces no list.
+   
     text = re.sub(
         r"\b(?:\d{1,2}|" + "|".join(_NUMBER_WORDS) + r")-departments?\b",
         " ",
@@ -473,6 +423,7 @@ def _extract_department_names(text: str) -> List[str]:
     m = re.search(r"departments?\s*[:\-]?\s*([^\n\.]+)", text, flags=re.IGNORECASE)
     if not m:
         return []
+
     # Same idea as _infer_departments_from_free_text: stop the capture at a
     # trailing qualifier before splitting on comma/and.
     raw = _strip_trailing_list_qualifiers(m.group(1))
@@ -482,6 +433,7 @@ def _extract_department_names(text: str) -> List[str]:
         name = p.strip(" \"'[](){}")
         if name:
             out.append(name)
+
     # Deduplicate while preserving order
     seen = set()
     uniq: List[str] = []
@@ -495,7 +447,7 @@ def _extract_department_names(text: str) -> List[str]:
 
 
 def _apply_sme_device_defaults(p: Dict[str, Any]) -> Dict[str, Any]:
-    """Shared SME scope fields (models, OSPF, addressing)."""
+   
     p["protocols"] = ["ospf"]
     p["ospf"] = {"area": 0}
     p["connectivity"] = p.get(
@@ -515,18 +467,11 @@ def _apply_sme_device_defaults(p: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _apply_sme_defaults(plan: Dict[str, Any], user_input: str, history: List[dict]) -> Dict[str, Any]:
-    """
-    Enforce SME campus defaults and keep scope to Cisco 1941 + 2960, IPv4, VLAN, OSPF area 0.
-
-    Two plan modes:
-    - flat_inventory: explicit device counts, no org language → no departments required
-    - departmental: existing SME / VLAN-segmented shape
-    """
     p = dict(plan or {})
     user_text = _user_messages_text(user_input, history)
     explicit_depts = _explicit_departments_from_user(user_input, history)
 
-    # Sites default — honor "N sites" in user text when present
+    
     sites = p.get("sites")
     if not isinstance(sites, list) or not sites:
         sm = re.search(
@@ -600,14 +545,9 @@ def _apply_sme_defaults(plan: Dict[str, Any], user_input: str, history: List[dic
     else:
         p["departments"] = []
 
-    # Ground the model's list in the user's own words rather than replacing it.
-    # Names the user never wrote are hallucinations and get dropped; names they
-    # did write are kept with the model's users/VLAN detail, and anything the
-    # model missed is appended. A narrower deterministic match must not discard
-    # a correct proposal.
+  
     if _is_user_delegation(user_input, history) and p["departments"]:
-        # The user handed the choice over, so incidental department-like words in
-        # their description are not a list to ground against.
+       
         pass
     elif explicit_depts:
         grounded = [
@@ -646,8 +586,7 @@ def _apply_sme_defaults(plan: Dict[str, Any], user_input: str, history: List[dic
                     for i, n in enumerate(inferred)
                 ]
 
-    # "a 4-department SME" states a count without naming anything; honour the
-    # count rather than dropping the intent. Never trims — naming beats counting.
+    # "a 4-department SME" states a count without naming anything; 
     requested_n = _requested_department_count(user_text)
     if requested_n and len(p["departments"]) < requested_n:
         p["departments"] = _pad_to_requested_count(
@@ -666,13 +605,7 @@ def _apply_sme_defaults(plan: Dict[str, Any], user_input: str, history: List[dic
 
 
 def _is_user_delegation(user_input: str, history: List[dict]) -> bool:
-    """
-    True when user explicitly delegates technical decisions to the system.
-    Naming departments explicitly is not delegation of the department set.
-    """
-    # Only a structurally named list ("departments X, Y") overrides delegation.
-    # A bare vocabulary hit such as "a logistics depot" is a description of the
-    # business, not the user picking their department set.
+ 
     if _extract_department_names(_user_messages_text(user_input, history)):
         return False
     text = _user_messages_text(user_input, history).lower()
@@ -687,9 +620,6 @@ def _is_user_delegation(user_input: str, history: List[dict]) -> bool:
 
 
 def _ensure_default_departments(plan: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    If departments are absent, inject SME baseline departments for delegated requests.
-    """
     p = dict(plan or {})
     depts = p.get("departments")
     if isinstance(depts, list) and depts:

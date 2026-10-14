@@ -1,14 +1,5 @@
-"""
-LLM access layer.
+""" LLM access layer"""
 
-Tier routing (Part 2 escalation scope):
-- "planning"   -> OpenAI. Used unconditionally by the Planning Agent on every call.
-                  This is Planning's assigned model, not a retry/escalation path.
-- "primary"    -> Groq. Used only by Topology attempt 0.
-                  Configuration and Validation are deterministic Python and never
-                  call this layer.
-- "escalated"  -> OpenAI. Invoked only by the Topology Agent's retry path.
-"""
 import os
 from typing import Literal, Optional
 
@@ -19,58 +10,45 @@ from openai import OpenAI
 load_dotenv()
 
 Tier = Literal["planning", "primary", "escalated"]
-# Chat Completions top-level parameter (not the Responses API's nested
-# reasoning={"effort": ...}). Verified live against gpt-5.5: the nested shape
-# raises TypeError; reasoning_effort="low"|"medium"|... is accepted.
+
 ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
 
-# qwen/qwen3.6-27b is the default model for Groq.
+# qwen/qwen3.6-27b was default model for Groq.
 GROQ_DEFAULT_MODEL = "qwen/qwen3.8-27b"
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
 
 _groq_client: Optional[Groq] = None
 _openai_client: Optional[OpenAI] = None
 
-# Confirmed against the live API during Part 2 integration testing: gpt-5 class
-# models accept only the default temperature (1) and replace `max_tokens` with
-# `max_completion_tokens`.
-_FIXED_TEMPERATURE_MODEL_PREFIXES = ("gpt-5",)
 
-# Output budget for OpenAI tiers (planning + escalated). Kept at 8000 so GPT-5.5
+_FIXED_TEMPERATURE_MODEL_PREFIXES = ("gpt-5",)
 
 LLM_MAX_OUTPUT_TOKENS = 8000
 
-# Groq Free-tier TPM is 8000 for qwen/qwen3.6-27b (prompt + requested max_tokens
-# reserved together). Measured 2026-08-27 with reasoning_effort="none"
-
 GROQ_PRIMARY_MAX_OUTPUT_TOKENS = 5700
 
-# gpt-5 class models bill internal reasoning against the same budget, so they get
-# an allowance on top to keep their *content* budget equal to the figure above.
-# Reasoning is near-constant with design size (404/485/512 tokens for the three
-# designs measured), so this is sized well clear of the observed range rather
-# than scaled per request.
+# gpt-5 class models 
 _REASONING_TOKEN_ALLOWANCE = 2000
 
 
 def _get_groq_client() -> Groq:
-    """Groq client, created on first use so a missing key never breaks imports."""
+  
     global _groq_client
     if _groq_client is None:
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
-            raise Exception("Groq call failed: GROQ_API_KEY is not set in the environment.")
+            raise Exception("Groq call failed")
         _groq_client = Groq(api_key=api_key)
     return _groq_client
 
 
 def _get_openai_client() -> OpenAI:
-    """OpenAI client, created on first use so a missing key never breaks imports."""
+    
     global _openai_client
     if _openai_client is None:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise Exception("OpenAI call failed: OPENAI_API_KEY is not set in the environment.")
+            raise Exception("OpenAI call failed")
         _openai_client = OpenAI(api_key=api_key)
     return _openai_client
 
@@ -92,8 +70,7 @@ def _call_groq(
 ) -> str:
     client = _get_groq_client()
     kwargs = {}
-    # Qwen3 on Groq: "none" disables thinking mode. Omit the key when unset
-    # so other Groq callers keep the model default.
+    
     if reasoning_effort is not None:
         kwargs["reasoning_effort"] = reasoning_effort
     try:
@@ -119,8 +96,7 @@ def _openai_create(
 ):
     messages = [{"role": "user", "content": prompt}]
     kwargs = {}
-    # Omit the key entirely when unset so the model keeps its own default
-    # (gpt-5.5 → medium). Passing null is not the same as omitting.
+    
     if reasoning_effort is not None:
         kwargs["reasoning_effort"] = reasoning_effort
     if _requires_default_params(model):
@@ -157,8 +133,7 @@ def _call_openai(
     choice = response.choices[0]
     content = choice.message.content or ""
     if not content.strip():
-        # Reported as its own failure rather than passed on as an empty string,
-        # which downstream parsers would misdiagnose as malformed JSON.
+       
         raise Exception(
             f"OpenAI call failed: {model} returned no content "
             f"(finish_reason={choice.finish_reason})."
@@ -174,14 +149,7 @@ def call_llm(
     max_tokens: Optional[int] = None,
     reasoning_effort: Optional[ReasoningEffort] = None,
 ) -> str:
-    """
-    Routes a prompt to the provider and model assigned to the given tier.
-
-    reasoning_effort is Chat Completions-only. When None (the default), the
-    key is omitted so each provider keeps its own default (medium for gpt-5.5;
-    thinking-on for Qwen3 on Groq). Topology's escalated path must keep
-    calling without an OpenAI override unless separately re-tuned.
-    """
+    
     if max_tokens is None:
         max_tokens = (
             GROQ_PRIMARY_MAX_OUTPUT_TOKENS
@@ -201,7 +169,8 @@ def call_llm(
             reasoning_effort,
         )
     if tier == "escalated":
-        # Intentionally does not force an effort — leave at model default.
+
+        # leave at model default.
         return _call_openai(
             prompt,
             _resolve_openai_model("OPENAI_ESCALATION_MODEL"),

@@ -26,11 +26,6 @@ def _host_center_gap() -> int:
 
 
 def _departmental_column_spacing(max_hosts_in_cluster: int) -> int:
-    """
-    Access-switch column spacing so the widest host cluster still clears
-    its neighbor. Shrinking host_gap below card width would reintroduce
-    intra-cluster overlap, so wide clusters widen the columns instead.
-    """
     n = max(1, int(max_hosts_in_cluster))
     needed = (n - 1) * _host_center_gap() + HOST_CARD_WIDTH_PX + HOST_CLUSTER_GUTTER_PX
     return max(DEFAULT_COLUMN_SPACING_PX, needed)
@@ -67,22 +62,12 @@ def _department_count(design_plan: Optional[Dict[str, Any]]) -> int:
 def _escalated_reasoning_effort(
     design_plan: Optional[Dict[str, Any]],
 ) -> Optional[Literal["low"]]:
-    """
-    reasoning_effort for tier="escalated" only.
-
-    Returns "low" when department count <= TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS,
-    otherwise None (omit the parameter → gpt-5.5 medium default).
-    """
     if _department_count(design_plan) <= TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS:
         return "low"
     return None
 
 
 def _host_nodes_for_department(dept: Dict[str, Any]) -> int:
-    """
-    How many host nodes to draw for one department.
-    Small literal device counts use host_nodes; otherwise one representative.
-    """
     raw = dept.get("host_nodes") if isinstance(dept, dict) else None
     if raw is None:
         return 1
@@ -150,11 +135,6 @@ def _count_roles_in_nodes(nodes: Any) -> Tuple[int, int, int]:
 def _sparse_reason(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> Optional[str]:
-    """
-    Returns what is missing vs the plan shape, or None when the inventory fits.
-    Flat inventory plans are checked against stated device counts; departmental
-    plans keep the SME 1-router / core+access / host-nodes-per-dept formula.
-    """
     nodes = topology_dict.get("nodes")
     if _plan_mode(design_plan) == "flat_inventory":
         er, es, eh = _flat_inventory_targets(design_plan)
@@ -339,12 +319,6 @@ def _missing_department_reason(
 def _missing_host_link_reason(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> Optional[str]:
-    """
-    Every host must appear as source or target of at least one link.
-    Departmental designs expect that link to an access switch; flat inventory
-    allows switch or router (the prompt connects hosts to a router when no
-    switch exists). The check itself is only: host id present in the links list.
-    """
     nodes = topology_dict.get("nodes")
     if not isinstance(nodes, list):
         return None
@@ -387,9 +361,6 @@ def _missing_host_link_reason(
 def _topology_department_scope_invalid(
     topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
 ) -> bool:
-    """
-    True when topology references departments/VLANs outside design_plan.departments.
-    """
     return _scope_reason(topology_dict, design_plan) is not None
 
 
@@ -520,10 +491,6 @@ def _fallback_flat_inventory_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]
 
 
 def _fallback_topology_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Deterministic topology when LLM output cannot be parsed or validated.
-    Flat inventory uses stated device counts; departmental uses the SME campus shape.
-    """
     if _plan_mode(design_plan) == "flat_inventory":
         return _fallback_flat_inventory_dict(design_plan)
 
@@ -638,9 +605,6 @@ def _fallback_topology_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def merge_vlan_metadata(design_plan: Dict[str, Any], topology_dict: Dict[str, Any]) -> None:
-    """
-    Ensure topology.metadata.vlans exists from design_plan when the LLM omitted it.
-    """
     md = topology_dict.setdefault("metadata", {})
     raw = md.get("vlans")
     if isinstance(raw, list) and len(raw) > 0:
@@ -846,10 +810,6 @@ Return a corrected topology that resolves every point listed above.
 def _parse_and_validate_topology(
     raw_text: str, design_plan: Dict[str, Any]
 ) -> Tuple[Optional[Dict[str, Any]], List[str]]:
-    """
-    Returns (topology_dict, []) when the output is usable, or (None, reasons)
-    describing exactly why it was rejected.
-    """
     clean_text = (raw_text or "").replace("```json", "").replace("```", "").strip()
     try:
         topology_dict = json.loads(clean_text)
@@ -939,10 +899,6 @@ def _position_hosts_under_access_switches(
     y_level: int,
     position_row,
 ) -> None:
-    """
-    Place each department's hosts on the host row, centered under that
-    department's access switch. Unmatched hosts keep the flat-row fallback.
-    """
     access_by_id = {s.get("id"): s for s in access_switches if s.get("id")}
     grouped, unmatched = _group_hosts_by_access_switch(hosts, access_switches, links)
 
@@ -962,10 +918,6 @@ def _position_hosts_under_access_switches(
 
 
 def _orient_host_uplinks(links: Any, host_ids: set, infra_ids: set) -> None:
-    """
-    For every host–switch or host–router link, make the switch/router `source`
-    and the host `target`. Leaves other links (core uplinks, etc.) unchanged.
-    """
     if not isinstance(links, list) or not host_ids or not infra_ids:
         return
     for link in links:
@@ -1068,11 +1020,6 @@ def _match_host_to_representative_users(
     by_vlan_name: Dict[str, Tuple[str, int]],
     by_vlan_id: Dict[int, Tuple[str, int]],
 ) -> Optional[Tuple[str, int]]:
-    """
-    Resolve a host to (department_name, users) when that department is a
-    representative (collapsed) user-count department. Prefer VLAN config;
-    fall back to a label that starts with the department name.
-    """
     cfg = node.get("config") if isinstance(node.get("config"), dict) else {}
 
     vlan_name = cfg.get("vlan_name")
@@ -1102,13 +1049,6 @@ def _match_host_to_representative_users(
 def _annotate_representative_host_user_counts(
     topology_dict: Dict[str, Any], design_plan: Dict[str, Any]
 ) -> None:
-    """
-    When a department is drawn as one representative host (no host_nodes) and
-    its stated user count is above LITERAL_HOST_NODE_THRESHOLD, append
-    "(N PCs)" to that host's label so the canvas shows what the node stands for.
-
-    Flat-inventory plans and departments with explicit small host_nodes are left alone.
-    """
     if _plan_mode(design_plan) != "departmental":
         return
 

@@ -6,8 +6,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
-# Single-word English closed-class tokens. These cannot be department names;
-# they appear when a qualifier clause is split on a comma (e.g. orphan "with").
+
 _CLOSED_CLASS_WORDS = frozenset(
     {
         "with",
@@ -29,7 +28,7 @@ _CLOSED_CLASS_WORDS = frozenset(
     }
 )
 
-# Requirement-style fragments that are not department names
+# fragments that are not department names
 _JUNK_PATTERNS = [
     re.compile(r"sites?\s+in\b", re.I),
     re.compile(r"users?\s+each\b", re.I),
@@ -47,7 +46,8 @@ def is_plausible_department_name(name: str) -> bool:
     if not name or not isinstance(name, str):
         return False
     n = name.strip().strip(' "\'[](){}')
-    # Single-letter tokens are almost always parse noise (e.g. stray "e"), not real department names.
+
+    # Single-letter 
     if len(n) < 2 or len(n) > 48:
         return False
     if len(n.split()) > 3:
@@ -70,14 +70,14 @@ def is_plausible_department_name(name: str) -> bool:
 
 
 def sanitize_department_name(name: str, fallback_index: int = 0) -> str:
-    """Single department string for design_plan / VLAN rows."""
+   
     if is_plausible_department_name(name):
         return name.strip()[:48]
     return f"Dept{fallback_index + 1}"
 
 
 def filter_department_string_list(names: List[str]) -> List[str]:
-    """Keep only plausible tokens; preserves order."""
+    
     out: List[str] = []
     fb = 0
     for raw in names:
@@ -105,7 +105,7 @@ def _clean_node_label(
     if label and is_plausible_department_name(label) and len(label) <= 44:
         return label[:44]
 
-    # Prefer VLAN name from host/switch config when label is junk
+    # Prefer VLAN name from host/switch 
     if vlan_name and is_plausible_department_name(str(vlan_name)):
         base = str(vlan_name).strip()[:28]
         if "host" in nt or "pc" in nt or "server" in nt or "laptop" in nt:
@@ -123,12 +123,12 @@ def _clean_node_label(
 
 
 def sanitize_topology_node_labels(topology_dict: Dict[str, Any]) -> None:
-    """In-place: fix labels that contain requirement text instead of short names."""
+   
     nodes = topology_dict.get("nodes")
     if not isinstance(nodes, list):
         return
 
-    # Per-role ordinals (same counters as the former if/elif branches).
+    # Per-role ordinals 
     ordinals = {"router": 0, "switch": 0, "host": 0}
 
     for node in nodes:
