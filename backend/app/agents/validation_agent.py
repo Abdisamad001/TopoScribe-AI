@@ -3,10 +3,6 @@ from app.generators.cisco import generate_cisco_config
 from typing import Dict, Any
 
 def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Validation Agent: Validates and generates final configs.
-    """
-    
     topology = state.get("topology")
     configurations = state.get("configurations")
 

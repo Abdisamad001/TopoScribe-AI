@@ -25,12 +25,12 @@ from typing import Dict, Any, List
 
 import langwatch
 
-# Escalated retries allowed after the initial primary-tier attempt.
+# Escalated retries 
 MAX_TOPOLOGY_RETRIES = 3
 
-
+# Rejection reasons recorded 
 def _prior_topology_errors(state: NetworkDesignState) -> List[str]:
-    """Rejection reasons recorded by earlier topology attempts in this run."""
+    
     out: List[str] = []
     for entry in state.get("agent_trace") or []:
         if not isinstance(entry, dict) or entry.get("agent") != "topology":
@@ -59,7 +59,7 @@ def _topology_span_meta(
     topology_source: Any = None,
     gate_outcome: str,
 ) -> None:
-    """Attach attempt labels the OpenAI/Groq instrumentors cannot infer."""
+    
     langwatch.get_current_span().update(
         tier=tier,
         reasoning_effort=effort if effort is not None else "default",
@@ -71,13 +71,6 @@ def _topology_span_meta(
 
 @langwatch.span(name="Topology Agent")
 def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Topology Agent: Converts design plan into network topology.
-
-    Attempt 0 runs on the primary tier. Attempts 1-3 escalate, each prompted with
-    the specific reasons earlier attempts were rejected. The deterministic layout
-    is only used once the retry budget is exhausted.
-    """
     design_plan = state.get("design_plan") or {}
     attempt = int(state.get("topology_retry_count", 0) or 0)
     tier = "primary" if attempt == 0 else "escalated"
@@ -135,8 +128,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     reason_text = " | ".join(reasons) if reasons else "Unknown topology failure."
 
     if attempt < MAX_TOPOLOGY_RETRIES:
-        # Hand control back to the graph so the next attempt can escalate with
-        # this reason in its prompt. No fallback while retries remain.
+       
         _topology_span_meta(
             tier=tier,
             effort=effort,
@@ -156,7 +148,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
             ],
         }
 
-    # Retry budget exhausted — fall back to the deterministic SME layout.
+    # Retry budget exhausted - fallback to SME layout
     try:
         topology_dict = _fallback_topology_dict(design_plan)
         merge_vlan_metadata(design_plan, topology_dict)

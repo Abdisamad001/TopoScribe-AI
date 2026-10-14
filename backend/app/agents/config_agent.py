@@ -35,10 +35,10 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
 
     catalog = vlan_catalog_from_state(topology, design_plan if isinstance(design_plan, dict) else {})
 
-    # Ensure frontend has the VLAN catalog (names/ids) even if topology_agent omitted metadata merge.
+    # Ensure frontend has the VLAN catalog
     _sync_topology_vlan_catalog(topology, catalog)
 
-    # Assign each host to a VLAN id and a valid subnet sized from design_plan users per department.
+    # Assign each host to a VLAN
     vlan_name_by_id, vlan_ids_in_order = _vlan_maps_from_catalog(catalog)
 
     plan_dict = design_plan if isinstance(design_plan, dict) else {}
@@ -46,7 +46,7 @@ def config_node(state: NetworkDesignState) -> Dict[str, Any]:
     vlan_networks = _allocate_vlan_networks(vlan_ids_in_order, users_by_vlan)
     _write_vlan_gateways_metadata(topology, vlan_ids_in_order, vlan_networks, users_by_vlan)
 
-    # Hosts that don't match anything will be assigned in deterministic RR order.
+    # Hosts that don't match anything
     rr = [0]
     host_nodes = _collect_host_nodes(topology)
     hosts_by_vlan = _assign_host_vlan_membership(
