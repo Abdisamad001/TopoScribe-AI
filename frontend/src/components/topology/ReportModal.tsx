@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Copy, Download, X, FileText } from 'lucide-react';
+import { CopyIcon, DownloadSimpleIcon, XIcon, FileTextIcon } from '@phosphor-icons/react';
 import type { NetworkNode, Link, ProtocolConfig, TopologyMetadata, GenerationRuntime } from '@/types/network';
 import { generateMarkdownReport } from '@/lib/generator/report';
 import { downloadTextFile } from '@/lib/downloadTextFile';
@@ -78,7 +78,7 @@ export default function ReportModal({
                 <div className="report-modal__header">
                     <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-teal-500/10 p-2">
-                            <FileText size={20} className="text-teal-400" />
+                            <FileTextIcon size={20} weight="regular" className="text-teal-400" />
                         </div>
                         <div>
                             <h2 className="text-lg font-bold tracking-wide text-white">Documentation</h2>
@@ -93,7 +93,7 @@ export default function ReportModal({
                         aria-label="Close"
                         className="rounded-full p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
                     >
-                        <X size={20} />
+                        <XIcon size={20} weight="regular" />
                     </button>
                 </div>
 
@@ -129,14 +129,14 @@ export default function ReportModal({
                         onClick={handleCopy}
                         className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
                     >
-                        <Copy size={16} /> Copy Clean Text
+                        <CopyIcon size={16} weight="regular" /> Copy Clean Text
                     </button>
                     <button
                         type="button"
                         onClick={handleDownload}
                         className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-teal-600 to-teal-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-teal-900/20 hover:from-teal-500 hover:to-teal-400"
                     >
-                        <Download size={16} /> Download Report
+                        <DownloadSimpleIcon size={16} weight="regular" /> Download Report
                     </button>
                 </div>
             </div>

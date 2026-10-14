@@ -34,7 +34,7 @@ export class NetworkGraph {
         return graph;
     }
 
-    // Check for duplicate IPs globally across the network
+    // Check for duplicate IPs 
     private validateUniqueIps(): { valid: boolean; duplicateIp?: string; nodes?: string[] } {
         const ipMap = new Map<string, string[]>();
 
@@ -109,7 +109,7 @@ export class NetworkGraph {
             // ------------------------
 
             if (currentNodeId === endNodeId) {
-                // Check destination constraints if any (e.g. correct subnet relative to source - simplified)
+                // Check destination constraints
                 return { success: true, path };
             }
 

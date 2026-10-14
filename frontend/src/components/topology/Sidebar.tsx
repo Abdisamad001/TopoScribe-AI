@@ -8,8 +8,11 @@ import {
     PlusIcon,
     CopySimpleIcon,
     BookOpenIcon,
+    SquaresFourIcon,
+    RobotIcon,
+    LightningIcon,
+    CaretDownIcon,
 } from '@phosphor-icons/react';
-import { LayoutGrid, Bot, Zap, ChevronDown } from 'lucide-react';
 
 export type AppView =
     | 'home'
@@ -100,7 +103,7 @@ export default function Sidebar({
                             <PlusIcon size={14} weight="regular" className="shrink-0" />
                             New network design
                         </span>
-                        <ChevronDown size={14} className="shrink-0 text-zinc-600" />
+                        <CaretDownIcon size={14} weight="regular" className="shrink-0 text-zinc-600" />
                     </button>
                 ) : (
                     <button
@@ -120,7 +123,7 @@ export default function Sidebar({
                     label: 'Home',
                     active: activeView === 'home',
                     onClick: () => onNavigate('home'),
-                    icon: <LayoutGrid size={18} className="shrink-0" />,
+                    icon: <SquaresFourIcon size={18} weight="regular" className="shrink-0" />,
                 })}
                 {navItem({
                     label: 'Projects',
@@ -157,12 +160,12 @@ export default function Sidebar({
                     label: 'Chats',
                     active: activeView === 'chats',
                     onClick: () => onNavigate('chats'),
-                    icon: <Bot size={18} className="shrink-0" />,
+                    icon: <RobotIcon size={18} weight="regular" className="shrink-0" />,
                 })}
                 {navItem({
                     label: 'Validation',
                     disabled: true,
-                    icon: <Zap size={18} className="shrink-0" />,
+                    icon: <LightningIcon size={18} weight="regular" className="shrink-0" />,
                 })}
             </nav>
 

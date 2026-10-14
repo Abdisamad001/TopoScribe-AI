@@ -30,7 +30,7 @@ export async function simulateNetwork(topology: any, source: string, target: str
     return response.json();
 }
 
-/** Run canvas topology through backend config_node; returns topology with report metadata. */
+/** Run canvas topology through metadata. */
 export async function configureTopology(topology: any, designPlan: Record<string, unknown> = {}) {
     const response = await fetch(`${API_BASE_URL}/api/topology/configure`, {
         method: 'POST',

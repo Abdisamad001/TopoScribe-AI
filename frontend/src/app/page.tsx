@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import AppWorkspace from '@/components/app/AppWorkspace';
 import type { AppView } from '@/components/topology/Sidebar';
 import { updateDesign } from '@/lib/api';
-import { Search, CircleHelp, Bell, User } from 'lucide-react';
+import { MagnifyingGlassIcon, QuestionIcon, BellIcon, UserIcon } from '@phosphor-icons/react';
 
 export default function Home() {
   const [view, setView] = useState<AppView>('home');
@@ -44,7 +44,7 @@ export default function Home() {
         </div>
 
         <div className="absolute left-1/2 top-1/2 hidden w-[min(28rem,40vw)] -translate-x-1/2 -translate-y-1/2 md:flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 focus-within:border-white/20">
-          <Search size={14} className="shrink-0 text-zinc-500" />
+          <MagnifyingGlassIcon size={14} weight="regular" className="shrink-0 text-zinc-500" />
           <input
             ref={searchRef}
             type="search"
@@ -63,14 +63,14 @@ export default function Home() {
             aria-label="Support"
             className="rounded-md p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
           >
-            <CircleHelp size={16} />
+            <QuestionIcon size={16} weight="regular" />
           </button>
           <button
             type="button"
             aria-label="Notifications"
             className="rounded-md p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
           >
-            <Bell size={16} />
+            <BellIcon size={16} weight="regular" />
           </button>
           <a
             href="https://github.com/Abdisamad001/TopoScribe-AI.git"
@@ -87,7 +87,7 @@ export default function Home() {
             aria-label="Account"
             className="rounded-md p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
           >
-            <User size={16} />
+            <UserIcon size={16} weight="regular" />
           </button>
         </div>
       </header>

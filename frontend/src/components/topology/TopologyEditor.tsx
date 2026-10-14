@@ -24,10 +24,19 @@ import ReportModal from './ReportModal';
 import AiCopilot from './AiCopilot';
 import { clarifyRequirements, createChat, updateChat, configureTopology, type ChatMessage } from '@/lib/api';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
-import { GlobeIcon, ShareNetworkIcon, DesktopIcon, NoteIcon, CaretLeftIcon } from '@phosphor-icons/react';
-import { ChevronLeft, Layers, FileText, Share2, Save } from 'lucide-react';
+import {
+    GlobeIcon,
+    ShareNetworkIcon,
+    DesktopIcon,
+    NoteIcon,
+    CaretLeftIcon,
+    FloppyDiskIcon,
+    FileTextIcon,
+    ShareIcon,
+    StackIcon,
+} from '@phosphor-icons/react';
 
-// Component shelf cards. The Notes card is a visual placeholder: no node type exists for it yet.
+// Component shelf cards
 const DEVICE_CARDS = [
     { type: 'router', title: 'Router', subtitle: 'L3 Networking', Icon: GlobeIcon, chipClass: 'bg-teal-500', titleHoverClass: 'group-hover:text-teal-300', disabled: false },
     { type: 'switch', title: 'Switch', subtitle: 'L2 Switching', Icon: ShareNetworkIcon, chipClass: 'bg-blue-500', titleHoverClass: 'group-hover:text-blue-300', disabled: false },
@@ -281,7 +290,7 @@ export default function TopologyEditor({
         onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
-    // Apply topology to the canvas. Does not touch chat — clarification history must stay.
+    // clarification history must stay.
     const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
@@ -292,10 +301,10 @@ export default function TopologyEditor({
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
 
-    // Load a saved design's topology through the same path as AI generation
+    // Load a saved design's 
     React.useEffect(() => {
         if (initialTopology) onTopologyGenerated(initialTopology);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, []);
 
     const onSaveClick = async () => {
@@ -409,7 +418,7 @@ export default function TopologyEditor({
                         title="Back to designs"
                         className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
                     >
-                        <ChevronLeft size={18} />
+                        <CaretLeftIcon size={18} weight="regular" />
                     </button>
                     <div className="min-w-0">
                         {editingTitle ? (
@@ -446,7 +455,7 @@ export default function TopologyEditor({
                         disabled={saveState === 'saving'}
                         className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
                     >
-                        <Save size={13} />
+                        <FloppyDiskIcon size={13} weight="regular" />
                         {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Save failed' : 'Save'}
                     </button>
                     <button
@@ -455,7 +464,7 @@ export default function TopologyEditor({
                         disabled={exportState === 'configuring'}
                         className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
                     >
-                        <FileText size={13} />
+                        <FileTextIcon size={13} weight="regular" />
                         {exportState === 'configuring'
                             ? 'Preparing…'
                             : exportState === 'error'
@@ -468,7 +477,7 @@ export default function TopologyEditor({
                         title="Coming soon"
                         className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-900 opacity-70"
                     >
-                        <Share2 size={13} />
+                        <ShareIcon size={13} weight="regular" />
                         Share design
                     </button>
                 </div>
@@ -543,7 +552,7 @@ export default function TopologyEditor({
                                             <div className="text-[11px] text-zinc-500">{subtitle}</div>
                                         </div>
                                         {disabled && (
-                                            <span className="ml-auto rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-500">Soon</span>
+                                            <span className="ml-auto rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-500"></span>
                                         )}
                                     </div>
                                 ))}
@@ -556,7 +565,7 @@ export default function TopologyEditor({
                             aria-label="Expand component library"
                             className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#111]/95 px-2.5 py-1.5 text-xs font-medium text-zinc-300 shadow-lg backdrop-blur-md transition-colors hover:bg-white/5 hover:text-white"
                         >
-                            <Layers size={14} />
+                            <StackIcon size={14} weight="regular" />
                             Components
                         </button>
                     )}

@@ -41,7 +41,7 @@ type MetaReport = {
     }>;
 };
 
-/** Matches backend LITERAL_HOST_NODE_THRESHOLD (planning_helpers.py). */
+/** Matches backend LITERAL_HOST_NODE_THRESHOLD */
 const REPRESENTATIVE_USERS_THRESHOLD = 8;
 
 const REGENERATE_NOTE =

@@ -25,7 +25,7 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
     }
 }
 
-/** Strip markdown markers so “Copy clean text” is plain prose. */
+/** Copy clean text  */
 export function stripMarkdown(md: string): string {
     if (!md) return '';
     return md
