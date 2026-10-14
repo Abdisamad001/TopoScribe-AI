@@ -1,4 +1,4 @@
-"""Saved export reports. Deleting a report does not delete the design."""
+"""Saved export reports"""
 
 from typing import Any, Dict, Optional
 

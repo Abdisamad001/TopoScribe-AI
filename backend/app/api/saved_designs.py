@@ -41,9 +41,6 @@ def _get_or_404(db: Session, design_id: str) -> Design:
 
 @router.get("")
 def list_designs(db: Session = Depends(get_db)):
-    """
-    Lists all saved designs, newest first.
-    """
     try:
         designs = db.query(Design).order_by(Design.created_at.desc()).all()
         return [_to_dict(d) for d in designs]
@@ -53,9 +50,6 @@ def list_designs(db: Session = Depends(get_db)):
 
 @router.post("")
 def create_design(request: DesignCreate, db: Session = Depends(get_db)):
-    """
-    Saves a new design.
-    """
     try:
         design = Design(name=request.name, topology=request.topology)
         db.add(design)
@@ -69,9 +63,6 @@ def create_design(request: DesignCreate, db: Session = Depends(get_db)):
 
 @router.patch("/{design_id}/open")
 def open_design(design_id: str, db: Session = Depends(get_db)):
-    """
-    Marks a design as opened and returns it, including its topology.
-    """
     try:
         design = _get_or_404(db, design_id)
         design.last_opened_at = func.now()
@@ -87,9 +78,6 @@ def open_design(design_id: str, db: Session = Depends(get_db)):
 
 @router.patch("/{design_id}/favourite")
 def toggle_favourite(design_id: str, db: Session = Depends(get_db)):
-    """
-    Toggles a design's favourite flag.
-    """
     try:
         design = _get_or_404(db, design_id)
         design.is_favourite = not design.is_favourite
@@ -105,9 +93,6 @@ def toggle_favourite(design_id: str, db: Session = Depends(get_db)):
 
 @router.patch("/{design_id}/template")
 def toggle_template(design_id: str, db: Session = Depends(get_db)):
-    """
-    Marks or unmarks a saved design as a reusable template.
-    """
     try:
         design = _get_or_404(db, design_id)
         design.is_template = not design.is_template
@@ -123,9 +108,6 @@ def toggle_template(design_id: str, db: Session = Depends(get_db)):
 
 @router.patch("/{design_id}")
 def update_design(design_id: str, request: DesignUpdate, db: Session = Depends(get_db)):
-    """
-    Updates a design's name and/or topology.
-    """
     try:
         design = _get_or_404(db, design_id)
         if request.name is not None:
@@ -144,9 +126,6 @@ def update_design(design_id: str, request: DesignUpdate, db: Session = Depends(g
 
 @router.delete("/{design_id}", status_code=204)
 def delete_design(design_id: str, db: Session = Depends(get_db)):
-    """
-    Permanently deletes a saved design.
-    """
     try:
         design = _get_or_404(db, design_id)
         db.delete(design)

@@ -2,9 +2,6 @@ import networkx as nx
 from typing import Dict, Any
 
 def simulate_ping(graph: nx.Graph, source: str, target: str) -> Dict[str, Any]:
-    """
-    Simulates ping using shortest path algorithm.
-    """
     try:
         path = nx.shortest_path(graph, source=source, target=target)
         return {

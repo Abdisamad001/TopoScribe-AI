@@ -1,4 +1,4 @@
-"""Configure a canvas topology through the same config_node path as AI designs."""
+"""Configure a canvas topology."""
 
 from typing import Any, Dict, Optional
 
@@ -16,9 +16,9 @@ class ConfigureRequest(BaseModel):
     topology: Dict[str, Any]
     design_plan: Optional[Dict[str, Any]] = None
 
-
+ #
 def _coerce_topology(raw: Dict[str, Any]) -> Topology:
-    """Accept frontend domain shape (name / sourceNodeId) or backend shape (label / source)."""
+   
     nodes = []
     for n in raw.get("nodes") or []:
         if not isinstance(n, dict) or not n.get("id") or not n.get("type"):
@@ -57,7 +57,7 @@ def _coerce_topology(raw: Dict[str, Any]) -> Topology:
 
 
 def _cisco_configs_for(topology: Topology, configurations: Dict[str, Any]) -> Dict[str, str]:
-    """Same router/switch CLI attachment as validation_agent (no validation gate)."""
+    
     out: Dict[str, str] = {}
     for node in topology.nodes:
         if node.type == "router":
@@ -88,7 +88,7 @@ def configure_topology(body: ConfigureRequest):
             topo.metadata = {}
         topo.metadata["configurations"] = configurations
         topo.metadata["cisco_configs"] = _cisco_configs_for(topo, configurations)
-        # cabling / vlan_gateways / host_addresses already written on topo.metadata by config_node
+      
         return {"topology": topo.dict()}
     except HTTPException:
         raise

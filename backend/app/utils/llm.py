@@ -218,7 +218,4 @@ def get_llm_response(
     temperature: float = 0.25,
     max_tokens: int = 2000,
 ) -> str:
-    """
-    Calls Groq API and returns response text.
-    """
     return _call_groq(prompt, model, temperature, max_tokens)

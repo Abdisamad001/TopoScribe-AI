@@ -14,9 +14,7 @@ router = APIRouter()
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
-# Part 2 run log. scenario_runs.csv (Part 1) is frozen as the pre-escalation
-# baseline and no longer receives rows; run numbering restarts at 1 here because
-# this is a separate dataset, not a continuation. See scenario_runs_NOTES.md.
+
 RUN_LOG_PATH = DATA_DIR / "scenario_runs_part2.csv"
 RUN_LOG_HEADERS = [
     "Run #",
@@ -31,8 +29,7 @@ RUN_LOG_HEADERS = [
     "Escalated",
 ]
 
-# Keys copied out of the graph's agent_trace, so the response shape stays stable
-# if a node starts recording extra internal fields.
+
 _TRACE_KEYS = ("agent", "model", "attempt", "outcome", "status")
 
 
@@ -72,9 +69,9 @@ def _append_run_row(
     topology_source: Optional[str] = None,
     topology_retries: int = 0,
 ) -> None:
+
     _ensure_run_log_file()
-    # Runs that never reached topology generation have no source, and must not
-    # be counted as escalated just because the source is not "groq".
+    # Runs that never reached topology 
     escalated = "Yes" if topology_source and topology_source != "groq" else "No"
     row = [
         _next_run_number(),
@@ -99,9 +96,6 @@ class DesignRequest(BaseModel):
 @router.post("/generate")
 @langwatch.trace(name="Generate Network Topology")
 async def generate_design(request: DesignRequest):
-    """
-    Initiates the LangGraph workflow.
-    """
     try:
         started_at = datetime.now(timezone.utc).isoformat()
         t0 = time.perf_counter()

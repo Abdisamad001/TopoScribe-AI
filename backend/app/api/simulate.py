@@ -13,9 +13,6 @@ class SimulationRequest(BaseModel):
 
 @router.post("/run")
 async def run_simulation(request: SimulationRequest):
-    """
-    Simulates connectivity between two nodes.
-    """
     try:
         # Build NetworkX graph
         graph = build_network_graph(request.topology)
