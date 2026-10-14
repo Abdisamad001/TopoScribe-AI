@@ -6,7 +6,7 @@ load_dotenv()
 
 
 def _setup_langwatch() -> None:
-    """Best-effort tracing. Missing key or setup failure must not block the app."""
+   
     api_key = os.getenv("LANGWATCH_API_KEY")
     if not api_key:
         return
@@ -23,9 +23,7 @@ def _setup_langwatch() -> None:
         print(f"LangWatch setup skipped: {e}")
 
 
-# Must run before importing routers: @langwatch.trace on generate_design calls
-# ensure_setup() at decoration time and would otherwise create a bare client
-# without the OpenAI/Groq instrumentors.
+
 _setup_langwatch()
 
 from fastapi import FastAPI
@@ -47,7 +45,7 @@ app = FastAPI(title="TopoScribe AI Backend")
 
 @app.on_event("startup")
 def create_tables():
-    """Best-effort table creation. An unreachable DB must not block the app."""
+   
     try:
         Base.metadata.create_all(engine)
     except Exception as e:
@@ -64,7 +62,7 @@ app.add_middleware(
 
 # Register routers
 app.include_router(design.router, prefix="/api/design", tags=["design"])
-app.include_router(clarify.router, prefix="/api/design", tags=["design"]) # Mounted at /api/design/clarify by router decoration? No, router has /clarify. Prefix adds /api/design -> /api/design/clarify
+app.include_router(clarify.router, prefix="/api/design", tags=["design"]) 
 app.include_router(simulate.router, prefix="/api/simulate", tags=["simulation"])
 app.include_router(saved_designs.router, prefix="/api/designs", tags=["designs"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
