@@ -52,7 +52,9 @@ def test_writes_target_the_part2_file_by_default():
     "source,expected",
     [
         ("groq", "No"),
+        ("openrouter", "No"),
         ("openai_escalated", "Yes"),
+        ("openrouter_escalated", "Yes"),
         ("deterministic_fallback", "Yes"),
     ],
 )

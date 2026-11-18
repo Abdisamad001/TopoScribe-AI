@@ -72,7 +72,14 @@ def _append_run_row(
 
     _ensure_run_log_file()
     # Runs that never reached topology 
-    escalated = "Yes" if topology_source and topology_source != "groq" else "No"
+    # Primary accept sources (Groq legacy rows + OpenRouter primary Qwen).
+    # Escalated includes openrouter_escalated (GPT-5.5 via OpenRouter) and legacy
+    # openai_escalated / deterministic_fallback.
+    escalated = (
+        "Yes"
+        if topology_source and topology_source not in ("groq", "openrouter")
+        else "No"
+    )
     row = [
         _next_run_number(),
         "Yes" if requirements_clear else "No",
@@ -99,6 +106,10 @@ async def generate_design(request: DesignRequest):
     try:
         started_at = datetime.now(timezone.utc).isoformat()
         t0 = time.perf_counter()
+        try:
+            langwatch.get_current_span().update(provider="openrouter")
+        except Exception:
+            pass
 
         initial_state: NetworkDesignState = {
             "user_input": request.description,

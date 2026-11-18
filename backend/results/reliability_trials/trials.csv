@@ -1,0 +1,347 @@
+trial_id,departments,trial,attempt_slot,valid_model_trial,exclusion_reason,pipeline,primary_model,escalation_model,requirements_clear,topology_source,topology_retry_count,first_pass,gpt55_recovery,fallback,validation_status,validation_passed,config_present,latency_sec,error,started_at_utc
+w3_d2_t01_a01,2,1,1,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,22.629,,2026-11-17T18:23:33.723968+00:00
+w3_d2_t01_a02,2,1,2,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,14.79,,2026-11-17T18:23:59.368139+00:00
+w3_d2_t01_a03,2,1,3,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,13.939,,2026-11-17T18:24:17.161586+00:00
+w3_d2_t02_a04,2,2,4,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,19.064,,2026-11-17T18:24:34.109866+00:00
+w3_d2_t03_a05,2,3,5,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.128,,2026-11-17T18:24:56.177658+00:00
+w3_d2_t03_a06,2,3,6,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,12.638,,2026-11-17T18:25:15.323388+00:00
+w3_d2_t03_a07,2,3,7,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,12.583,,2026-11-17T18:25:30.984630+00:00
+w3_d2_t03_a08,2,3,8,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,11.755,,2026-11-17T18:25:46.581219+00:00
+w3_d2_t03_a09,2,3,9,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,12.344,,2026-11-17T18:26:01.350486+00:00
+w3_d2_t03_a10,2,3,10,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,10.425,,2026-11-17T18:26:16.701054+00:00
+w3_d2_t04_a11,2,4,11,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,20.215,,2026-11-17T18:26:30.132160+00:00
+w3_d2_t04_a12,2,4,12,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,13.158,,2026-11-17T18:26:53.350393+00:00
+w3_d2_t04_a13,2,4,13,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.641,,2026-11-17T18:27:09.522849+00:00
+w3_d2_t04_a14,2,4,14,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,8.299,,2026-11-17T18:27:29.167710+00:00
+w3_d2_t05_a15,2,5,15,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.487,,2026-11-17T18:27:40.469887+00:00
+w3_d2_t05_a16,2,5,16,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,11.407,,2026-11-17T18:27:59.968646+00:00
+w3_d2_t05_a17,2,5,17,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,19.165,,2026-11-17T18:28:14.380760+00:00
+w3_d2_t05_a18,2,5,18,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.351,,2026-11-17T18:28:36.551331+00:00
+w3_d2_t05_a19,2,5,19,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,9.093,,2026-11-17T18:28:55.919944+00:00
+w3_d2_t06_a20,2,6,20,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,14.456,,2026-11-17T18:29:08.021624+00:00
+w3_d2_t07_a21,2,7,21,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.863,,2026-11-17T18:29:25.479991+00:00
+w3_d2_t07_a22,2,7,22,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,12.973,,2026-11-17T18:29:46.352332+00:00
+w3_d2_t07_a23,2,7,23,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,12.736,,2026-11-17T18:30:02.335347+00:00
+w3_d2_t07_a24,2,7,24,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,7.709,,2026-11-17T18:30:18.077232+00:00
+w3_d2_t08_a25,2,8,25,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,13.525,,2026-11-17T18:30:28.802205+00:00
+w3_d5_t01_a01,5,1,1,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.951,,2026-11-17T18:30:48.337083+00:00
+w3_d5_t01_a02,5,1,2,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,12.227,,2026-11-17T18:31:08.303320+00:00
+w3_d5_t02_a03,5,2,3,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.888,,2026-11-17T18:31:23.552582+00:00
+w3_d5_t02_a04,5,2,4,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,20.353,,2026-11-17T18:31:44.451151+00:00
+w3_d5_t02_a05,5,2,5,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,20.119,,2026-11-17T18:32:07.817850+00:00
+w3_d5_t02_a06,5,2,6,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.441,,2026-11-17T18:32:30.954687+00:00
+w3_d5_t02_a07,5,2,7,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,12.217,,2026-11-17T18:32:51.451169+00:00
+w3_d5_t03_a08,5,3,8,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,24.113,,2026-11-17T18:33:06.682823+00:00
+w3_d5_t03_a09,5,3,9,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,18.209,,2026-11-17T18:33:33.810081+00:00
+w3_d5_t03_a10,5,3,10,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,18.235,,2026-11-17T18:33:55.021066+00:00
+w3_d5_t03_a11,5,3,11,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,11.488,,2026-11-17T18:34:16.262573+00:00
+w3_d5_t04_a12,5,4,12,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,15.38,,2026-11-17T18:34:30.758262+00:00
+w3_d5_t05_a13,5,5,13,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,24.31,,2026-11-17T18:34:49.152885+00:00
+w3_d5_t05_a14,5,5,14,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.856,,2026-11-17T18:35:16.475107+00:00
+w3_d5_t05_a15,5,5,15,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.067,,2026-11-17T18:35:37.335623+00:00
+w3_d5_t05_a16,5,5,16,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,19.715,,2026-11-17T18:35:57.409921+00:00
+w3_d5_t05_a17,5,5,17,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,18.705,,2026-11-17T18:36:20.130382+00:00
+w3_d5_t05_a18,5,5,18,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,26.796,,2026-11-17T18:36:41.850597+00:00
+w3_d5_t05_a19,5,5,19,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,11.723,,2026-11-17T18:37:11.655195+00:00
+w3_d5_t06_a20,5,6,20,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,18.206,,2026-11-17T18:37:26.387164+00:00
+w3_d5_t06_a21,5,6,21,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.918,,2026-11-17T18:37:47.595109+00:00
+w3_d5_t06_a22,5,6,22,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,21.088,,2026-11-17T18:38:08.511938+00:00
+w3_d5_t06_a23,5,6,23,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.778,,2026-11-17T18:38:32.608082+00:00
+w3_d5_t06_a24,5,6,24,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.787,,2026-11-17T18:38:53.395731+00:00
+w3_d5_t06_a25,5,6,25,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,20.752,,2026-11-17T18:39:13.197054+00:00
+w3_d10_t01_a01,10,1,1,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,33.578,,2026-11-17T18:39:39.944464+00:00
+w3_d10_t01_a02,10,1,2,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,16.861,,2026-11-17T18:40:16.536322+00:00
+w3_d10_t02_a03,10,2,3,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,38.661,,2026-11-17T18:40:36.412881+00:00
+w3_d10_t02_a04,10,2,4,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,35.478,,2026-11-17T18:41:18.089460+00:00
+w3_d10_t02_a05,10,2,5,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,42.705,,2026-11-17T18:41:56.572288+00:00
+w3_d10_t02_a06,10,2,6,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,17.778,,2026-11-17T18:42:42.280302+00:00
+w3_d10_t03_a07,10,3,7,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,35.924,,2026-11-17T18:43:03.068918+00:00
+w3_d10_t03_a08,10,3,8,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,17.992,,2026-11-17T18:43:41.997808+00:00
+w3_d10_t04_a09,10,4,9,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,27.252,,2026-11-17T18:44:02.999155+00:00
+w3_d10_t05_a10,10,5,10,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,40.287,,2026-11-17T18:44:33.266661+00:00
+w3_d10_t05_a11,10,5,11,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,28.607,,2026-11-17T18:45:16.570173+00:00
+w3_d10_t05_a12,10,5,12,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,34.345,,2026-11-17T18:45:48.198901+00:00
+w3_d10_t05_a13,10,5,13,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,37.968,,2026-11-17T18:46:25.555016+00:00
+w3_d2_t08_a01,2,8,1,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,15.593,,2026-11-17T18:47:03.927859+00:00
+w3_d10_t05_a14,10,5,14,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,35.996,,2026-11-17T18:47:06.546595+00:00
+w3_d2_t09_a01,2,9,1,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.291,,2026-11-17T18:47:46.654901+00:00
+w3_d10_t05_a15,10,5,15,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,37.656,,2026-11-17T18:47:45.553079+00:00
+w3_d2_t09_a02,2,9,2,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,15.835,,2026-11-17T18:48:07.965763+00:00
+w3_d2_t09_a03,2,9,3,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,11.234,,2026-11-17T18:48:28.802187+00:00
+w3_d10_t05_a16,10,5,16,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,30.0,,2026-11-17T18:48:26.213212+00:00
+w3_d2_t09_a04,2,9,4,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,13.089,,2026-11-17T18:48:45.037956+00:00
+w3_d10_t05_a17,10,5,17,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,17.742,,2026-11-17T18:48:59.219496+00:00
+w3_d2_t09_a05,2,9,5,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,14.968,,2026-11-17T18:49:03.119515+00:00
+w3_d2_t09_a06,2,9,6,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,15.299,,2026-11-17T18:49:23.102247+00:00
+w3_d10_t06_a18,10,6,18,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,27.76,,2026-11-17T18:49:19.969869+00:00
+w3_d2_t09_a07,2,9,7,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,8.826,,2026-11-17T18:49:43.403322+00:00
+w3_d2_t10_a08,2,10,8,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,13.841,,2026-11-17T18:49:57.235156+00:00
+w3_d2_t10_a09,2,10,9,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,9.514,,2026-11-17T18:50:16.084875+00:00
+w3_d10_t06_a19,10,6,19,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,35.002,,2026-11-17T18:49:50.740505+00:00
+w3_d5_t06_a01,5,6,1,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,24.343,,2026-11-17T18:50:30.695081+00:00
+w3_d10_t06_a20,10,6,20,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,33.126,,2026-11-17T18:50:28.753981+00:00
+w3_d5_t06_a02,5,6,2,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,19.456,,2026-11-17T18:51:00.037279+00:00
+w3_d10_t06_a21,10,6,21,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,19.888,,2026-11-17T18:51:04.884462+00:00
+w3_d5_t06_a03,5,6,3,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,24.059,,2026-11-17T18:51:24.506361+00:00
+w3_d10_t07_a22,10,7,22,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,37.413,,2026-11-17T18:51:27.782033+00:00
+w3_d5_t06_a04,5,6,4,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,17.736,,2026-11-17T18:51:53.571151+00:00
+w3_d5_t06_a05,5,6,5,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,20.257,,2026-11-17T18:52:16.316644+00:00
+w3_d10_t08_a23,10,8,23,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,34.515,,2026-11-17T18:52:08.205483+00:00
+w3_d5_t06_a06,5,6,6,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,16.556,,2026-11-17T18:52:41.585449+00:00
+w3_d5_t06_a07,5,6,7,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,12.195,,2026-11-17T18:53:03.147579+00:00
+w3_d10_t08_a24,10,8,24,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,32.058,,2026-11-17T18:52:45.728976+00:00
+w3_d5_t07_a08,5,7,8,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,15.981,,2026-11-17T18:53:20.339958+00:00
+w3_d10_t08_a25,10,8,25,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,19.536,,2026-11-17T18:53:20.788992+00:00
+w3_d5_t08_a09,5,8,9,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,20.294,,2026-11-17T18:53:41.335977+00:00
+w3_d5_t08_a10,5,8,10,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,18.056,,2026-11-17T18:54:06.637861+00:00
+w3_d5_t08_a11,5,8,11,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,25.437,,2026-11-17T18:54:29.686859+00:00
+w3_d5_t08_a12,5,8,12,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,18.862,,2026-11-17T18:55:00.133175+00:00
+w3_d5_t08_a13,5,8,13,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,30.416,,2026-11-17T18:55:24.001488+00:00
+w3_d5_t08_a14,5,8,14,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,14.572,,2026-11-17T18:55:59.423638+00:00
+w3_d5_t09_a15,5,9,15,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,19.312,,2026-11-17T18:56:19.005702+00:00
+w3_d5_t09_a16,5,9,16,False,api_infra:Groq call failed,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,openai_escalated,1,False,True,False,passed,True,True,19.542,,2026-11-17T18:56:43.320757+00:00
+w3_d5_t09_a17,5,9,17,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.406,,2026-11-17T18:57:07.863690+00:00
+w3_d5_t09_a18,5,9,18,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.108,,2026-11-17T18:57:16.281372+00:00
+w3_d5_t09_a19,5,9,19,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,True,groq,0,True,False,False,passed,True,True,15.598,,2026-11-17T18:57:23.402328+00:00
+w3_d5_t10_a20,5,10,20,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.337,,2026-11-17T18:57:44.012932+00:00
+w3_d5_t10_a21,5,10,21,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.759,,2026-11-17T18:57:54.363674+00:00
+w3_d5_t10_a22,5,10,22,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.272,,2026-11-17T18:58:04.128395+00:00
+w3_d5_t10_a23,5,10,23,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.874,,2026-11-17T18:58:12.403923+00:00
+w3_d5_t10_a24,5,10,24,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.309,,2026-11-17T18:58:21.279491+00:00
+w3_d5_t10_a25,5,10,25,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.577,,2026-11-17T18:58:29.594827+00:00
+w3_d5_t10_a26,5,10,26,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.568,,2026-11-17T18:58:38.174355+00:00
+w3_d5_t10_a27,5,10,27,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.722,,2026-11-17T18:58:45.749614+00:00
+w3_d5_t10_a28,5,10,28,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.814,,2026-11-17T18:58:54.485800+00:00
+w3_d5_t10_a29,5,10,29,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.643,,2026-11-17T18:59:02.309115+00:00
+w3_d5_t10_a30,5,10,30,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.442,,2026-11-17T18:59:10.964269+00:00
+w3_d5_t10_a31,5,10,31,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.211,,2026-11-17T18:59:18.423931+00:00
+w3_d5_t10_a32,5,10,32,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.306,,2026-11-17T18:59:28.644861+00:00
+w3_d5_t10_a33,5,10,33,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.356,,2026-11-17T18:59:37.969613+00:00
+w3_d5_t10_a34,5,10,34,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.231,,2026-11-17T18:59:46.320819+00:00
+w3_d5_t10_a35,5,10,35,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,6.533,,2026-11-17T18:59:54.552912+00:00
+w3_d5_t10_a36,5,10,36,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.323,,2026-11-17T19:00:06.102304+00:00
+w3_d5_t10_a37,5,10,37,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,9.924,,2026-11-17T19:00:15.431510+00:00
+w3_d5_t10_a38,5,10,38,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,6.009,,2026-11-17T19:00:30.368965+00:00
+w3_d5_t10_a39,5,10,39,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,7.014,,2026-11-17T19:00:41.390996+00:00
+w3_d5_t10_a40,5,10,40,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.57,,2026-11-17T19:00:53.407289+00:00
+w3_d10_t05_a01,10,5,1,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.866,,2026-11-17T19:01:07.993675+00:00
+w3_d10_t05_a02,10,5,2,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,6.865,,2026-11-17T19:01:16.862086+00:00
+w3_d10_t05_a03,10,5,3,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.214,,2026-11-17T19:01:28.735804+00:00
+w3_d10_t05_a04,10,5,4,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.101,,2026-11-17T19:01:35.946677+00:00
+w3_d10_t05_a05,10,5,5,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,14.234,,2026-11-17T19:01:43.053083+00:00
+w3_d10_t05_a06,10,5,6,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.153,,2026-11-17T19:02:02.293594+00:00
+w3_d10_t05_a07,10,5,7,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.748,,2026-11-17T19:02:12.456266+00:00
+w3_d10_t05_a08,10,5,8,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.461,,2026-11-17T19:02:22.210676+00:00
+w3_d10_t05_a09,10,5,9,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.572,,2026-11-17T19:02:31.679383+00:00
+w3_d10_t05_a10,10,5,10,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.157,,2026-11-17T19:02:42.266102+00:00
+w3_d10_t05_a11,10,5,11,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.214,,2026-11-17T19:02:52.431549+00:00
+w3_d10_t05_a12,10,5,12,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.16,,2026-11-17T19:03:00.664458+00:00
+w3_d10_t05_a13,10,5,13,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.296,,2026-11-17T19:03:08.822771+00:00
+w3_d10_t05_a14,10,5,14,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.518,,2026-11-17T19:03:17.128031+00:00
+w3_d10_t05_a15,10,5,15,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.586,,2026-11-17T19:03:24.656143+00:00
+w3_d10_t05_a16,10,5,16,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.471,,2026-11-17T19:03:35.250409+00:00
+w3_d10_t05_a17,10,5,17,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.839,,2026-11-17T19:03:44.735378+00:00
+w3_d10_t05_a18,10,5,18,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.182,,2026-11-17T19:03:55.588277+00:00
+w3_d10_t05_a19,10,5,19,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.485,,2026-11-17T19:04:05.776700+00:00
+w3_d10_t05_a20,10,5,20,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.521,,2026-11-17T19:04:15.267102+00:00
+w3_d10_t05_a21,10,5,21,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.866,,2026-11-17T19:04:22.804940+00:00
+w3_d10_t05_a22,10,5,22,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.869,,2026-11-17T19:04:31.684204+00:00
+w3_d10_t05_a23,10,5,23,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.248,,2026-11-17T19:04:39.555369+00:00
+w3_d10_t05_a24,10,5,24,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.555,,2026-11-17T19:04:49.816441+00:00
+w3_d10_t05_a25,10,5,25,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.204,,2026-11-17T19:04:58.376368+00:00
+w3_d10_t05_a26,10,5,26,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.29,,2026-11-17T19:05:06.592558+00:00
+w3_d10_t05_a27,10,5,27,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.276,,2026-11-17T19:05:15.880865+00:00
+w3_d10_t05_a28,10,5,28,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.699,,2026-11-17T19:05:24.154062+00:00
+w3_d10_t05_a29,10,5,29,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.762,,2026-11-17T19:05:31.860694+00:00
+w3_d10_t05_a30,10,5,30,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.268,,2026-11-17T19:05:40.636656+00:00
+w3_d10_t05_a31,10,5,31,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.889,,2026-11-17T19:05:48.916354+00:00
+w3_d10_t05_a32,10,5,32,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.533,,2026-11-17T19:05:58.815941+00:00
+w3_d10_t05_a33,10,5,33,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.279,,2026-11-17T19:06:06.362904+00:00
+w3_d10_t05_a34,10,5,34,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.249,,2026-11-17T19:06:14.648296+00:00
+w3_d10_t05_a35,10,5,35,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.112,,2026-11-17T19:06:24.903965+00:00
+w3_d10_t05_a36,10,5,36,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.194,,2026-11-17T19:06:33.025092+00:00
+w3_d10_t05_a37,10,5,37,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.171,,2026-11-17T19:06:40.227467+00:00
+w3_d10_t05_a38,10,5,38,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.635,,2026-11-17T19:06:47.406708+00:00
+w3_d10_t05_a39,10,5,39,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.545,,2026-11-17T19:06:55.046027+00:00
+w3_d10_t05_a40,10,5,40,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,4.238,,2026-11-17T19:07:02.598016+00:00
+w3_d2_t11_a01,2,11,1,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,5.428,,2026-11-17T20:14:36.778883+00:00
+w3_d2_t11_a02,2,11,2,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.611,,2026-11-17T20:14:47.221299+00:00
+w3_d2_t11_a03,2,11,3,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.938,,2026-11-17T20:14:54.840782+00:00
+w3_d2_t11_a04,2,11,4,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.828,,2026-11-17T20:15:02.789690+00:00
+w3_d2_t11_a05,2,11,5,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.484,,2026-11-17T20:15:10.611418+00:00
+w3_d2_t11_a06,2,11,6,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.255,,2026-11-17T20:15:18.089910+00:00
+w3_d2_t11_a07,2,11,7,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.788,,2026-11-17T20:15:25.356193+00:00
+w3_d2_t11_a08,2,11,8,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.54,,2026-11-17T20:15:33.154930+00:00
+w3_d2_t11_a09,2,11,9,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.666,,2026-11-17T20:15:40.706325+00:00
+w3_d2_t11_a10,2,11,10,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.252,,2026-11-17T20:15:48.374707+00:00
+w3_d2_t11_a11,2,11,11,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.532,,2026-11-17T20:15:55.639661+00:00
+w3_d2_t11_a12,2,11,12,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.659,,2026-11-17T20:16:03.189534+00:00
+w3_d2_t11_a13,2,11,13,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.186,,2026-11-17T20:16:10.841843+00:00
+w3_d2_t11_a14,2,11,14,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.512,,2026-11-17T20:16:18.040886+00:00
+w3_d2_t11_a15,2,11,15,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.574,,2026-11-17T20:16:25.556515+00:00
+w3_d2_t11_a16,2,11,16,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.387,,2026-11-17T20:16:33.139425+00:00
+w3_d2_t11_a17,2,11,17,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.728,,2026-11-17T20:16:40.542416+00:00
+w3_d2_t11_a18,2,11,18,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.291,,2026-11-17T20:16:48.271397+00:00
+w3_d2_t11_a19,2,11,19,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.491,,2026-11-17T20:16:55.577137+00:00
+w3_d2_t11_a20,2,11,20,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.647,,2026-11-17T20:17:03.072937+00:00
+w3_d2_t11_a21,2,11,21,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.447,,2026-11-17T20:17:10.722958+00:00
+w3_d2_t11_a22,2,11,22,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.875,,2026-11-17T20:17:18.190985+00:00
+w3_d2_t11_a23,2,11,23,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.588,,2026-11-17T20:17:26.072954+00:00
+w3_d2_t11_a24,2,11,24,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.633,,2026-11-17T20:17:33.661818+00:00
+w3_d2_t11_a25,2,11,25,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.201,,2026-11-17T20:17:41.291627+00:00
+w3_d2_t11_a26,2,11,26,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.366,,2026-11-17T20:17:48.504915+00:00
+w3_d2_t11_a27,2,11,27,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.628,,2026-11-17T20:17:55.858493+00:00
+w3_d2_t11_a28,2,11,28,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.395,,2026-11-17T20:18:03.488670+00:00
+w3_d2_t11_a29,2,11,29,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.354,,2026-11-17T20:18:10.890340+00:00
+w3_d2_t11_a30,2,11,30,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.446,,2026-11-17T20:18:18.253979+00:00
+w3_d2_t11_a31,2,11,31,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.418,,2026-11-17T20:18:25.707288+00:00
+w3_d2_t11_a32,2,11,32,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.578,,2026-11-17T20:18:33.137135+00:00
+w3_d2_t11_a33,2,11,33,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.497,,2026-11-17T20:18:40.720699+00:00
+w3_d2_t11_a34,2,11,34,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.498,,2026-11-17T20:18:48.225860+00:00
+w3_d2_t11_a35,2,11,35,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.42,,2026-11-17T20:18:55.729201+00:00
+w3_d2_t11_a36,2,11,36,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.238,,2026-11-17T20:19:03.157555+00:00
+w3_d2_t11_a37,2,11,37,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.267,,2026-11-17T20:19:10.393093+00:00
+w3_d2_t11_a38,2,11,38,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.588,,2026-11-17T20:19:17.673245+00:00
+w3_d2_t11_a39,2,11,39,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.555,,2026-11-17T20:19:25.273071+00:00
+w3_d2_t11_a40,2,11,40,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.58,,2026-11-17T20:19:32.839644+00:00
+w3_d2_t11_a41,2,11,41,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.867,,2026-11-17T20:19:40.423303+00:00
+w3_d2_t11_a42,2,11,42,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.497,,2026-11-17T20:19:48.306459+00:00
+w3_d2_t11_a43,2,11,43,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.493,,2026-11-17T20:19:55.806322+00:00
+w3_d2_t11_a44,2,11,44,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,3.009,,2026-11-17T20:20:03.306587+00:00
+w3_d2_t11_a45,2,11,45,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.688,,2026-11-17T20:20:11.323151+00:00
+w3_d2_t11_a46,2,11,46,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.779,,2026-11-17T20:20:19.023343+00:00
+w3_d2_t11_a47,2,11,47,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.332,,2026-11-17T20:20:26.791591+00:00
+w3_d2_t11_a48,2,11,48,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.482,,2026-11-17T20:20:34.139902+00:00
+w3_d2_t11_a49,2,11,49,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.436,,2026-11-17T20:20:41.625929+00:00
+w3_d2_t11_a50,2,11,50,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.254,,2026-11-17T20:20:49.058475+00:00
+w3_d5_t10_a01,5,10,1,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.59,,2026-11-17T20:21:01.323201+00:00
+w3_d5_t10_a02,5,10,2,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.337,,2026-11-17T20:21:08.923237+00:00
+w3_d5_t10_a03,5,10,3,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.518,,2026-11-17T20:21:16.273185+00:00
+w3_d5_t10_a04,5,10,4,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.646,,2026-11-17T20:21:23.806693+00:00
+w3_d5_t10_a05,5,10,5,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.594,,2026-11-17T20:21:31.461766+00:00
+w3_d5_t10_a06,5,10,6,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.442,,2026-11-17T20:21:39.072150+00:00
+w3_d5_t10_a07,5,10,7,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.485,,2026-11-17T20:21:46.523421+00:00
+w3_d5_t10_a08,5,10,8,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.524,,2026-11-17T20:21:54.018254+00:00
+w3_d5_t10_a09,5,10,9,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.575,,2026-11-17T20:22:01.556781+00:00
+w3_d5_t10_a10,5,10,10,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.048,,2026-11-17T20:22:09.138401+00:00
+w3_d5_t10_a11,5,10,11,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.459,,2026-11-17T20:22:16.190099+00:00
+w3_d5_t10_a12,5,10,12,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.022,,2026-11-17T20:22:23.650378+00:00
+w3_d5_t10_a13,5,10,13,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.645,,2026-11-17T20:22:30.675716+00:00
+w3_d5_t10_a14,5,10,14,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.558,,2026-11-17T20:22:38.340057+00:00
+w3_d5_t10_a15,5,10,15,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.427,,2026-11-17T20:22:45.906733+00:00
+w3_d5_t10_a16,5,10,16,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.337,,2026-11-17T20:22:53.337360+00:00
+w3_d5_t10_a17,5,10,17,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.48,,2026-11-17T20:23:00.688376+00:00
+w3_d5_t10_a18,5,10,18,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.406,,2026-11-17T20:23:08.173390+00:00
+w3_d5_t10_a19,5,10,19,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.47,,2026-11-17T20:23:15.589958+00:00
+w3_d5_t10_a20,5,10,20,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.464,,2026-11-17T20:23:23.063934+00:00
+w3_d5_t10_a21,5,10,21,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.514,,2026-11-17T20:23:30.539873+00:00
+w3_d5_t10_a22,5,10,22,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.036,,2026-11-17T20:23:38.056668+00:00
+w3_d5_t10_a23,5,10,23,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.625,,2026-11-17T20:23:45.106708+00:00
+w3_d5_t10_a24,5,10,24,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.09,,2026-11-17T20:23:52.730080+00:00
+w3_d5_t10_a25,5,10,25,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.498,,2026-11-17T20:23:59.823475+00:00
+w3_d5_t10_a26,5,10,26,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.678,,2026-11-17T20:24:07.323402+00:00
+w3_d5_t10_a27,5,10,27,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.468,,2026-11-17T20:24:15.006767+00:00
+w3_d5_t10_a28,5,10,28,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.371,,2026-11-17T20:24:22.478631+00:00
+w3_d5_t10_a29,5,10,29,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.485,,2026-11-17T20:24:29.854371+00:00
+w3_d5_t10_a30,5,10,30,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.306,,2026-11-17T20:24:37.356489+00:00
+w3_d5_t10_a31,5,10,31,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.41,,2026-11-17T20:24:44.673522+00:00
+w3_d5_t10_a32,5,10,32,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.568,,2026-11-17T20:24:52.089965+00:00
+w3_d5_t10_a33,5,10,33,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.455,,2026-11-17T20:24:59.666455+00:00
+w3_d5_t10_a34,5,10,34,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.796,,2026-11-17T20:25:07.123105+00:00
+w3_d5_t10_a35,5,10,35,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.168,,2026-11-17T20:25:14.917581+00:00
+w3_d5_t10_a36,5,10,36,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.586,,2026-11-17T20:25:22.088926+00:00
+w3_d5_t10_a37,5,10,37,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.752,,2026-11-17T20:25:29.690155+00:00
+w3_d5_t10_a38,5,10,38,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.688,,2026-11-17T20:25:37.441812+00:00
+w3_d5_t10_a39,5,10,39,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.471,,2026-11-17T20:25:45.140014+00:00
+w3_d5_t10_a40,5,10,40,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.474,,2026-11-17T20:25:52.623490+00:00
+w3_d5_t10_a41,5,10,41,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.582,,2026-11-17T20:26:00.106824+00:00
+w3_d5_t10_a42,5,10,42,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.39,,2026-11-17T20:26:07.690121+00:00
+w3_d5_t10_a43,5,10,43,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.531,,2026-11-17T20:26:15.091149+00:00
+w3_d5_t10_a44,5,10,44,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.557,,2026-11-17T20:26:22.638576+00:00
+w3_d5_t10_a45,5,10,45,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.219,,2026-11-17T20:26:30.200097+00:00
+w3_d5_t10_a46,5,10,46,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.555,,2026-11-17T20:26:37.415553+00:00
+w3_d5_t10_a47,5,10,47,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.598,,2026-11-17T20:26:44.976015+00:00
+w3_d5_t10_a48,5,10,48,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.328,,2026-11-17T20:26:52.590121+00:00
+w3_d5_t10_a49,5,10,49,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.285,,2026-11-17T20:26:59.924541+00:00
+w3_d5_t10_a50,5,10,50,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.55,,2026-11-17T20:27:07.222322+00:00
+w3_d10_t09_a01,10,9,1,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.529,,2026-11-17T20:27:19.790121+00:00
+w3_d10_t09_a02,10,9,2,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.57,,2026-11-17T20:27:27.322317+00:00
+w3_d10_t09_a03,10,9,3,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.459,,2026-11-17T20:27:34.895144+00:00
+w3_d10_t09_a04,10,9,4,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.115,,2026-11-17T20:27:42.355470+00:00
+w3_d10_t09_a05,10,9,5,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.444,,2026-11-17T20:27:49.473373+00:00
+w3_d10_t09_a06,10,9,6,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.441,,2026-11-17T20:27:56.926372+00:00
+w3_d10_t09_a07,10,9,7,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.406,,2026-11-17T20:28:04.365752+00:00
+w3_d10_t09_a08,10,9,8,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.428,,2026-11-17T20:28:11.777822+00:00
+w3_d10_t09_a09,10,9,9,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.263,,2026-11-17T20:28:19.212809+00:00
+w3_d10_t09_a10,10,9,10,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.398,,2026-11-17T20:28:26.479149+00:00
+w3_d10_t09_a11,10,9,11,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.51,,2026-11-17T20:28:33.881462+00:00
+w3_d10_t09_a12,10,9,12,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.461,,2026-11-17T20:28:41.405844+00:00
+w3_d10_t09_a13,10,9,13,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.563,,2026-11-17T20:28:48.873533+00:00
+w3_d10_t09_a14,10,9,14,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.891,,2026-11-17T20:28:56.440164+00:00
+w3_d10_t09_a15,10,9,15,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.405,,2026-11-17T20:29:04.333124+00:00
+w3_d10_t09_a16,10,9,16,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.376,,2026-11-17T20:29:11.749650+00:00
+w3_d10_t09_a17,10,9,17,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.347,,2026-11-17T20:29:19.140178+00:00
+w3_d10_t09_a18,10,9,18,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.441,,2026-11-17T20:29:26.490141+00:00
+w3_d10_t09_a19,10,9,19,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.502,,2026-11-17T20:29:33.940140+00:00
+w3_d10_t09_a20,10,9,20,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.474,,2026-11-17T20:29:41.457010+00:00
+w3_d10_t09_a21,10,9,21,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.567,,2026-11-17T20:29:48.940003+00:00
+w3_d10_t09_a22,10,9,22,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.729,,2026-11-17T20:29:56.522237+00:00
+w3_d10_t09_a23,10,9,23,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.315,,2026-11-17T20:30:04.243266+00:00
+w3_d10_t09_a24,10,9,24,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.493,,2026-11-17T20:30:11.560951+00:00
+w3_d10_t09_a25,10,9,25,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.587,,2026-11-17T20:30:19.057520+00:00
+w3_d10_t09_a26,10,9,26,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.684,,2026-11-17T20:30:26.656819+00:00
+w3_d10_t09_a27,10,9,27,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.478,,2026-11-17T20:30:34.357028+00:00
+w3_d10_t09_a28,10,9,28,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.414,,2026-11-17T20:30:41.841969+00:00
+w3_d10_t09_a29,10,9,29,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.585,,2026-11-17T20:30:49.258923+00:00
+w3_d10_t09_a30,10,9,30,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.398,,2026-11-17T20:30:56.850250+00:00
+w3_d10_t09_a31,10,9,31,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.21,,2026-11-17T20:31:04.244753+00:00
+w3_d10_t09_a32,10,9,32,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.471,,2026-11-17T20:31:11.461575+00:00
+w3_d10_t09_a33,10,9,33,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.782,,2026-11-17T20:31:18.947293+00:00
+w3_d10_t09_a34,10,9,34,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.596,,2026-11-17T20:31:26.739996+00:00
+w3_d10_t09_a35,10,9,35,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.707,,2026-11-17T20:31:34.342964+00:00
+w3_d10_t09_a36,10,9,36,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.473,,2026-11-17T20:31:42.052589+00:00
+w3_d10_t09_a37,10,9,37,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.517,,2026-11-17T20:31:49.537731+00:00
+w3_d10_t09_a38,10,9,38,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.708,,2026-11-17T20:31:57.052416+00:00
+w3_d10_t09_a39,10,9,39,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.481,,2026-11-17T20:32:04.768484+00:00
+w3_d10_t09_a40,10,9,40,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.706,,2026-11-17T20:32:12.255244+00:00
+w3_d10_t09_a41,10,9,41,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.334,,2026-11-17T20:32:19.962514+00:00
+w3_d10_t09_a42,10,9,42,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.674,,2026-11-17T20:32:27.299709+00:00
+w3_d10_t09_a43,10,9,43,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.531,,2026-11-17T20:32:34.976582+00:00
+w3_d10_t09_a44,10,9,44,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.367,,2026-11-17T20:32:42.521287+00:00
+w3_d10_t09_a45,10,9,45,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.586,,2026-11-17T20:32:49.892287+00:00
+w3_d10_t09_a46,10,9,46,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.177,,2026-11-17T20:32:57.483070+00:00
+w3_d10_t09_a47,10,9,47,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.52,,2026-11-17T20:33:04.671942+00:00
+w3_d10_t09_a48,10,9,48,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.496,,2026-11-17T20:33:12.192820+00:00
+w3_d10_t09_a49,10,9,49,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.469,,2026-11-17T20:33:19.706895+00:00
+w3_d10_t09_a50,10,9,50,False,needs_clarification,Qwen→GPT-5.5,qwen/qwen3.8-27b,gpt-5.5,False,,0,False,False,False,,False,False,2.386,,2026-11-17T20:33:27.190293+00:00
+w3_d2_t11_a01,2,11,1,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,12.809,,2026-11-17T20:38:45.238688+00:00
+w3_d2_t12_a02,2,12,2,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,11.284,,2026-11-17T20:39:03.051192+00:00
+w3_d2_t13_a03,2,13,3,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,14.299,,2026-11-17T20:39:19.344550+00:00
+w3_d2_t14_a04,2,14,4,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,12.829,,2026-11-17T20:39:38.653087+00:00
+w3_d2_t15_a05,2,15,5,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,9.326,,2026-11-17T20:39:56.494756+00:00
+w3_d5_t10_a01,5,10,1,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,17.255,,2026-11-17T20:40:11.005023+00:00
+w3_d5_t11_a02,5,11,2,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,13.048,,2026-11-17T20:40:33.271945+00:00
+w3_d5_t12_a03,5,12,3,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,49.02,,2026-11-17T20:40:51.336144+00:00
+w3_d5_t13_a04,5,13,4,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,11.752,,2026-11-17T20:41:45.364585+00:00
+w3_d5_t14_a05,5,14,5,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,18.912,,2026-11-17T20:42:02.119741+00:00
+w3_d5_t15_a06,5,15,6,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,11.64,,2026-11-17T20:42:26.035198+00:00
+w3_d10_t09_a01,10,9,1,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,20.411,,2026-11-17T20:42:42.680746+00:00
+w3_d10_t10_a02,10,10,2,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,16.067,,2026-11-17T20:43:08.105895+00:00
+w3_d10_t11_a03,10,11,3,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,21.717,,2026-11-17T20:43:29.175927+00:00
+w3_d10_t12_a04,10,12,4,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,18.519,,2026-11-17T20:43:55.896770+00:00
+w3_d10_t13_a05,10,13,5,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,25.257,,2026-11-17T20:44:19.419781+00:00
+w3_d10_t14_a06,10,14,6,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,30.55,,2026-11-17T20:44:49.685723+00:00
+w3_d10_t15_a07,10,15,7,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,17.903,,2026-11-17T20:45:25.243785+00:00
+w3_stress15_t01,15,1,1,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,54.22,,2026-11-17T20:52:38.663171+00:00
+w3_stress15_t02,15,2,2,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,70.457,,2026-11-17T20:53:52.138700+00:00
+w3_stress15_t03,15,3,3,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,71.537,,2026-11-17T20:55:06.688243+00:00
+w3_stress15_t04,15,4,4,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,67.705,,2026-11-17T20:56:17.411330+00:00
+w3_stress15_t05,15,5,5,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,60.822,,2026-11-17T20:57:21.239179+00:00
+w3_stress15_t06,15,6,6,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter,0,True,False,False,passed,True,True,24.182,,2026-11-17T20:57:48.423955+00:00
+w3_stress15_t07,15,7,7,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,65.918,,2026-11-17T20:58:57.348088+00:00
+w3_stress15_t08,15,8,8,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,62.765,,2026-11-17T21:00:03.125906+00:00
+w3_stress15_t09,15,9,9,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,78.881,,2026-11-17T21:01:25.011604+00:00
+w3_stress15_t10,15,10,10,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,105.971,,2026-11-17T21:03:13.975073+00:00
+w3_stress15_t11,15,11,11,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,59.995,,2026-11-17T21:04:16.992045+00:00
+w3_stress15_t12,15,12,12,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,openrouter_escalated,1,False,True,False,passed,True,True,72.03,,2026-11-17T21:05:32.034604+00:00
+w3_stress_fb_t01,15,1,1,True,,Qwen→GPT-5.5,qwen/qwen3.8-27b,openai/gpt-5.5,True,deterministic_fallback,4,False,False,True,passed,True,True,91.071,,2026-11-17T21:08:32.079629+00:00

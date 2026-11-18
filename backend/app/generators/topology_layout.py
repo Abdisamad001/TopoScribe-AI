@@ -185,12 +185,6 @@ def _sparse_reason(
     return None
 
 
-def _topology_too_sparse_for_plan(
-    topology_dict: Dict[str, Any], design_plan: Optional[Dict[str, Any]]
-) -> bool:
-    return _sparse_reason(topology_dict, design_plan) is not None
-
-
 def _allowed_department_names(design_plan: Optional[Dict[str, Any]]) -> set:
     allowed: set = set()
     if not isinstance(design_plan, dict):

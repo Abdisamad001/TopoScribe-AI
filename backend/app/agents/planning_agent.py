@@ -1,5 +1,5 @@
 from app.graph.state import NetworkDesignState
-from app.utils.llm import call_llm
+from app.utils.llm import OPENROUTER_GPT55_MODEL, _resolve_openai_model, call_llm
 from app.utils.planning_helpers import (
     LITERAL_HOST_NODE_THRESHOLD,
     _apply_sme_defaults,
@@ -110,9 +110,12 @@ Return ONLY valid JSON:
     
     try:
         with langwatch.span(name="Planning Agent"):
+            planning_model = _resolve_openai_model("OPENAI_PLANNING_MODEL")
             langwatch.get_current_span().update(
                 tier="planning",
                 reasoning_effort="low",
+                provider="openrouter",
+                model=planning_model or OPENROUTER_GPT55_MODEL,
             )
             response_text = call_llm(prompt, tier="planning", reasoning_effort="low")
         

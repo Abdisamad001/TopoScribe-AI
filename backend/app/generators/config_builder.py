@@ -329,20 +329,6 @@ def _host_config_vlan(node) -> Optional[int]:
     except (TypeError, ValueError):
         return None
 
-def _access_end_devices(topology, switch_id: str) -> List[Any]:
-    out: List[Any] = []
-    for nid in _neighbor_ids(topology, switch_id):
-        n = next((x for x in topology.nodes if x.id == nid), None)
-        if not n:
-            continue
-        nt = n.type or ""
-        if _is_router(nt):
-            continue
-        if _is_switch(nt):
-            continue
-        out.append(n)
-    return out
-
 def _resolve_vlan_for_host(
     host,
     switch_node,
