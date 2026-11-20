@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "pt-api:enable": "node ./scripts/pt-api.mjs enable",
+    "pt-api:disable": "node ./scripts/pt-api.mjs disable",
+    "dev": "node ./scripts/pt-api.mjs enable && next dev",
+    "build": "node ./scripts/pt-api.mjs disable && next build",
     "start": "next start",
     "lint": "eslint"
   },

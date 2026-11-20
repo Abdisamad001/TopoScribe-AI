@@ -1,4 +1,8 @@
-/** Browser-safe Packet Tracer client (talks only to Next.js /api/pt/*). */
+/**
+ * Browser-safe Packet Tracer client (talks to Next.js /api/pt/*).
+ * Those routes exist only during local `npm run dev` (see local/pt-api/).
+ * On Cloudflare static export they are absent — UI fails soft to empty/disabled.
+ */
 
 const PT_LIST_TIMEOUT_MS = 4000;
 const PT_STATUS_TIMEOUT_MS = 8000;
