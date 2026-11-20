@@ -5,6 +5,8 @@ import json
 import os
 import shutil
 import subprocess
+import threading
+import time
 import uuid
 from pathlib import Path
 from typing import Any, Dict, Optional, Set
@@ -15,6 +17,13 @@ PROJECTS_DIR = ROOT / "results" / "packettracer_projects"
 # In-flight / completed execution ids for duplicate protection (process-local).
 _SEEN_EXECUTIONS: Set[str] = set()
 _ACTIVE_EXECUTIONS: Set[str] = set()
+
+# Status probes spawn uvx and can take tens of seconds — cache + single-flight
+# so polling does not wedge the whole FastAPI worker.
+_STATUS_TTL_S = 12.0
+_STATUS_LOCK = threading.Lock()
+_STATUS_INFLIGHT = threading.Event()
+_STATUS_CACHE: Dict[str, Any] = {"ts": 0.0, "data": None}
 
 
 def projects_dir() -> Path:
@@ -71,23 +80,59 @@ def check_token(provided: Optional[str]) -> bool:
 
 
 def status_probe() -> Dict[str, Any]:
-    """Lightweight status via worker bridge check (short request)."""
+    """Cached bridge/canvas status. Safe to poll; never blocks other requests for long when cached."""
     if not is_enabled():
-        return {"ready": False, "enabled": False, "detail": "PACKETTRACER_ENABLED is false"}
+        return {
+            "ready": False,
+            "enabled": False,
+            "canvas_empty": False,
+            "detail": "PACKETTRACER_ENABLED is false",
+        }
     if shutil.which("uvx") is None:
-        return {"ready": False, "enabled": True, "detail": "uvx not found on PATH"}
+        return {
+            "ready": False,
+            "enabled": True,
+            "canvas_empty": False,
+            "detail": "uvx not found on PATH",
+        }
 
-    execution_id = f"status-{uuid.uuid4().hex[:8]}"
-    req = {
-        "execution_id": execution_id,
-        "topology": {"nodes": [], "links": [], "metadata": {"cabling": []}},
-        "cisco_configs": {},
-        "configurations": {},
-        "project_dir": str(projects_dir() / "_status"),
-        "mcp_url": mcp_base_url(),
-        "status_only": True,
-    }
-    # Inline quick httpx check without full worker when possible
+    now = time.time()
+    with _STATUS_LOCK:
+        cached = _STATUS_CACHE.get("data")
+        ts = float(_STATUS_CACHE.get("ts") or 0.0)
+        if cached is not None and (now - ts) < _STATUS_TTL_S:
+            return dict(cached)
+        # Another thread already probing — return stale or a fast "checking" payload
+        if _STATUS_INFLIGHT.is_set():
+            if cached is not None:
+                return dict(cached)
+            return {
+                "ready": False,
+                "enabled": True,
+                "canvas_empty": False,
+                "detail": "Checking Packet Tracer…",
+            }
+        _STATUS_INFLIGHT.set()
+
+    try:
+        data = _status_probe_uncached()
+    finally:
+        _STATUS_INFLIGHT.clear()
+
+    with _STATUS_LOCK:
+        _STATUS_CACHE["ts"] = time.time()
+        _STATUS_CACHE["data"] = data
+    return dict(data)
+
+
+def invalidate_status_cache() -> None:
+    with _STATUS_LOCK:
+        _STATUS_CACHE["ts"] = 0.0
+        _STATUS_CACHE["data"] = None
+
+
+def _status_probe_uncached() -> Dict[str, Any]:
+    """Actual MCP HTTP + bridge/canvas check (slow)."""
     try:
         import httpx
 
@@ -106,22 +151,23 @@ def status_probe() -> Dict[str, Any]:
                 "clientInfo": {"name": "toposcribe-status", "version": "0.1"},
             },
         }
-        with httpx.Client(timeout=5.0) as client:
+        with httpx.Client(timeout=3.0) as client:
             r = client.post(url, headers=headers, json=body)
             if r.status_code != 200:
                 return {
                     "ready": False,
                     "enabled": True,
                     "mcp_url": mcp_base_url(),
+                    "canvas_empty": False,
                     "detail": f"MCP HTTP {r.status_code}",
                 }
-        # Full bridge status via worker status_only path would need PT; call worker tool path
         return _bridge_status_via_worker()
     except Exception as e:
         return {
             "ready": False,
             "enabled": True,
             "mcp_url": mcp_base_url(),
+            "canvas_empty": False,
             "detail": f"MCP unreachable: {e}",
         }
 
@@ -188,7 +234,7 @@ asyncio.run(main())
             ],
             capture_output=True,
             text=True,
-            timeout=45,
+            timeout=20,
             check=False,
         )
         if proc.returncode != 0:

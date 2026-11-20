@@ -1,5 +1,17 @@
 /** Browser-safe Packet Tracer client (talks only to Next.js /api/pt/*). */
 
+const PT_LIST_TIMEOUT_MS = 4000;
+const PT_STATUS_TIMEOUT_MS = 8000;
+
+function withTimeout(ms: number): AbortSignal {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms);
+  }
+  const ctrl = new AbortController();
+  window.setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
+
 export type PtStatus = {
   ready: boolean;
   enabled?: boolean;
@@ -64,7 +76,10 @@ export type PtExecuteResult = {
 };
 
 export async function fetchPtStatus(): Promise<PtStatus> {
-  const res = await fetch('/api/pt/status', { cache: 'no-store' });
+  const res = await fetch('/api/pt/status', {
+    cache: 'no-store',
+    signal: withTimeout(PT_STATUS_TIMEOUT_MS),
+  });
   return res.json();
 }
 
@@ -90,7 +105,10 @@ export async function executePt(body: {
 
 export async function listPtProjects(designId?: string | null): Promise<PtProject[]> {
   const qs = designId ? `?design_id=${encodeURIComponent(designId)}` : '';
-  const res = await fetch(`/api/pt/projects${qs}`, { cache: 'no-store' });
+  const res = await fetch(`/api/pt/projects${qs}`, {
+    cache: 'no-store',
+    signal: withTimeout(PT_LIST_TIMEOUT_MS),
+  });
   const data = await res.json().catch(() => ({ projects: [] }));
   return Array.isArray(data?.projects) ? data.projects : [];
 }

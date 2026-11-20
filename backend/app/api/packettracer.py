@@ -1,6 +1,7 @@
 """Optional Packet Tracer execute API (disabled by default)."""
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, Query
@@ -8,6 +9,7 @@ from fastapi.responses import FileResponse
 
 from app.integrations.packettracer.client import (
     check_token,
+    invalidate_status_cache,
     is_enabled,
     projects_dir,
     status_probe,
@@ -41,7 +43,9 @@ def _safe_execution_id(execution_id: str) -> str:
 
 
 @router.get("/status")
-def packettracer_status(x_pt_token: Optional[str] = Header(default=None, alias="X-PT-Token")):
+async def packettracer_status(
+    x_pt_token: Optional[str] = Header(default=None, alias="X-PT-Token"),
+):
     if not is_enabled():
         return {
             "ready": False,
@@ -51,11 +55,12 @@ def packettracer_status(x_pt_token: Optional[str] = Header(default=None, alias="
         }
     if not check_token(x_pt_token):
         raise HTTPException(status_code=401, detail="Invalid or missing PACKETTRACER_TOKEN")
-    return status_probe()
+    # Off the event loop so list/download stay responsive while MCP is probed.
+    return await asyncio.to_thread(status_probe)
 
 
 @router.post("/execute")
-def packettracer_execute(
+async def packettracer_execute(
     body: PacketTracerExecuteRequest,
     x_pt_token: Optional[str] = Header(default=None, alias="X-PT-Token"),
 ):
@@ -67,7 +72,8 @@ def packettracer_execute(
             design_id = body.options.get("design_id")
         if not design_name:
             design_name = body.options.get("design_name")
-    return execute_packettracer(
+    result = await asyncio.to_thread(
+        execute_packettracer,
         topology=body.topology,
         cisco_configs=body.cisco_configs,
         configurations=body.configurations,
@@ -75,6 +81,8 @@ def packettracer_execute(
         design_id=design_id,
         design_name=design_name,
     )
+    invalidate_status_cache()
+    return result
 
 
 @router.get("/projects")

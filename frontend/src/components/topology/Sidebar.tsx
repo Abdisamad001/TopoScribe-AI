@@ -22,6 +22,7 @@ export type AppView =
     | 'projects'
     | 'reports'
     | 'chats'
+    | 'packettracer'
     | 'documentation';
 
 function NavTooltip({ label }: { label: string }) {
@@ -163,8 +164,9 @@ export default function Sidebar({
                     icon: <RobotIcon size={18} weight="regular" className="shrink-0" />,
                 })}
                 {navItem({
-                    label: 'Validation',
-                    disabled: true,
+                    label: 'Packet Tracer',
+                    active: activeView === 'packettracer',
+                    onClick: () => onNavigate('packettracer'),
                     icon: <LightningIcon size={18} weight="regular" className="shrink-0" />,
                 })}
             </nav>

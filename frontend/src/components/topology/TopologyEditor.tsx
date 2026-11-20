@@ -166,8 +166,19 @@ export default function TopologyEditor({
                 }
             }
         };
-        poll();
-        const id = window.setInterval(poll, 8000);
+        let inFlight = false;
+        const safePoll = async () => {
+            if (inFlight || cancelled) return;
+            inFlight = true;
+            try {
+                await poll();
+            } finally {
+                inFlight = false;
+            }
+        };
+        safePoll();
+        // Status hits MCP; keep interval loose so we don't pile up requests.
+        const id = window.setInterval(safePoll, 20000);
         return () => {
             cancelled = true;
             window.clearInterval(id);

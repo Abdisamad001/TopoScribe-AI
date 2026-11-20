@@ -28,15 +28,20 @@ export default function PtProjectsPopover({
 
   useEffect(() => {
     let cancelled = false;
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) setProjects((prev) => (prev === null ? [] : prev));
+    }, 2500);
     listPtProjects(designId)
       .then((rows) => {
         if (!cancelled) setProjects(rows);
       })
       .catch(() => {
         if (!cancelled) setProjects([]);
-      });
+      })
+      .finally(() => window.clearTimeout(failSafe));
     return () => {
       cancelled = true;
+      window.clearTimeout(failSafe);
     };
   }, [designId]);
 
