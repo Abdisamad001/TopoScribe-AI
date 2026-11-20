@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShareNetworkIcon, StarIcon, TrashIcon, CopySimpleIcon } from '@phosphor-icons/react';
+import { ShareNetworkIcon, StarIcon, TrashIcon, CopySimpleIcon, BroadcastIcon } from '@phosphor-icons/react';
 import type { Design } from '@/lib/api';
 import { formatRelativeTime } from '@/lib/formatDate';
+import { listPtProjects, type PtProject } from '@/lib/ptClient';
+import PtProjectsPopover from './PtProjectsPopover';
 
 function UpdatedLabel({ iso }: { iso: string }) {
     const [label, setLabel] = useState('');
@@ -36,7 +38,29 @@ export default function DesignCardGrid({
     onDelete: (id: string) => void;
 }) {
     const [pendingDelete, setPendingDelete] = useState<Design | null>(null);
+    const [ptByDesign, setPtByDesign] = useState<Record<string, PtProject[]>>({});
+    const [ptOpenFor, setPtOpenFor] = useState<Design | null>(null);
     const removingTemplate = removeAs === 'template';
+
+    useEffect(() => {
+        let cancelled = false;
+        listPtProjects()
+            .then((rows) => {
+                if (cancelled) return;
+                const map: Record<string, PtProject[]> = {};
+                for (const row of rows) {
+                    if (!row.design_id) continue;
+                    (map[row.design_id] ||= []).push(row);
+                }
+                setPtByDesign(map);
+            })
+            .catch(() => {
+                if (!cancelled) setPtByDesign({});
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [designs]);
 
     if (designs.length === 0) {
         const Icon = emptyIcon === 'star' ? StarIcon : ShareNetworkIcon;
@@ -62,6 +86,27 @@ export default function DesignCardGrid({
                         className="group ui-card ui-card--button design-card"
                     >
                         <div className="design-card__actions">
+                            {(ptByDesign[design.id]?.length ?? 0) > 0 && (
+                                <span
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Packet Tracer projects"
+                                    title={`${ptByDesign[design.id].length} Packet Tracer project(s)`}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        setPtOpenFor(design);
+                                    }}
+                                    onKeyDown={(event) => {
+                                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        setPtOpenFor(design);
+                                    }}
+                                    className="ui-icon-btn text-teal-400"
+                                >
+                                    <BroadcastIcon size={13} weight="fill" />
+                                </span>
+                            )}
                             <span
                                 role="button"
                                 tabIndex={0}
@@ -178,6 +223,14 @@ export default function DesignCardGrid({
                         </div>
                     </div>
                 </div>
+            )}
+
+            {ptOpenFor && (
+                <PtProjectsPopover
+                    designId={ptOpenFor.id}
+                    designName={ptOpenFor.name}
+                    onClose={() => setPtOpenFor(null)}
+                />
             )}
         </>
     );

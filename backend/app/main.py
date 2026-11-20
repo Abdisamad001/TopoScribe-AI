@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 def _setup_langwatch() -> None:
@@ -35,6 +35,7 @@ from app.api import (
     chats,
     clarify,
     design,
+    packettracer,
     projects,
     reports,
     saved_designs,
@@ -57,7 +58,7 @@ def create_tables():
 # Allow CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, specify frontend URL
+    allow_origins=["*"],  # In production, specify frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -72,6 +73,10 @@ app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(chats.router, prefix="/api/chats", tags=["chats"])
 app.include_router(topology.router, prefix="/api/topology", tags=["topology"])
+# Optional Packet Tracer integration (no-op unless PACKETTRACER_ENABLED=true)
+app.include_router(
+    packettracer.router, prefix="/api/packettracer", tags=["packettracer"]
+)
 
 @app.get("/")
 def read_root():
