@@ -100,8 +100,8 @@ Source: live measurements and tests recorded during Part 2 work. No new figures.
 |---|---|---|
 | 2 | 2/3 switches, core 0/3, accepted 0/3 | 3/3 switches, core 3/3, accepted 3/3 |
 | 5 | 5/6 switches, core 0/3, accepted 0/3 | 6/6 switches, core 1/1, accepted 1/1 |
-| 10 | 10/11 switches, core 0/3, accepted 0/3 | not run |
-| 15 | 15/16 switches, core 0/3, accepted 0/3 | not run |
+| 10 | 10/11 switches, core 0/3, accepted 0/3 | core 1/1, accepted 1/1 |
+| 15 | 15/16 switches, core 0/3, accepted 0/3 | core 1/1, accepted 1/1 |
 
 
 
