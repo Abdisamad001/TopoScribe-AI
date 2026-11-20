@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Globe, CheckCircle, AlertTriangle } from 'lucide-react';
+import { GlobeIcon, CheckCircleIcon, WarningIcon } from '@phosphor-icons/react';
 
 const RouterNode = ({ data, selected }: NodeProps) => {
     const status = data.simulationStatus as string;
@@ -15,17 +15,17 @@ const RouterNode = ({ data, selected }: NodeProps) => {
         `}>
             <div className="flex flex-col items-center">
                 <div className={`p-2 rounded-full mb-2 relative ${status === 'error' ? 'bg-rose-300/20' : 'bg-cyan-300/20'}`}>
-                    <Globe size={21} className={status === 'error' ? 'text-rose-300' : 'text-cyan-300'} />
+                    <GlobeIcon size={21} weight="regular" className={status === 'error' ? 'text-rose-300' : 'text-cyan-300'} />
 
                     {/* Status Icons Overlay */}
                     {status === 'success' && (
                         <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full p-0.5 shadow">
-                            <CheckCircle size={14} className="text-emerald-400 fill-emerald-900/60" />
+                            <CheckCircleIcon size={14} weight="fill" className="text-emerald-400" />
                         </div>
                     )}
                     {status === 'error' && (
                         <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full p-0.5 shadow">
-                            <AlertTriangle size={14} className="text-rose-400 fill-rose-900/60" />
+                            <WarningIcon size={14} weight="fill" className="text-rose-400" />
                         </div>
                     )}
                 </div>

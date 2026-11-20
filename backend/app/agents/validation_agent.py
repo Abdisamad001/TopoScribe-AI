@@ -1,12 +1,9 @@
 from app.graph.state import NetworkDesignState
 from app.generators.cisco import generate_cisco_config
+from app.utils.validation_helpers import check_ip_and_subnet_conflicts
 from typing import Dict, Any
 
 def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Validation Agent: Validates and generates final configs.
-    """
-    
     topology = state.get("topology")
     configurations = state.get("configurations")
 
@@ -50,32 +47,8 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
         if link.target not in node_ids:
             errors.append(f"Link {link.id}: target {link.target} not found")
     
-    # Check 2: No IP conflicts (interfaces + router subinterfaces)
-    used_ips = set()
-    for node_id, config in configurations.items():
-        for iface in config.get("interfaces", []):
-            ip = iface.get("ip")
-            if ip:
-                if ip in used_ips:
-                    errors.append(f"IP conflict: {ip} used multiple times")
-                used_ips.add(ip)
-        for s in config.get("subinterfaces") or []:
-            ip = s.get("ip")
-            if ip:
-                if ip in used_ips:
-                    errors.append(f"IP conflict: {ip} used multiple times (subinterface)")
-                used_ips.add(ip)
-
-    # Check 2b: Management interface IP conflicts
-    for node_id, config in configurations.items():
-        mgmt_ip = config.get("management_ip")
-        if mgmt_ip:
-            if mgmt_ip in used_ips:
-                errors.append(
-                    f"IP conflict: management IP {mgmt_ip} on {node_id} "
-                    f"already used by another interface"
-                )
-            used_ips.add(mgmt_ip)
+    # Check 2 / 2b: IP uniqueness, management overlap, subnet overlap (ipaddress)
+    errors.extend(check_ip_and_subnet_conflicts(topology, configurations))
 
     # Check 3: VLAN plan (switches): dynamic VLAN ids and port modes
     for node_id, config in configurations.items():
@@ -89,8 +62,9 @@ def validation_node(state: NetworkDesignState) -> Dict[str, Any]:
             if vid is None:
                 errors.append(f"VLAN plan {node_id}: missing vlan id in vlans list")
                 continue
-            if not isinstance(vid, int) or vid < 2 or vid > 4094:
-                errors.append(f"VLAN plan {node_id}: invalid vlan id {vid} (must be 2-4094)")
+            # Allow VLAN 1 (Default fallback) through 4094
+            if not isinstance(vid, int) or vid < 1 or vid > 4094:
+                errors.append(f"VLAN plan {node_id}: invalid vlan id {vid} (must be 1-4094)")
             vlan_ids.append(vid)
         if len(vlan_ids) != len(set(vlan_ids)):
             errors.append(f"VLAN plan {node_id}: duplicate VLAN ids in vlans list")

@@ -1,4 +1,4 @@
-"""Projects = named groups of design ids. Deleting a project keeps the designs."""
+"""Projects."""
 
 from typing import Any, Dict, List, Optional
 

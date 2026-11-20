@@ -23,11 +23,29 @@ import ConfigPanel from './ConfigPanel';
 import ReportModal from './ReportModal';
 import AiCopilot from './AiCopilot';
 import { clarifyRequirements, createChat, updateChat, configureTopology, type ChatMessage } from '@/lib/api';
+import {
+    attachPtProject,
+    executePt,
+    fetchPtStatus,
+    newExecutionId,
+    type PtExecuteResult,
+    type PtStatus,
+} from '@/lib/ptClient';
 import { NetworkNode, Link, GenerationRuntime, ProtocolConfig, TopologyMetadata } from '@/types/network';
-import { GlobeIcon, ShareNetworkIcon, DesktopIcon, NoteIcon, CaretLeftIcon } from '@phosphor-icons/react';
-import { ChevronLeft, Layers, FileText, Share2, Save } from 'lucide-react';
+import PacketTracerPanel from './PacketTracerPanel';
+import {
+    GlobeIcon,
+    ShareNetworkIcon,
+    DesktopIcon,
+    NoteIcon,
+    CaretLeftIcon,
+    FloppyDiskIcon,
+    FileTextIcon,
+    BroadcastIcon,
+    StackIcon,
+} from '@phosphor-icons/react';
 
-// Component shelf cards. The Notes card is a visual placeholder: no node type exists for it yet.
+// Component shelf cards
 const DEVICE_CARDS = [
     { type: 'router', title: 'Router', subtitle: 'L3 Networking', Icon: GlobeIcon, chipClass: 'bg-teal-500', titleHoverClass: 'group-hover:text-teal-300', disabled: false },
     { type: 'switch', title: 'Switch', subtitle: 'L2 Switching', Icon: ShareNetworkIcon, chipClass: 'bg-blue-500', titleHoverClass: 'group-hover:text-blue-300', disabled: false },
@@ -119,6 +137,69 @@ export default function TopologyEditor({
     );
     const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [exportState, setExportState] = React.useState<'idle' | 'configuring' | 'error'>('idle');
+    const [ptStatus, setPtStatus] = React.useState<PtStatus | null>(null);
+    const [ptBusy, setPtBusy] = React.useState(false);
+    const [ptPreparing, setPtPreparing] = React.useState(false);
+    const [ptPanelOpen, setPtPanelOpen] = React.useState(false);
+    const [ptElapsed, setPtElapsed] = React.useState(0);
+    const [ptResult, setPtResult] = React.useState<PtExecuteResult | null>(null);
+    const [ptError, setPtError] = React.useState<string | null>(null);
+    const ptRunLock = React.useRef(false);
+    const pendingPtAttachments = React.useRef<string[]>([]);
+    const designIdRef = React.useRef(designId);
+    designIdRef.current = designId;
+
+    React.useEffect(() => {
+        let cancelled = false;
+        const poll = async () => {
+            try {
+                const s = await fetchPtStatus();
+                if (!cancelled) setPtStatus(s);
+            } catch {
+                if (!cancelled) {
+                    setPtStatus({
+                        ready: false,
+                        enabled: false,
+                        canvas_empty: false,
+                        detail: 'Packet Tracer status unavailable',
+                    });
+                }
+            }
+        };
+        let inFlight = false;
+        const safePoll = async () => {
+            if (inFlight || cancelled) return;
+            inFlight = true;
+            try {
+                await poll();
+            } finally {
+                inFlight = false;
+            }
+        };
+        safePoll();
+        // Status hits MCP; keep interval loose so we don't pile up requests.
+        const id = window.setInterval(safePoll, 20000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(id);
+        };
+    }, []);
+
+    React.useEffect(() => {
+        if (!ptBusy) return;
+        setPtElapsed(0);
+        const id = window.setInterval(() => setPtElapsed((s) => s + 1), 1000);
+        return () => window.clearInterval(id);
+    }, [ptBusy]);
+
+    React.useEffect(() => {
+        if (!designId || pendingPtAttachments.current.length === 0) return;
+        const ids = [...pendingPtAttachments.current];
+        pendingPtAttachments.current = [];
+        ids.forEach((eid) => {
+            attachPtProject(eid, designId).catch(() => {});
+        });
+    }, [designId]);
 
     // Keep Sidebar → Chats in sync whenever the assistant thread grows.
     React.useEffect(() => {
@@ -281,7 +362,7 @@ export default function TopologyEditor({
         onSimulationPath({ path: [], success: true });
     }, [onSimulationPath]);
 
-    // Apply topology to the canvas. Does not touch chat — clarification history must stay.
+    // clarification history must stay.
     const onTopologyGenerated = useCallback((newTopology: any, runtime?: GenerationRuntime) => {
         if (newTopology.nodes) setNodes(convertNodes(newTopology.nodes));
         if (newTopology.links) setEdges(convertEdges(newTopology.links));
@@ -292,11 +373,119 @@ export default function TopologyEditor({
         setSelectedNodeId(null);
     }, [setNodes, setEdges, onSimulationPath]);
 
-    // Load a saved design's topology through the same path as AI generation
+    // Load a saved design's 
     React.useEffect(() => {
         if (initialTopology) onTopologyGenerated(initialTopology);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, []);
+
+    const buildDomainTopology = React.useCallback(
+        (meta?: TopologyMetadata) => ({
+            nodes: convertNodesToDomain(nodes),
+            links: convertEdgesToDomain(edges),
+            protocols: topologyProtocols,
+            metadata: meta || topologyMeta || {},
+        }),
+        [nodes, edges, topologyProtocols, topologyMeta],
+    );
+
+    const ensureConfigured = React.useCallback(async (): Promise<TopologyMetadata> => {
+        const meta = topologyMeta || {};
+        const cisco = meta.cisco_configs || {};
+        const cabling = meta.cabling || [];
+        if (Object.keys(cisco).length > 0 && cabling.length > 0) {
+            return meta;
+        }
+        setPtPreparing(true);
+        const data = await configureTopology(buildDomainTopology(meta));
+        const enriched = data?.topology?.metadata as TopologyMetadata | undefined;
+        if (!enriched) {
+            throw new Error('Configure returned no metadata');
+        }
+        setTopologyMeta(enriched);
+        // Keep host IPs / config from configure response on canvas when present
+        const enrichedNodes = data?.topology?.nodes;
+        if (Array.isArray(enrichedNodes) && enrichedNodes.length > 0) {
+            setNodes(convertNodes(enrichedNodes));
+        }
+        setPtPreparing(false);
+        return enriched;
+    }, [topologyMeta, buildDomainTopology, setNodes]);
+
+    const ptDisableReason = React.useMemo(() => {
+        if (ptBusy) return 'A Packet Tracer run is already in progress';
+        if (!ptStatus) return 'Checking Packet Tracer…';
+        if (ptStatus.enabled === false) {
+            return ptStatus.detail || 'Packet Tracer feature is disabled';
+        }
+        if (!ptStatus.ready) {
+            if (ptStatus.canvas_empty === false) {
+                return ptStatus.detail || 'Packet Tracer canvas is not empty — open a blank project';
+            }
+            return ptStatus.detail || 'Packet Tracer is not ready';
+        }
+        if (nodes.length === 0) return 'Canvas has no devices';
+        return null;
+    }, [ptBusy, ptStatus, nodes.length]);
+
+    const onLaunchPtClick = async () => {
+        if (ptRunLock.current || ptBusy) return;
+        if (ptDisableReason && ptDisableReason !== 'A Packet Tracer run is already in progress') {
+            // Still allow click only when reason is null; guard above
+        }
+        if (ptDisableReason) return;
+        ptRunLock.current = true;
+        setPtBusy(true);
+        setPtPanelOpen(true);
+        setPtResult(null);
+        setPtError(null);
+        setPtPreparing(false);
+        const executionId = newExecutionId();
+        try {
+            const meta = await ensureConfigured();
+            const cisco = meta.cisco_configs || {};
+            const cabling = meta.cabling || [];
+            if (Object.keys(cisco).length === 0 || cabling.length === 0) {
+                throw new Error('No CLI configs or cabling available after configure');
+            }
+            setPtPreparing(false);
+            const topology = buildDomainTopology(meta);
+            const result = await executePt({
+                topology,
+                cisco_configs: cisco,
+                configurations: (meta.configurations || {}) as Record<string, unknown>,
+                execution_id: executionId,
+                design_id: designIdRef.current || null,
+                design_name: designName || 'network-design',
+            });
+            setPtResult(result);
+            if (!result.ok) {
+                setPtError(result.message || 'Packet Tracer deploy failed');
+            }
+            if (result.ok && result.execution_id && !designIdRef.current) {
+                pendingPtAttachments.current.push(result.execution_id);
+            }
+            // Refresh readiness (canvas will be occupied after success)
+            fetchPtStatus().then(setPtStatus).catch(() => {});
+        } catch (e) {
+            setPtPreparing(false);
+            const msg = e instanceof Error ? e.message : 'Packet Tracer deploy failed';
+            setPtError(msg);
+            setPtResult({
+                execution_id: executionId,
+                ok: false,
+                stage: 'frontend',
+                message: msg,
+                devices: [],
+                links: [],
+                cli_lines: [],
+                pings: [],
+            });
+        } finally {
+            setPtBusy(false);
+            ptRunLock.current = false;
+        }
+    };
 
     const onSaveClick = async () => {
         setSaveState('saving');
@@ -308,6 +497,13 @@ export default function TopologyEditor({
                 metadata: topologyMeta,
             });
             setSaveState('saved');
+            // Attach orphan PT runs once design exists
+            const id = designIdRef.current;
+            if (id && pendingPtAttachments.current.length > 0) {
+                const ids = [...pendingPtAttachments.current];
+                pendingPtAttachments.current = [];
+                await Promise.all(ids.map((eid) => attachPtProject(eid, id).catch(() => {})));
+            }
         } catch {
             setSaveState('error');
         }
@@ -409,7 +605,7 @@ export default function TopologyEditor({
                         title="Back to designs"
                         className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
                     >
-                        <ChevronLeft size={18} />
+                        <CaretLeftIcon size={18} weight="regular" />
                     </button>
                     <div className="min-w-0">
                         {editingTitle ? (
@@ -446,7 +642,7 @@ export default function TopologyEditor({
                         disabled={saveState === 'saving'}
                         className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
                     >
-                        <Save size={13} />
+                        <FloppyDiskIcon size={13} weight="regular" />
                         {saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Save failed' : 'Save'}
                     </button>
                     <button
@@ -455,7 +651,7 @@ export default function TopologyEditor({
                         disabled={exportState === 'configuring'}
                         className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
                     >
-                        <FileText size={13} />
+                        <FileTextIcon size={13} weight="regular" />
                         {exportState === 'configuring'
                             ? 'Preparing…'
                             : exportState === 'error'
@@ -464,12 +660,17 @@ export default function TopologyEditor({
                     </button>
                     <button
                         type="button"
-                        disabled
-                        title="Coming soon"
-                        className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-900 opacity-70"
+                        onClick={onLaunchPtClick}
+                        disabled={Boolean(ptDisableReason)}
+                        title={ptDisableReason || 'Deploy open design into local Packet Tracer'}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-900 transition-opacity hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        <Share2 size={13} />
-                        Share design
+                        <BroadcastIcon size={13} weight="regular" />
+                        {ptBusy
+                            ? ptPreparing
+                                ? 'Preparing…'
+                                : 'Running…'
+                            : 'Launch PT'}
                     </button>
                 </div>
             </div>
@@ -543,7 +744,7 @@ export default function TopologyEditor({
                                             <div className="text-[11px] text-zinc-500">{subtitle}</div>
                                         </div>
                                         {disabled && (
-                                            <span className="ml-auto rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-500">Soon</span>
+                                            <span className="ml-auto rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-500"></span>
                                         )}
                                     </div>
                                 ))}
@@ -556,7 +757,7 @@ export default function TopologyEditor({
                             aria-label="Expand component library"
                             className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#111]/95 px-2.5 py-1.5 text-xs font-medium text-zinc-300 shadow-lg backdrop-blur-md transition-colors hover:bg-white/5 hover:text-white"
                         >
-                            <Layers size={14} />
+                            <StackIcon size={14} weight="regular" />
                             Components
                         </button>
                     )}
@@ -599,6 +800,15 @@ export default function TopologyEditor({
                     lastUpdated: new Date().toISOString()
                 }}
             />
+            <PacketTracerPanel
+                isOpen={ptPanelOpen}
+                onClose={() => setPtPanelOpen(false)}
+                running={ptBusy && !ptPreparing}
+                preparing={ptPreparing}
+                elapsedSec={ptElapsed}
+                result={ptResult}
+                errorMessage={ptError}
+            />
             </div>
         </div>
     );
@@ -606,22 +816,32 @@ export default function TopologyEditor({
 
 // Helper to convert back to domain model
 const convertNodesToDomain = (nodes: Node[]): NetworkNode[] => {
-    return nodes.map(n => ({
-        id: n.id,
-        type: n.type as any,
-        name: n.data.label as string,
-        x: n.position.x,
-        y: n.position.y,
-        interfaces: [
-            {
-                id: 'eth0',
-                name: 'Ethernet0',
-                ipAddress: (n.data.ip as string) || '',
-                subnetMask: (n.data as { subnetMask?: string }).subnetMask || undefined,
-            },
-        ],
-        config: (n.data as any).config || {},
-    }));
+    return nodes.map((n) => {
+        const ip = (n.data.ip as string) || '';
+        const mask = (n.data as { subnetMask?: string }).subnetMask || undefined;
+        const ifaceName =
+            n.type === 'host' ? 'FastEthernet0' : n.type === 'router' ? 'GigabitEthernet0/0' : 'FastEthernet0/1';
+        return {
+            id: n.id,
+            type: n.type as NetworkNode['type'],
+            name: n.data.label as string,
+            x: n.position.x,
+            y: n.position.y,
+            interfaces: [
+                {
+                    id: 'eth0',
+                    name: ifaceName,
+                    ipAddress: ip,
+                    subnetMask: mask,
+                    // Backend / PT mapper also read snake_case
+                    ...({ ip_address: ip, subnet_mask: mask } as object),
+                },
+            ],
+            config: (n.data as { config?: Record<string, unknown> }).config || {},
+            // Preserve display label for backends that read `label`
+            ...({ label: n.data.label as string } as object),
+        } as NetworkNode;
+    });
 };
 
 const convertEdgesToDomain = (edges: Edge[]): Link[] => {

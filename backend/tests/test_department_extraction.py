@@ -1,9 +1,4 @@
-"""Regression tests for the two department-extraction defects found in Phase 7.
-
-1. "N-department <Org>" captured the organisation descriptor as a department.
-2. The free-text fallback only saw uppercase acronyms, so lowercase names were
-   lost, and that narrower deterministic result then overrode a correct
-   LLM-proposed list.
+"""Regression tests
 """
 import pytest
 
@@ -22,11 +17,11 @@ def _names(plan):
     return [d["name"] for d in plan["departments"]]
 
 
-# --- defect 1: "N-department <Org>" -------------------------------------------
+# --- defect 1: "N-department <Org>" 
 
 
 def test_org_descriptor_is_not_captured_as_a_department():
-    """The Phase 7 failure: '4-department SME' yielded ['SME']."""
+
     assert _infer_departments_from_free_text("Design a 4-department SME with 50 users each") == []
     assert _explicit_departments_from_user("Design a 4-department SME with 50 users each", []) == []
 
@@ -56,7 +51,7 @@ def test_stated_count_is_honoured_when_no_names_given():
 
 
 def test_spaced_count_form_still_reads_the_list():
-    """'4 departments A, B' is a list introducer; only the hyphenated form is not."""
+   
     assert _infer_departments_from_free_text("4 departments IT, Finance") == ["IT", "Finance"]
 
 
@@ -65,7 +60,7 @@ def test_named_departments_beat_a_smaller_stated_count():
     assert _names(plan) == ["HR", "IT", "Finance"]
 
 
-# --- defect 2: lowercase and multi-word names ---------------------------------
+# --- defect 2: lowercase and multi-word names 
 
 
 def test_lowercase_department_is_extracted_alongside_an_acronym():
@@ -97,7 +92,7 @@ def test_pcs_quantity_is_not_a_department():
     assert "Pcs" not in _explicit_departments_from_user("finance and JS with five Pcs", [])
 
 
-# --- defect 2: grounding instead of overriding --------------------------------
+
 
 
 def test_correct_llm_proposal_survives_a_narrower_deterministic_match():
@@ -110,7 +105,7 @@ def test_correct_llm_proposal_survives_a_narrower_deterministic_match():
     }
     plan = _apply_sme_defaults(llm_plan, "finance and JS with five Pcs", [])
     assert _names(plan) == ["Finance", "JS"]
-    # The model's own detail is kept, not flattened to defaults.
+   
     assert [d["users"] for d in plan["departments"]] == [5, 5]
 
 
@@ -153,7 +148,7 @@ def test_delegated_request_keeps_the_models_invented_names():
     assert _names(plan) == ["Warehouse", "Dispatch"]
 
 
-# --- multi-turn: the exact Phase 7 conversation -------------------------------
+# --- multi-turn
 
 
 def test_multi_turn_answer_extracts_both_departments():

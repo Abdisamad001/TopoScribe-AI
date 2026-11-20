@@ -1,17 +1,5 @@
-"""
-LLM access layer.
-
-Tier routing (Part 2 escalation scope):
-- "planning"   -> OpenAI. Used unconditionally by the Planning Agent on every call.
-                  This is Planning's assigned model, not a retry/escalation path.
-- "primary"    -> Groq. Used only by Topology attempt 0.
-                  Configuration and Validation are deterministic Python and never
-                  call this layer.
-- "escalated"  -> OpenAI. Invoked only by the Topology Agent's retry path.
-"""
 import os
-from typing import Literal, Optional
-
+from typing import Any, Dict, Literal, Optional
 from dotenv import load_dotenv
 from groq import Groq
 from openai import OpenAI
@@ -19,68 +7,88 @@ from openai import OpenAI
 load_dotenv()
 
 Tier = Literal["planning", "primary", "escalated"]
-# Chat Completions top-level parameter (not the Responses API's nested
-# reasoning={"effort": ...}). Verified live against gpt-5.5: the nested shape
-# raises TypeError; reasoning_effort="low"|"medium"|... is accepted.
+
 ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"]
 
-# qwen/qwen3.6-27b is the default model for Groq.
-GROQ_DEFAULT_MODEL = "qwen/qwen3.8-27b"
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_PRIMARY_MODEL = "qwen/qwen3.8-27b"
+OPENROUTER_GPT55_MODEL = "openai/gpt-5.5"
+
+# [GROQ] model id (same string on OpenRouter); alias kept for imports
+GROQ_DEFAULT_MODEL = OPENROUTER_PRIMARY_MODEL
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
 
 _groq_client: Optional[Groq] = None
 _openai_client: Optional[OpenAI] = None
+_openrouter_client: Optional[OpenAI] = None
 
-# Confirmed against the live API during Part 2 integration testing: gpt-5 class
-# models accept only the default temperature (1) and replace `max_tokens` with
-# `max_completion_tokens`.
 _FIXED_TEMPERATURE_MODEL_PREFIXES = ("gpt-5",)
-
-# Output budget for OpenAI tiers (planning + escalated). Kept at 8000 so GPT-5.5
 
 LLM_MAX_OUTPUT_TOKENS = 8000
 
-# Groq Free-tier TPM is 8000 for qwen/qwen3.6-27b (prompt + requested max_tokens
-# reserved together). Measured 2026-08-27 with reasoning_effort="none"
+PRIMARY_MAX_OUTPUT_TOKENS = 5700
+GROQ_PRIMARY_MAX_OUTPUT_TOKENS = PRIMARY_MAX_OUTPUT_TOKENS
 
-GROQ_PRIMARY_MAX_OUTPUT_TOKENS = 5700
-
-# gpt-5 class models bill internal reasoning against the same budget, so they get
-# an allowance on top to keep their *content* budget equal to the figure above.
-# Reasoning is near-constant with design size (404/485/512 tokens for the three
-# designs measured), so this is sized well clear of the observed range rather
-# than scaled per request.
+# gpt-5 class models
 _REASONING_TOKEN_ALLOWANCE = 2000
 
 
 def _get_groq_client() -> Groq:
-    """Groq client, created on first use so a missing key never breaks imports."""
+    # [GROQ] setup — GROQ_API_KEY; leave live so uncommenting call_llm works
     global _groq_client
     if _groq_client is None:
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
-            raise Exception("Groq call failed: GROQ_API_KEY is not set in the environment.")
+            raise Exception("Groq call failed")
         _groq_client = Groq(api_key=api_key)
     return _groq_client
 
 
 def _get_openai_client() -> OpenAI:
-    """OpenAI client, created on first use so a missing key never breaks imports."""
+    # [OPENAI] setup — OPENAI_API_KEY → api.openai.com; leave live for toggle
     global _openai_client
     if _openai_client is None:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise Exception("OpenAI call failed: OPENAI_API_KEY is not set in the environment.")
+            raise Exception("OpenAI call failed")
         _openai_client = OpenAI(api_key=api_key)
     return _openai_client
 
 
+def _get_openrouter_client() -> OpenAI:
+    # [OPENROUTER] setup — OPENROUTER_API_KEY → openrouter.ai/api/v1
+    global _openrouter_client
+    if _openrouter_client is None:
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise Exception("OpenRouter call failed")
+        _openrouter_client = OpenAI(
+            base_url=OPENROUTER_BASE_URL,
+            api_key=api_key,
+            default_headers={
+                "HTTP-Referer": "https://toposcribe.local",
+                "X-Title": "TopoScribe AI",
+            },
+        )
+    return _openrouter_client
+
+
 def _resolve_openai_model(env_var: str) -> str:
-    return os.getenv(env_var) or OPENAI_FALLBACK_MODEL
+    # [OPENROUTER] only — maps gpt-5.5 → openai/gpt-5.5; [OPENAI] uses short id
+    raw = (os.getenv(env_var) or OPENAI_FALLBACK_MODEL).strip()
+    if raw.startswith("openai/") or raw.startswith("qwen/"):
+        return raw
+    if raw.startswith("gpt-5"):
+        return f"openai/{raw}"
+    return raw
+
+
+def _model_basename(model: str) -> str:
+    return model.split("/")[-1]
 
 
 def _requires_default_params(model: str) -> bool:
-    return model.startswith(_FIXED_TEMPERATURE_MODEL_PREFIXES)
+    return _model_basename(model).startswith(_FIXED_TEMPERATURE_MODEL_PREFIXES)
 
 
 def _call_groq(
@@ -92,8 +100,7 @@ def _call_groq(
 ) -> str:
     client = _get_groq_client()
     kwargs = {}
-    # Qwen3 on Groq: "none" disables thinking mode. Omit the key when unset
-    # so other Groq callers keep the model default.
+
     if reasoning_effort is not None:
         kwargs["reasoning_effort"] = reasoning_effort
     try:
@@ -116,13 +123,15 @@ def _openai_create(
     temperature: float,
     max_tokens: int,
     reasoning_effort: Optional[ReasoningEffort] = None,
+    extra_body: Optional[Dict[str, Any]] = None,
 ):
     messages = [{"role": "user", "content": prompt}]
-    kwargs = {}
-    # Omit the key entirely when unset so the model keeps its own default
-    # (gpt-5.5 → medium). Passing null is not the same as omitting.
+    kwargs: Dict[str, Any] = {}
+
     if reasoning_effort is not None:
         kwargs["reasoning_effort"] = reasoning_effort
+    if extra_body:
+        kwargs["extra_body"] = extra_body
     if _requires_default_params(model):
         return client.chat.completions.create(
             model=model,
@@ -146,6 +155,7 @@ def _call_openai(
     max_tokens: int,
     reasoning_effort: Optional[ReasoningEffort] = None,
 ) -> str:
+    # [OPENAI] Platform chat.completions (planning / escalation)
     client = _get_openai_client()
     try:
         response = _openai_create(
@@ -157,10 +167,49 @@ def _call_openai(
     choice = response.choices[0]
     content = choice.message.content or ""
     if not content.strip():
-        # Reported as its own failure rather than passed on as an empty string,
-        # which downstream parsers would misdiagnose as malformed JSON.
         raise Exception(
             f"OpenAI call failed: {model} returned no content "
+            f"(finish_reason={choice.finish_reason})."
+        )
+    return content
+
+
+def _call_openrouter(
+    prompt: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    reasoning_effort: Optional[ReasoningEffort] = None,
+) -> str:
+    # [OPENROUTER] chat.completions for all live tiers
+    client = _get_openrouter_client()
+    extra_body: Dict[str, Any] = {}
+    create_effort: Optional[ReasoningEffort] = None
+
+    if reasoning_effort is not None:
+        if _requires_default_params(model):
+            create_effort = reasoning_effort
+        else:
+            extra_body["reasoning"] = {"effort": reasoning_effort}
+
+    try:
+        response = _openai_create(
+            client,
+            model,
+            prompt,
+            temperature,
+            max_tokens,
+            reasoning_effort=create_effort,
+            extra_body=extra_body or None,
+        )
+    except Exception as e:
+        raise Exception(f"OpenRouter call failed: {str(e)}")
+
+    choice = response.choices[0]
+    content = choice.message.content or ""
+    if not content.strip():
+        raise Exception(
+            f"OpenRouter call failed: {model} returned no content "
             f"(finish_reason={choice.finish_reason})."
         )
     return content
@@ -174,51 +223,47 @@ def call_llm(
     max_tokens: Optional[int] = None,
     reasoning_effort: Optional[ReasoningEffort] = None,
 ) -> str:
-    """
-    Routes a prompt to the provider and model assigned to the given tier.
-
-    reasoning_effort is Chat Completions-only. When None (the default), the
-    key is omitted so each provider keeps its own default (medium for gpt-5.5;
-    thinking-on for Qwen3 on Groq). Topology's escalated path must keep
-    calling without an OpenAI override unless separately re-tuned.
-    """
     if max_tokens is None:
         max_tokens = (
-            GROQ_PRIMARY_MAX_OUTPUT_TOKENS
+            PRIMARY_MAX_OUTPUT_TOKENS
             if tier == "primary"
             else LLM_MAX_OUTPUT_TOKENS
         )
+
+    # --- REPORT (Groq + OpenAI) 
+    # if tier == "primary":
+    #     return _call_groq(
+    #         prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens, reasoning_effort
+    #     )
+    # if tier == "planning":
+    #     return _call_openai(
+    #         prompt,
+    #         (os.getenv("OPENAI_PLANNING_MODEL") or OPENAI_FALLBACK_MODEL),
+    #         temperature, max_tokens, reasoning_effort,
+    #     )
+    # if tier == "escalated":
+    #     return _call_openai(
+    #         prompt,
+    #         (os.getenv("OPENAI_ESCALATION_MODEL") or OPENAI_FALLBACK_MODEL),
+    #         temperature, max_tokens, reasoning_effort,
+    #     )
+    # raise ValueError(f"Unknown LLM tier: {tier!r}")
+
+    # --- LIVE (OpenRouter) 
     if tier == "primary":
-        return _call_groq(
-            prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens, reasoning_effort
+        return _call_openrouter(
+            prompt, OPENROUTER_PRIMARY_MODEL, temperature, max_tokens, reasoning_effort
         )
     if tier == "planning":
-        return _call_openai(
+        return _call_openrouter(
             prompt,
             _resolve_openai_model("OPENAI_PLANNING_MODEL"),
-            temperature,
-            max_tokens,
-            reasoning_effort,
+            temperature, max_tokens, reasoning_effort,
         )
     if tier == "escalated":
-        # Intentionally does not force an effort — leave at model default.
-        return _call_openai(
+        return _call_openrouter(
             prompt,
             _resolve_openai_model("OPENAI_ESCALATION_MODEL"),
-            temperature,
-            max_tokens,
-            reasoning_effort,
+            temperature, max_tokens, reasoning_effort,
         )
     raise ValueError(f"Unknown LLM tier: {tier!r}")
-
-
-def get_llm_response(
-    prompt: str,
-    model: str = GROQ_DEFAULT_MODEL,
-    temperature: float = 0.25,
-    max_tokens: int = 2000,
-) -> str:
-    """
-    Calls Groq API and returns response text.
-    """
-    return _call_groq(prompt, model, temperature, max_tokens)

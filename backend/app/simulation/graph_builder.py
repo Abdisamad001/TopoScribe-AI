@@ -2,9 +2,6 @@ import networkx as nx
 from app.models.network import Topology
 
 def build_network_graph(topology: Topology) -> nx.Graph:
-    """
-    Converts Topology model to NetworkX graph.
-    """
     G = nx.Graph()
     
     # Add nodes

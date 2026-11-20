@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Bot, X } from 'lucide-react';
+import { RobotIcon, XIcon } from '@phosphor-icons/react';
 import ChatInterface from './ChatInterface';
 import ImmersiveChatPanel, {
     AI_ASSISTANT_SUBTITLE,
@@ -57,7 +57,7 @@ export default function AiCopilot({
                     <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
                         <div className="flex min-w-0 items-center gap-2.5">
                             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">
-                                <Bot size={15} className="text-zinc-200" />
+                                <RobotIcon size={15} weight="regular" className="text-zinc-200" />
                             </span>
                             <div className="min-w-0">
                                 <h2 className="text-sm font-semibold text-white">
@@ -72,7 +72,7 @@ export default function AiCopilot({
                             aria-label="Close"
                             className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
                         >
-                            <X size={16} />
+                            <XIcon size={16} weight="regular" />
                         </button>
                     </div>
 
@@ -105,7 +105,7 @@ export default function AiCopilot({
                     title="Ask assistant"
                     className="absolute bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-[#111]/90 px-3 py-2 text-xs font-medium text-zinc-300 shadow-lg backdrop-blur-md transition-colors hover:border-white/25 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
                 >
-                    <Bot size={14} />
+                    <RobotIcon size={14} weight="regular" />
                     Ask assistant
                 </button>
             )}

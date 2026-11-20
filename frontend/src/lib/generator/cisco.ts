@@ -281,8 +281,7 @@ type SwitchPortJob = { ifaceName: string; peer: NetworkNode | undefined };
 
 function buildSwitchPortJobs(node: NetworkNode, links: Link[], allNodes: NetworkNode[]): SwitchPortJob[] {
     // For report generation we must create one access port per connected host.
-    // The canvas may only store a single interface on each switch, so we ignore node.interfaces
-    // and instead derive ports from topology links.
+
     const jobs: SwitchPortJob[] = [];
     const connectedLinks = links
         .filter((l) => l.sourceNodeId === node.id || l.targetNodeId === node.id)

@@ -217,9 +217,6 @@ def _primary_ip(node) -> Optional[str]:
     return None
 
 def vlan_catalog_from_state(topology, design_plan: Optional[dict]) -> List[Dict[str, Any]]:
-    """
-    Ordered VLAN catalog: from topology.metadata.vlans, then design_plan, then node hints.
-    """
     seen: set = set()
     out: List[Dict[str, Any]] = []
 
@@ -332,20 +329,6 @@ def _host_config_vlan(node) -> Optional[int]:
     except (TypeError, ValueError):
         return None
 
-def _access_end_devices(topology, switch_id: str) -> List[Any]:
-    out: List[Any] = []
-    for nid in _neighbor_ids(topology, switch_id):
-        n = next((x for x in topology.nodes if x.id == nid), None)
-        if not n:
-            continue
-        nt = n.type or ""
-        if _is_router(nt):
-            continue
-        if _is_switch(nt):
-            continue
-        out.append(n)
-    return out
-
 def _resolve_vlan_for_host(
     host,
     switch_node,
@@ -433,11 +416,6 @@ def _users_by_vlan_from_plan(design_plan: Optional[dict]) -> Dict[int, int]:
 
 
 def _prefix_len_for_department_users(users: Optional[int]) -> int:
-    """
-    Subnet size from planned user count per department:
-    ≤14 → /28, ≤30 → /26, ≤62 → /25, ≤126 → /25, else → /24.
-    Missing/invalid user count defaults to /24.
-    """
     if users is None or users < 0:
         return 24
     u = int(users)
@@ -454,10 +432,6 @@ def _allocate_vlan_networks(
     vlan_ids: List[int],
     users_by_vlan: Dict[int, int],
 ) -> Dict[int, ipaddress.IPv4Network]:
-    """
-    Per VLAN catalog index i: network 192.168.(10 + i*10).0/<prefix>.
-    Third octet steps by 10 (10, 20, 30, ...) so VLANs are separated; wraps at 25 VLANs.
-    """
     out: Dict[int, ipaddress.IPv4Network] = {}
     for i, vid in enumerate(vlan_ids):
         u = users_by_vlan.get(vid)
@@ -736,10 +710,6 @@ def _build_router_configuration(
     used_hostnames: Optional[set] = None,
     topology=None,
 ) -> Tuple[Dict[str, Any], int]:
-    """
-    Build one router's configuration dict and advance subnet_counter exactly as before.
-    Returns (config, next_subnet_counter).
-    """
     node_interfaces = []
     for idx, interface in enumerate(node.interfaces):
         ip = f"{subnet_base}.{subnet_counter}.{idx + 1}"

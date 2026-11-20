@@ -83,9 +83,6 @@ def _network_addr(ip: str, mask: str) -> str:
     return ".".join(str(ip_parts[i] & m_parts[i]) for i in range(4))
 
 def generate_cisco_config(node, config: dict) -> str:
-    """
-    Generates Cisco IOS config from template.
-    """
     t = (getattr(node, "type", None) or "").lower()
     if "switch" in t or t == "switch" or "catalyst" in t or "hub" in t:
         vlan_plan = (config or {}).get("vlan_plan")

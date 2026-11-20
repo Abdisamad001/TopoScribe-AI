@@ -1,4 +1,3 @@
-/** Absolute local date/time for lists (reports, chats). */
 export function formatDateTime(iso: string): string {
     try {
         return new Date(iso).toLocaleString();

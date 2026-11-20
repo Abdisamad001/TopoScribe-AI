@@ -1,5 +1,5 @@
 from app.graph.state import NetworkDesignState
-from app.utils.llm import call_llm
+from app.utils.llm import OPENROUTER_GPT55_MODEL, _resolve_openai_model, call_llm
 from app.utils.planning_helpers import (
     LITERAL_HOST_NODE_THRESHOLD,
     _apply_sme_defaults,
@@ -21,10 +21,6 @@ import langwatch
 
 
 def planning_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Planning Agent: Analyzes user input and asks clarifying questions.
-    """
-    
     user_input = state["user_input"]
     history = state.get("conversation_history", [])
     
@@ -111,27 +107,27 @@ Return ONLY valid JSON:
 }}
 """
     
-    # Single call, always the planning tier. Temperature is fixed by the model
-    # at 1; consistency comes from the prompt plus deterministic post-processing.
-    # reasoning_effort="low" was chosen after a 7-case × 3-repeat comparison vs
-    # the gpt-5.5 default (medium): identical correctness, ~58% fewer reasoning
-    # tokens and ~29% lower mean wall time. Topology escalation is left at the
-    # model default — do not copy this override there without a separate study.
+    
     try:
         with langwatch.span(name="Planning Agent"):
+            planning_model = _resolve_openai_model("OPENAI_PLANNING_MODEL")
             langwatch.get_current_span().update(
                 tier="planning",
                 reasoning_effort="low",
+                provider="openrouter",
+                model=planning_model or OPENROUTER_GPT55_MODEL,
             )
             response_text = call_llm(prompt, tier="planning", reasoning_effort="low")
         
         # Parse response
         try:
-            # Clean markdown
+
+            # Clean .md
             clean_text = response_text.replace("```json", "").replace("```", "").strip()
             response_json = json.loads(clean_text)
         except json.JSONDecodeError:
-            # LLM returned non-JSON — infer departments from user text and proceed with SME defaults
+
+            # return non-JSON 
             plan = _apply_sme_defaults({}, user_input, history)
             if not plan.get("departments") and _is_user_delegation(user_input, history):
                 plan = _ensure_default_departments(plan)
@@ -147,7 +143,7 @@ Return ONLY valid JSON:
             }
             
     except Exception as e:
-        # Graceful fallback for LLM/Network errors
+        
         print(f"LLM Error: {str(e)}")
         delegated = _is_user_delegation(user_input, history)
         if delegated:
@@ -180,8 +176,7 @@ Return ONLY valid JSON:
         )
     )
 
-    # Fatal-gap: departments block only in departmental mode. Flat inventory is complete
-    # once device counts are captured.
+    # Fatal-gap: 
     requirements_clear = bool(response_json.get("requirements_clear", False)) and has_departments
     if delegated:
         requirements_clear = True

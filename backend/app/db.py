@@ -24,7 +24,7 @@ class Design(Base):
 
 
 class Project(Base):
-    """A named folder of design ids. Deleting a project does not delete designs."""
+   
 
     __tablename__ = "projects"
 
@@ -35,7 +35,7 @@ class Project(Base):
 
 
 class Report(Base):
-    """Saved markdown report from Export report. Independent from designs."""
+  
 
     __tablename__ = "reports"
 
@@ -47,7 +47,7 @@ class Report(Base):
 
 
 class Chat(Base):
-    """Saved Ask-assistant thread. Independent from designs."""
+
 
     __tablename__ = "chats"
 

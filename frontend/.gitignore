@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# Local-only Packet Tracer proxy 
+/src/app/api/
+
 # production
 /build
 

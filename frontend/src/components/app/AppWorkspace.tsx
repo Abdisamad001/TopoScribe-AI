@@ -10,6 +10,7 @@ import ProjectsView from '@/components/home/ProjectsView';
 import ReportsView from '@/components/home/ReportsView';
 import ChatsView from '@/components/home/ChatsView';
 import DocumentationView from '@/components/home/DocumentationView';
+import PacketTracerView from '@/components/home/PacketTracerView';
 import {
     createDesign,
     createProject,
@@ -74,6 +75,7 @@ export default function AppWorkspace({
             'projects',
             'reports',
             'chats',
+            'packettracer',
         ];
         if (searchable.includes(view)) return;
         onViewChange('home');
@@ -328,6 +330,13 @@ export default function AppWorkspace({
                                 listChats().then(setChats).catch(() => {});
                             });
                         }}
+                    />
+                )}
+                {view === 'packettracer' && (
+                    <PacketTracerView
+                        designs={designs}
+                        searchQuery={searchQuery}
+                        onOpenDesign={openExistingDesign}
                     />
                 )}
                 {view === 'documentation' && <DocumentationView />}

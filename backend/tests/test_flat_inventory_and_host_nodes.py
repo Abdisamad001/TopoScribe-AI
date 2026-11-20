@@ -1,10 +1,5 @@
-"""Regression tests for flat_inventory mode and literal host-node counts.
+"""Regression tests for flat_inventory mode and literal host-node counts"""
 
-Covers the two live defects:
-- flat device-count requests must not hit the departments fatal gap
-- stated device inventory / small PC counts must reach topology nodes
-while leaving 'N users each' on the one-representative-host path.
-"""
 import pytest
 
 from app.agents.planning_agent import (
@@ -33,7 +28,7 @@ def _role_counts(topo):
     return _count_roles_in_nodes(topo.get("nodes") or [])
 
 
-# --- Bug A: flat inventory detection & planning --------------------------------
+# --- Bug A: flat inventory detection & planning
 
 
 @pytest.mark.parametrize(
@@ -126,7 +121,7 @@ def test_five_pcs_phrasing_annotates_host_nodes():
     assert all(d.get("host_nodes") == 5 for d in plan["departments"])
 
 
-# --- Bug B: topology respects mode / host_nodes --------------------------------
+# --- Bug B: topology respects mode / host_nodes 
 
 
 def test_flat_fallback_matches_stated_inventory():
@@ -179,7 +174,7 @@ def test_departmental_sparse_still_uses_sme_formula_for_users_plans():
             {"name": "Finance", "users": 10, "vlan_id": 30},
         ],
     }
-    # Classic under-built campus shape (missing access switches / hosts)
+    # Classic under-built campus shape 
     sparse = {
         "nodes": [
             {"id": "R1", "type": "router"},
@@ -206,7 +201,7 @@ def test_departmental_prompt_mentions_host_nodes_when_present():
     assert "host_nodes" in prompt or "exactly 2 host" in prompt.lower()
 
 
-# --- Representative host labels for collapsed "N users" departments ------------
+# host labels for collapsed "N users" departments
 
 
 def _host_labels(topo_dict):
@@ -234,7 +229,7 @@ def test_representative_host_gets_user_count_label_when_above_threshold():
 
 
 def test_users_at_or_below_threshold_do_not_get_count_label():
-    # users == threshold → still representative, but no "(N PCs)" suffix
+ 
     plan = {
         "mode": "departmental",
         "departments": [
@@ -301,7 +296,7 @@ def test_unmatched_host_label_left_unchanged():
     assert _host_labels(topo) == ["Mystery Host"]
 
 
-# --- Four-tier departmental layout vs single-row flat switches -----------------
+# --- Four-tier departmental layout vs single-row flat switches 
 
 
 def _y_by_role_labels(finalized):
@@ -322,7 +317,7 @@ def _y_by_role_labels(finalized):
 
 
 def test_departmental_layout_is_four_tiers():
-    """Router above core, core above access switches, access above hosts."""
+    
     plan = _apply_sme_defaults({}, "departments HR and IT, 20 users each", [])
     topo = _fallback_topology_dict(plan)
     finalized = _finalize_topology(topo, plan)
@@ -338,7 +333,7 @@ def test_departmental_layout_is_four_tiers():
     assert set(rows["access"]) == {400}
     assert set(rows["host"]) == {500}
 
-    # Access switches sit on the same row (side by side), distinct from core.
+    # Access switches sit on the same row 
     assert rows["access"][0] == rows["access"][1]
     assert rows["core"][0] < rows["access"][0] < rows["host"][0]
 

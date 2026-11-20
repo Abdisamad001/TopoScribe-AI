@@ -1,7 +1,3 @@
-/**
- * Save a text file from the browser without relying on an http:// file URL.
- * Prefers the File System Access API (localhost / HTTPS), then a blob download.
- */
 export async function downloadTextFile(filename: string, content: string): Promise<boolean> {
     if (typeof window === 'undefined') return false;
 

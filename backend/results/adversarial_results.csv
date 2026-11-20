@@ -1,0 +1,52 @@
+dept_size,fault_case,detected_before,detected_after,error_message_after
+2,1_dup_iface_or_subif,True,True,IP conflict: 192.168.10.1 on R1 (subinterface vlan 20) already used by R1 (subinterface vlan 10)
+2,2_iface_eq_subif,True,True,IP conflict: 192.168.10.1 on R1 (subinterface vlan 10) already used by R1 (interface)
+2,3_mgmt_eq_iface,True,True,IP conflict: 192.168.10.1 on SW_CORE (management) already used by R1 (subinterface vlan 10)
+2,4_dup_mgmt,True,True,IP conflict: 192.168.99.10 on SW_ACC_1 (management) already used by SW_CORE (management)
+2,5_mgmt_eq_host,False,True,IP conflict: 192.168.10.2 on H1 (host) already used by SW_CORE (management)
+2,6a_mgmt_in_user_no_mask,False,True,IP conflict: management IP 192.168.10.5 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/26)
+2,6b_mgmt_mask_eq_user,False,True,IP conflict: management IP 192.168.10.50 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/26)
+2,6c_mgmt_26_in_24,False,True,IP conflict: management IP 192.168.10.10 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/24)
+2,7_mgmt_network_addr,False,True,IP conflict: management IP 192.168.10.0 on SW_CORE is network/broadcast of R1 vlan 10 (192.168.10.0/26)
+2,8_overlap_subnets,False,True,Subnet overlap: R1 vlan 10 (192.168.10.0/24) overlaps R1 vlan 20 (192.168.10.128/25)
+2,9a_access_undeclared,True,True,VLAN plan SW_ACC_1: access vlan 27 not declared in vlans list
+2,9b_trunk_undeclared,True,True,VLAN plan SW_CORE: trunk references vlan 999 not in local VLAN database
+2,9c_dup_vlan_id,True,True,VLAN plan SW_CORE: duplicate VLAN ids in vlans list
+2,9d_vlan_oor,True,True,VLAN plan SW_CORE: invalid vlan id 5000 (must be 1-4094)
+2,10_missing_link_node,True,True,Link link-r-core: source MISSING_NODE not found
+2,positive_clean,False,False,PASS
+2,positive_mgmt_99,False,False,PASS
+5,1_dup_iface_or_subif,True,True,IP conflict: 192.168.10.1 on R1 (subinterface vlan 20) already used by R1 (subinterface vlan 10)
+5,2_iface_eq_subif,True,True,IP conflict: 192.168.10.1 on R1 (subinterface vlan 10) already used by R1 (interface)
+5,3_mgmt_eq_iface,True,True,IP conflict: 192.168.10.1 on SW_CORE (management) already used by R1 (subinterface vlan 10)
+5,4_dup_mgmt,True,True,IP conflict: 192.168.99.10 on SW_ACC_1 (management) already used by SW_CORE (management)
+5,5_mgmt_eq_host,False,True,IP conflict: 192.168.10.2 on H1 (host) already used by SW_CORE (management)
+5,6a_mgmt_in_user_no_mask,False,True,IP conflict: management IP 192.168.10.5 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/26)
+5,6b_mgmt_mask_eq_user,False,True,IP conflict: management IP 192.168.10.50 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/26)
+5,6c_mgmt_26_in_24,False,True,IP conflict: management IP 192.168.10.10 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/24)
+5,7_mgmt_network_addr,False,True,IP conflict: management IP 192.168.10.0 on SW_CORE is network/broadcast of R1 vlan 10 (192.168.10.0/26)
+5,8_overlap_subnets,False,True,Subnet overlap: R1 vlan 10 (192.168.10.0/24) overlaps R1 vlan 20 (192.168.10.128/25)
+5,9a_access_undeclared,True,True,VLAN plan SW_ACC_1: access vlan 57 not declared in vlans list
+5,9b_trunk_undeclared,True,True,VLAN plan SW_CORE: trunk references vlan 999 not in local VLAN database
+5,9c_dup_vlan_id,True,True,VLAN plan SW_CORE: duplicate VLAN ids in vlans list
+5,9d_vlan_oor,True,True,VLAN plan SW_CORE: invalid vlan id 5000 (must be 1-4094)
+5,10_missing_link_node,True,True,Link link-r-core: source MISSING_NODE not found
+5,positive_clean,False,False,PASS
+5,positive_mgmt_99,False,False,PASS
+10,1_dup_iface_or_subif,True,True,IP conflict: 192.168.10.1 on R1 (subinterface vlan 20) already used by R1 (subinterface vlan 10)
+10,2_iface_eq_subif,True,True,IP conflict: 192.168.10.1 on R1 (subinterface vlan 10) already used by R1 (interface)
+10,3_mgmt_eq_iface,True,True,IP conflict: 192.168.10.1 on SW_CORE (management) already used by R1 (subinterface vlan 10)
+10,4_dup_mgmt,True,True,IP conflict: 192.168.99.10 on SW_ACC_1 (management) already used by SW_CORE (management)
+10,5_mgmt_eq_host,False,True,IP conflict: 192.168.10.2 on H1 (host) already used by SW_CORE (management)
+10,6a_mgmt_in_user_no_mask,False,True,IP conflict: management IP 192.168.10.5 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/26)
+10,6b_mgmt_mask_eq_user,False,True,IP conflict: management IP 192.168.10.50 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/26)
+10,6c_mgmt_26_in_24,False,True,IP conflict: management IP 192.168.10.10 on SW_CORE falls inside data-plane subnet R1 vlan 10 (192.168.10.0/24)
+10,7_mgmt_network_addr,False,True,IP conflict: management IP 192.168.10.0 on SW_CORE is network/broadcast of R1 vlan 10 (192.168.10.0/26)
+10,8_overlap_subnets,False,True,Subnet overlap: R1 vlan 10 (192.168.10.0/24) overlaps R1 vlan 20 (192.168.10.128/25)
+10,9a_access_undeclared,True,True,VLAN plan SW_ACC_1: access vlan 107 not declared in vlans list
+10,9b_trunk_undeclared,True,True,VLAN plan SW_CORE: trunk references vlan 999 not in local VLAN database
+10,9c_dup_vlan_id,True,True,VLAN plan SW_CORE: duplicate VLAN ids in vlans list
+10,9d_vlan_oor,True,True,VLAN plan SW_CORE: invalid vlan id 5000 (must be 1-4094)
+10,10_missing_link_node,True,True,Link link-r-core: source MISSING_NODE not found
+10,positive_clean,False,False,PASS
+10,positive_mgmt_99,False,False,PASS

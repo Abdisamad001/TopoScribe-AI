@@ -1,36 +1,23 @@
 from app.graph.state import NetworkDesignState
 from app.utils.llm import GROQ_PRIMARY_MAX_OUTPUT_TOKENS, call_llm
 from app.generators.topology_layout import (
-    DEFAULT_COLUMN_SPACING_PX,
-    HOST_CARD_WIDTH_PX,
-    TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS,
-    _annotate_representative_host_user_counts,
     _build_topology_prompt,
-    _count_roles_in_nodes,
-    _department_count,
-    _departmental_column_spacing,
     _escalated_reasoning_effort,
     _fallback_topology_dict,
     _finalize_topology,
-    _host_center_gap,
-    _missing_department_reason,
-    _missing_host_link_reason,
     _parse_and_validate_topology,
-    _scope_reason,
-    _sparse_reason,
-    _topology_department_scope_invalid,
     merge_vlan_metadata,
 )
 from typing import Dict, Any, List
 
 import langwatch
 
-# Escalated retries allowed after the initial primary-tier attempt.
+# Escalated retries 
 MAX_TOPOLOGY_RETRIES = 3
 
-
+# Rejection reasons recorded 
 def _prior_topology_errors(state: NetworkDesignState) -> List[str]:
-    """Rejection reasons recorded by earlier topology attempts in this run."""
+    
     out: List[str] = []
     for entry in state.get("agent_trace") or []:
         if not isinstance(entry, dict) or entry.get("agent") != "topology":
@@ -58,26 +45,27 @@ def _topology_span_meta(
     attempt: int,
     topology_source: Any = None,
     gate_outcome: str,
+    model_name: str = "",
 ) -> None:
-    """Attach attempt labels the OpenAI/Groq instrumentors cannot infer."""
+    from app.utils.llm import OPENROUTER_GPT55_MODEL, OPENROUTER_PRIMARY_MODEL
+
+    if not model_name:
+        model_name = (
+            OPENROUTER_PRIMARY_MODEL if tier == "primary" else OPENROUTER_GPT55_MODEL
+        )
     langwatch.get_current_span().update(
         tier=tier,
         reasoning_effort=effort if effort is not None else "default",
         attempt=attempt,
         topology_source=topology_source if topology_source is not None else "",
         gate_outcome=gate_outcome,
+        provider="openrouter",
+        model=model_name,
     )
 
 
 @langwatch.span(name="Topology Agent")
 def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
-    """
-    Topology Agent: Converts design plan into network topology.
-
-    Attempt 0 runs on the primary tier. Attempts 1-3 escalate, each prompted with
-    the specific reasons earlier attempts were rejected. The deterministic layout
-    is only used once the retry budget is exhausted.
-    """
     design_plan = state.get("design_plan") or {}
     attempt = int(state.get("topology_retry_count", 0) or 0)
     tier = "primary" if attempt == 0 else "escalated"
@@ -85,7 +73,8 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
 
     prompt = _build_topology_prompt(design_plan, prior_errors)
 
-    # Primary (Groq/Qwen): reasoning_effort="none" 
+    # Primary (OpenRouter Qwen): reasoning_effort="none"
+    # Escalated (OpenRouter GPT-5.5): effort from department-count heuristic
     if tier == "primary":
         effort = "none"
     else:
@@ -110,7 +99,9 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
             except Exception as e:
                 reasons = [f"Topology failed schema validation: {e}"]
             else:
-                source = "groq" if attempt == 0 else "openai_escalated"
+                # openrouter = primary Qwen; openrouter_escalated = GPT-5.5 via OpenRouter
+                # (legacy rows may still say openai_escalated / groq)
+                source = "openrouter" if attempt == 0 else "openrouter_escalated"
                 _topology_span_meta(
                     tier=tier,
                     effort=effort,
@@ -135,8 +126,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     reason_text = " | ".join(reasons) if reasons else "Unknown topology failure."
 
     if attempt < MAX_TOPOLOGY_RETRIES:
-        # Hand control back to the graph so the next attempt can escalate with
-        # this reason in its prompt. No fallback while retries remain.
+       
         _topology_span_meta(
             tier=tier,
             effort=effort,
@@ -156,7 +146,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
             ],
         }
 
-    # Retry budget exhausted — fall back to the deterministic SME layout.
+    # Retry budget exhausted - fallback to SME layout
     try:
         topology_dict = _fallback_topology_dict(design_plan)
         merge_vlan_metadata(design_plan, topology_dict)

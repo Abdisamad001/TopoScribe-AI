@@ -41,7 +41,6 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 40,Yes,0,Yes,0,51.087,Success,openai_escalated,1,Yes
 41,Yes,0,Yes,0,40.579,Success,openai_escalated,1,Yes
 42,Yes,0,Yes,0,54.028,Success,openai_escalated,1,Yes
-
 44,No,1,No,0,9.264,Needs Clarification,,0,No
 45,No,1,No,0,8.851,Needs Clarification,,0,No
 46,No,1,No,0,3.805,Needs Clarification,,0,No
@@ -62,3 +61,4 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 61,Yes,0,Yes,0,26.221,Success,openai_escalated,1,Yes
 62,Yes,0,Yes,0,12.148,Success,groq,0,No
 63,Yes,0,Yes,0,10.707,Success,groq,0,No
+63,Yes,0,Yes,0,19.898,Success,openrouter,0,No

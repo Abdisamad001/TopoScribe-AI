@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Terminal, Check } from 'lucide-react';
+import { CopyIcon, TerminalIcon, CheckIcon } from '@phosphor-icons/react';
 import { copyTextToClipboard } from '@/lib/reportUtils';
 
 const KEYWORDS = [
@@ -78,12 +78,12 @@ export default function CiscoTerminal({ code }: { code: string }) {
         <div className="cisco-terminal">
             <div className="cisco-terminal__header">
                 <div className="cisco-terminal__title">
-                    <Terminal size={18} />
+                    <TerminalIcon size={18} weight="regular" />
                     <span className="cisco-terminal__device">{deviceName}</span>
                     <span className="cisco-terminal__hint">(CISCO IOS)</span>
                 </div>
                 <button type="button" onClick={handleCopy} className="cisco-terminal__copy">
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? <CheckIcon size={14} weight="regular" /> : <CopyIcon size={14} weight="regular" />}
                     {copied ? 'Copied!' : 'Copy Config'}
                 </button>
             </div>
