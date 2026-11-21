@@ -1,4 +1,4 @@
-"""Configure a canvas topology."""
+# Configure a canvas topology.
 
 from typing import Any, Dict, Optional
 
