@@ -14,7 +14,7 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_PRIMARY_MODEL = "qwen/qwen3.8-27b"
 OPENROUTER_GPT55_MODEL = "openai/gpt-5.5"
 
-# [GROQ] model id (same string on OpenRouter); alias kept for imports
+# [GROQ] model id 
 GROQ_DEFAULT_MODEL = OPENROUTER_PRIMARY_MODEL
 OPENAI_FALLBACK_MODEL = "gpt-5.5"
 
@@ -34,7 +34,7 @@ _REASONING_TOKEN_ALLOWANCE = 2000
 
 
 def _get_groq_client() -> Groq:
-    # [GROQ] setup — GROQ_API_KEY; leave live so uncommenting call_llm works
+    # [GROQ] setup 
     global _groq_client
     if _groq_client is None:
         api_key = os.getenv("GROQ_API_KEY")
@@ -45,7 +45,7 @@ def _get_groq_client() -> Groq:
 
 
 def _get_openai_client() -> OpenAI:
-    # [OPENAI] setup — OPENAI_API_KEY → api.openai.com; leave live for toggle
+   
     global _openai_client
     if _openai_client is None:
         api_key = os.getenv("OPENAI_API_KEY")
@@ -56,7 +56,7 @@ def _get_openai_client() -> OpenAI:
 
 
 def _get_openrouter_client() -> OpenAI:
-    # [OPENROUTER] setup — OPENROUTER_API_KEY → openrouter.ai/api/v1
+    # [OPENROUTER] setup 
     global _openrouter_client
     if _openrouter_client is None:
         api_key = os.getenv("OPENROUTER_API_KEY")
@@ -74,7 +74,7 @@ def _get_openrouter_client() -> OpenAI:
 
 
 def _resolve_openai_model(env_var: str) -> str:
-    # [OPENROUTER] only — maps gpt-5.5 → openai/gpt-5.5; [OPENAI] uses short id
+    # [OPENROUTER] 
     raw = (os.getenv(env_var) or OPENAI_FALLBACK_MODEL).strip()
     if raw.startswith("openai/") or raw.startswith("qwen/"):
         return raw
@@ -230,7 +230,7 @@ def call_llm(
             else LLM_MAX_OUTPUT_TOKENS
         )
 
-    # --- REPORT (Groq + OpenAI) 
+    # ---  (Groq + OpenAI) 
     # if tier == "primary":
     #     return _call_groq(
     #         prompt, GROQ_DEFAULT_MODEL, temperature, max_tokens, reasoning_effort

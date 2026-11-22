@@ -1,0 +1,1145 @@
+{
+  "execution_id": "pt1a201dec3b547aeda6f",
+  "ok": true,
+  "stage": "done",
+  "message": "Packet Tracer deploy completed",
+  "devices": [
+    {
+      "node_id": "R1",
+      "label": "Edge Router",
+      "pt_name": "R1",
+      "pt_model": "1941",
+      "ok": true,
+      "detail": "Device 'R1' (1941) created at (600, 100)."
+    },
+    {
+      "node_id": "SW_CORE",
+      "label": "Core Switch",
+      "pt_name": "SW_CORE",
+      "pt_model": "2960-24TT",
+      "ok": true,
+      "detail": "Device 'SW_CORE' (2960-24TT) created at (600, 200)."
+    },
+    {
+      "node_id": "SW_IT",
+      "label": "IT Access Switch",
+      "pt_name": "SW_IT",
+      "pt_model": "2960-24TT",
+      "ok": true,
+      "detail": "Device 'SW_IT' (2960-24TT) created at (100, 400)."
+    },
+    {
+      "node_id": "SW_OP",
+      "label": "OP Access Switch",
+      "pt_name": "SW_OP",
+      "pt_model": "2960-24TT",
+      "ok": true,
+      "detail": "Device 'SW_OP' (2960-24TT) created at (1148, 400)."
+    },
+    {
+      "node_id": "H_IT_1",
+      "label": "IT Host",
+      "pt_name": "H_IT_1",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_IT_1' (PC-PT) created at (60, 500)."
+    },
+    {
+      "node_id": "H_IT_2",
+      "label": "IT Host",
+      "pt_name": "H_IT_2",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_IT_2' (PC-PT) created at (60, 500)."
+    },
+    {
+      "node_id": "H_IT_3",
+      "label": "IT Host",
+      "pt_name": "H_IT_3",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_IT_3' (PC-PT) created at (100, 500)."
+    },
+    {
+      "node_id": "H_IT_4",
+      "label": "IT Host",
+      "pt_name": "H_IT_4",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_IT_4' (PC-PT) created at (308, 500)."
+    },
+    {
+      "node_id": "H_IT_5",
+      "label": "IT Host",
+      "pt_name": "H_IT_5",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_IT_5' (PC-PT) created at (516, 500)."
+    },
+    {
+      "node_id": "H_OP_1",
+      "label": "OP Host",
+      "pt_name": "H_OP_1",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_OP_1' (PC-PT) created at (732, 500)."
+    },
+    {
+      "node_id": "H_OP_2",
+      "label": "OP Host",
+      "pt_name": "H_OP_2",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_OP_2' (PC-PT) created at (940, 500)."
+    },
+    {
+      "node_id": "H_OP_3",
+      "label": "OP Host",
+      "pt_name": "H_OP_3",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_OP_3' (PC-PT) created at (1148, 500)."
+    },
+    {
+      "node_id": "H_OP_4",
+      "label": "OP Host",
+      "pt_name": "H_OP_4",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_OP_4' (PC-PT) created at (1356, 500)."
+    },
+    {
+      "node_id": "H_OP_5",
+      "label": "OP Host",
+      "pt_name": "H_OP_5",
+      "pt_model": "PC-PT",
+      "ok": true,
+      "detail": "Device 'H_OP_5' (PC-PT) created at (1564, 500)."
+    }
+  ],
+  "links": [
+    {
+      "link_id": "link_r1_core",
+      "a_id": "R1",
+      "a_port": "GigabitEthernet0/0",
+      "b_id": "SW_CORE",
+      "b_port": "GigabitEthernet0/1",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: R1/GigabitEthernet0/0 <--[straight]--> SW_CORE/GigabitEthernet0/1"
+    },
+    {
+      "link_id": "link_core_it",
+      "a_id": "SW_CORE",
+      "a_port": "FastEthernet0/1",
+      "b_id": "SW_IT",
+      "b_port": "FastEthernet0/1",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_CORE/FastEthernet0/1 <--[straight]--> SW_IT/FastEthernet0/1"
+    },
+    {
+      "link_id": "link_core_op",
+      "a_id": "SW_CORE",
+      "a_port": "FastEthernet0/2",
+      "b_id": "SW_OP",
+      "b_port": "FastEthernet0/1",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_CORE/FastEthernet0/2 <--[straight]--> SW_OP/FastEthernet0/1"
+    },
+    {
+      "link_id": "link_it_h1",
+      "a_id": "SW_IT",
+      "a_port": "FastEthernet0/2",
+      "b_id": "H_IT_1",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_IT/FastEthernet0/2 <--[straight]--> H_IT_1/FastEthernet0"
+    },
+    {
+      "link_id": "link_it_h2",
+      "a_id": "SW_IT",
+      "a_port": "FastEthernet0/3",
+      "b_id": "H_IT_2",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_IT/FastEthernet0/3 <--[straight]--> H_IT_2/FastEthernet0"
+    },
+    {
+      "link_id": "link_it_h3",
+      "a_id": "SW_IT",
+      "a_port": "FastEthernet0/4",
+      "b_id": "H_IT_3",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_IT/FastEthernet0/4 <--[straight]--> H_IT_3/FastEthernet0"
+    },
+    {
+      "link_id": "link_it_h4",
+      "a_id": "SW_IT",
+      "a_port": "FastEthernet0/5",
+      "b_id": "H_IT_4",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_IT/FastEthernet0/5 <--[straight]--> H_IT_4/FastEthernet0"
+    },
+    {
+      "link_id": "link_it_h5",
+      "a_id": "SW_IT",
+      "a_port": "FastEthernet0/6",
+      "b_id": "H_IT_5",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_IT/FastEthernet0/6 <--[straight]--> H_IT_5/FastEthernet0"
+    },
+    {
+      "link_id": "link_op_h1",
+      "a_id": "SW_OP",
+      "a_port": "FastEthernet0/2",
+      "b_id": "H_OP_1",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_OP/FastEthernet0/2 <--[straight]--> H_OP_1/FastEthernet0"
+    },
+    {
+      "link_id": "link_op_h2",
+      "a_id": "SW_OP",
+      "a_port": "FastEthernet0/3",
+      "b_id": "H_OP_2",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_OP/FastEthernet0/3 <--[straight]--> H_OP_2/FastEthernet0"
+    },
+    {
+      "link_id": "link_op_h3",
+      "a_id": "SW_OP",
+      "a_port": "FastEthernet0/4",
+      "b_id": "H_OP_3",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_OP/FastEthernet0/4 <--[straight]--> H_OP_3/FastEthernet0"
+    },
+    {
+      "link_id": "link_op_h4",
+      "a_id": "SW_OP",
+      "a_port": "FastEthernet0/5",
+      "b_id": "H_OP_4",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_OP/FastEthernet0/5 <--[straight]--> H_OP_4/FastEthernet0"
+    },
+    {
+      "link_id": "link_op_h5",
+      "a_id": "SW_OP",
+      "a_port": "FastEthernet0/6",
+      "b_id": "H_OP_5",
+      "b_port": "FastEthernet0",
+      "cable_type": "straight",
+      "ok": true,
+      "detail": "Link created: SW_OP/FastEthernet0/6 <--[straight]--> H_OP_5/FastEthernet0"
+    }
+  ],
+  "cli_lines": [
+    {
+      "device_id": "R1",
+      "line": "enable",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "configure terminal",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "hostname Edge-Router",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "interface GigabitEthernet0/0",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "no ip address",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "interface GigabitEthernet0/0.10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "encapsulation dot1Q 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "ip address 192.168.10.1 255.255.255.240",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "interface GigabitEthernet0/0.20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "encapsulation dot1Q 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "ip address 192.168.20.1 255.255.255.240",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "router ospf 1",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "network 192.168.10.0 0.0.0.15 area 0",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "network 192.168.20.0 0.0.0.15 area 0",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "end",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "R1",
+      "line": "write memory",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "enable",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "configure terminal",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "hostname Core-Switch",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "name IT",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "name OP",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "interface GigabitEthernet0/1",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "switchport mode trunk",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "switchport trunk allowed vlan 10,20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "interface FastEthernet0/1",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "switchport mode trunk",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "switchport trunk allowed vlan 10,20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "interface FastEthernet0/2",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "switchport mode trunk",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "switchport trunk allowed vlan 10,20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "end",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_CORE",
+      "line": "write memory",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "enable",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "configure terminal",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "hostname IT-Access-Switch",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "name IT",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "name OP",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "interface FastEthernet0/1",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport mode trunk",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport trunk allowed vlan 10,20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "interface FastEthernet0/2",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport access vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "interface FastEthernet0/3",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport access vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "interface FastEthernet0/4",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport access vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "interface FastEthernet0/5",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport access vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "interface FastEthernet0/6",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "switchport access vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "end",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_IT",
+      "line": "write memory",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "enable",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "configure terminal",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "hostname OP-Access-Switch",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "vlan 10",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "name IT",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "name OP",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "interface FastEthernet0/1",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport mode trunk",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport trunk allowed vlan 10,20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "interface FastEthernet0/2",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport access vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "interface FastEthernet0/3",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport access vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "interface FastEthernet0/4",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport access vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "interface FastEthernet0/5",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport access vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "interface FastEthernet0/6",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport mode access",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "switchport access vlan 20",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "no shutdown",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "end",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    },
+    {
+      "device_id": "SW_OP",
+      "line": "write memory",
+      "status": "ok",
+      "impact": "",
+      "detail": ""
+    }
+  ],
+  "pings": [
+    {
+      "source": "H_IT_1",
+      "destination": "192.168.10.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_IT_1 \u2192 192.168.10.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_IT_2",
+      "destination": "192.168.10.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_IT_2 \u2192 192.168.10.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_IT_3",
+      "destination": "192.168.10.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_IT_3 \u2192 192.168.10.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_IT_4",
+      "destination": "192.168.10.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_IT_4 \u2192 192.168.10.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_IT_5",
+      "destination": "192.168.10.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_IT_5 \u2192 192.168.10.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_OP_1",
+      "destination": "192.168.20.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_OP_1 \u2192 192.168.20.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_OP_2",
+      "destination": "192.168.20.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_OP_2 \u2192 192.168.20.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_OP_3",
+      "destination": "192.168.20.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_OP_3 \u2192 192.168.20.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_OP_4",
+      "destination": "192.168.20.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_OP_4 \u2192 192.168.20.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_OP_5",
+      "destination": "192.168.20.1",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_OP_5 \u2192 192.168.20.1: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_IT_1",
+      "destination": "192.168.20.2",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_IT_1 \u2192 192.168.20.2: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    },
+    {
+      "source": "H_OP_1",
+      "destination": "192.168.10.2",
+      "attempts": 1,
+      "final_status": "pass",
+      "messages": [
+        "H_OP_1 \u2192 192.168.10.2: CONNECTIVITY OK\nPackets: Sent = 4, Received = 4, Lost = 0 (0% loss),"
+      ]
+    }
+  ],
+  "project_file": "A:/TopoScribe AI/backend/results/packettracer_projects/pt1a201dec3b547aeda6f/pt1a201dec3b547aeda6f.pkt",
+  "project_download_id": "pt1a201dec3b547aeda6f",
+  "name_map": {
+    "R1": "R1",
+    "SW_CORE": "SW_CORE",
+    "SW_IT": "SW_IT",
+    "SW_OP": "SW_OP",
+    "H_IT_1": "H_IT_1",
+    "H_IT_2": "H_IT_2",
+    "H_IT_3": "H_IT_3",
+    "H_IT_4": "H_IT_4",
+    "H_IT_5": "H_IT_5",
+    "H_OP_1": "H_OP_1",
+    "H_OP_2": "H_OP_2",
+    "H_OP_3": "H_OP_3",
+    "H_OP_4": "H_OP_4",
+    "H_OP_5": "H_OP_5"
+  },
+  "raw_notes": [
+    "CONNECTED over both channels:\n  \u2022 HTTP (window open) \u2014 http://127.0.0.1:54321\n  \u2022 file-bridge (Script Engine, keeps working if you close the window)\nPT client headers: {'Origin': 'pt-sm:', 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Mode': 'cors', 'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/6.8.7 Chrome/130.0.0.0 Safari/537.36'}",
+    "pre_topology='DEVICES:0|LINKS:0\\n' user_devices=0",
+    "cli:R1:R1 (CLI) \u2014 19 command(s): 19 ok\n(console primed: answered the initial dialog / Press RETURN)\n\n> enable    [ok]\n\nRouter#configure terminal    [ok]\nEnter configuration commands, one per line.  End with CNTL/Z.\n\nRouter(config)#hostname Edge-Router    [ok]\n\nEdge-Router(config)#interface GigabitEthernet0/0    [ok]\n\nEdge-Router(config-if)#no ip address    [ok]\n\nEdge-Router(config-if)#no shutdown    [ok]\n\nEdge-Router(config-if)#interface GigabitEthernet0/0.10    [ok]\n\nEdge-Router(config-subif)#encapsulation dot1Q 10    [ok]\n\nEdge-Router(config-subif)#ip address 192.168.10.1 255.255.255.240    [ok]\n\nEdge-Router(config-subif)#no shutdown    [ok]\n\nEdge-Router(config-subif)#interface GigabitEthernet0/0.20    [ok]\n\nEdge-Router(config-subif)#encapsulation dot1Q 20    [ok]\n\nEdge-Router(config-subif)#ip address 192.168.20.1 255.255.255.240    [ok]\n\nEdge-Router(config-subif)#no shutdown    [ok]\n\nEdge-Router(config-subif)#router ospf 1    [ok]\n\nEdge-Router(config-router)#network 192.168.10.0 0.0.0.15 area 0    [ok]\n\nEdge-Router(config-router)#network 192.168.20.0 0.0.0.15 area 0    [ok]\n\nEdge-Router(config-router)#end    [ok]\n\nEdge-Router#write memory    [ok]\nBuilding configuration...\n[OK]\n\nFinal prompt: Edge-Router#  (mode: enable)",
+    "cli:SW_CORE:SW_CORE (CLI) \u2014 21 command(s): 21 ok\n(console primed: answered the initial dialog / Press RETURN)\n\n> enable    [ok]\n\nSwitch#configure terminal    [ok]\nEnter configuration commands, one per line.  End with CNTL/Z.\n\nSwitch(config)#hostname Core-Switch    [ok]\n\nCore-Switch(config)#vlan 10    [ok]\n\nCore-Switch(config-vlan)#name IT    [ok]\n\nCore-Switch(config-vlan)#vlan 20    [ok]\n\nCore-Switch(config-vlan)#name OP    [ok]\n\nCore-Switch(config-vlan)#interface GigabitEthernet0/1    [ok]\n\nCore-Switch(config-if)#switchport mode trunk    [ok]\n\nCore-Switch(config-if)#switchport trunk allowed vlan 10,20    [ok]\n\nCore-Switch(config-if)#no shutdown    [ok]\n\nCore-Switch(config-if)#interface FastEthernet0/1    [ok]\n\nCore-Switch(config-if)#switchport mode trunk    [ok]\n\nCore-Switch(config-if)#switchport trunk allowed vlan 10,20    [ok]\n\nCore-Switch(config-if)#no shutdown    [ok]\n\nCore-Switch(config-if)#interface FastEthernet0/2    [ok]\n\nCore-Switch(config-if)#switchport mode trunk    [ok]\n\nCore-Switch(config-if)#switchport trunk allowed vlan 10,20    [ok]\n\nCore-Switch(config-if)#no shutdown    [ok]\n\nCore-Switch(config-if)#end    [ok]\n\nCore-Switch#write memory    [ok]\nBuilding configuration...\n[OK]\n\nFinal prompt: Core-Switch#  (mode: enable)",
+    "cli:SW_IT:SW_IT (CLI) \u2014 33 command(s): 33 ok\n(console primed: answered the initial dialog / Press RETURN)\n\n> enable    [ok]\n\nSwitch#configure terminal    [ok]\nEnter configuration commands, one per line.  End with CNTL/Z.\n\nSwitch(config)#hostname IT-Access-Switch    [ok]\n\nIT-Access-Switch(config)#vlan 10    [ok]\n\nIT-Access-Switch(config-vlan)#name IT    [ok]\n\nIT-Access-Switch(config-vlan)#vlan 20    [ok]\n\nIT-Access-Switch(config-vlan)#name OP    [ok]\n\nIT-Access-Switch(config-vlan)#interface FastEthernet0/1    [ok]\n\nIT-Access-Switch(config-if)#switchport mode trunk    [ok]\n\nIT-Access-Switch(config-if)#switchport trunk allowed vlan 10,20    [ok]\n\nIT-Access-Switch(config-if)#no shutdown    [ok]\n\nIT-Access-Switch(config-if)#interface FastEthernet0/2    [ok]\n\nIT-Access-Switch(config-if)#switchport mode access    [ok]\n\nIT-Access-Switch(config-if)#switchport access vlan 10    [ok]\n\nIT-Access-Switch(config-if)#no shutdown    [ok]\n\nIT-Access-Switch(config-if)#interface FastEthernet0/3    [ok]\n\nIT-Access-Switch(config-if)#switchport mode access    [ok]\n\nIT-Access-Switch(config-if)#switchport access vlan 10    [ok]\n\nIT-Access-Switch(config-if)#no shutdown    [ok]\n\nIT-Access-Switch(config-if)#interface FastEthernet0/4    [ok]\n\nIT-Access-Switch(config-if)#switchport mode access    [ok]\n\nIT-Access-Switch(config-if)#switchport access vlan 10    [ok]\n\nIT-Access-Switch(config-if)#no shutdown    [ok]\n\nIT-Access-Switch(config-if)#interface FastEthernet0/5    [ok]\n\nIT-Access-Switch(config-if)#switchport mode access    [ok]\n\nIT-Access-Switch(config-if)#switchport access vlan 10    [ok]\n\nIT-Access-Switch(config-if)#no shutdown    [ok]\n\nIT-Access-Switch(config-if)#interface FastEthernet0/6    [ok]\n\nIT-Access-Switch(config-if)#switchport mode access    [ok]\n\nIT-Access-Switch(config-if)#switchport access vlan 10    [ok]\n\nIT-Access-Switch(config-if)#no shutdown    [ok]\n\nIT-Access-Switch(config-if)#end    [ok]\n\nIT-Access-Switch#write memory    [ok]\nBuilding configuration...\n[OK]\n\nFinal prompt: IT-Access",
+    "cli:SW_OP:SW_OP (CLI) \u2014 33 command(s): 33 ok\n(console primed: answered the initial dialog / Press RETURN)\n\n> enable    [ok]\n\nSwitch#configure terminal    [ok]\nEnter configuration commands, one per line.  End with CNTL/Z.\n\nSwitch(config)#hostname OP-Access-Switch    [ok]\n\nOP-Access-Switch(config)#vlan 10    [ok]\n\nOP-Access-Switch(config-vlan)#name IT    [ok]\n\nOP-Access-Switch(config-vlan)#vlan 20    [ok]\n\nOP-Access-Switch(config-vlan)#name OP    [ok]\n\nOP-Access-Switch(config-vlan)#interface FastEthernet0/1    [ok]\n\nOP-Access-Switch(config-if)#switchport mode trunk    [ok]\n\nOP-Access-Switch(config-if)#switchport trunk allowed vlan 10,20    [ok]\n\nOP-Access-Switch(config-if)#no shutdown    [ok]\n\nOP-Access-Switch(config-if)#interface FastEthernet0/2    [ok]\n\nOP-Access-Switch(config-if)#switchport mode access    [ok]\n\nOP-Access-Switch(config-if)#switchport access vlan 20    [ok]\n\nOP-Access-Switch(config-if)#no shutdown    [ok]\n\nOP-Access-Switch(config-if)#interface FastEthernet0/3    [ok]\n\nOP-Access-Switch(config-if)#switchport mode access    [ok]\n\nOP-Access-Switch(config-if)#switchport access vlan 20    [ok]\n\nOP-Access-Switch(config-if)#no shutdown    [ok]\n\nOP-Access-Switch(config-if)#interface FastEthernet0/4    [ok]\n\nOP-Access-Switch(config-if)#switchport mode access    [ok]\n\nOP-Access-Switch(config-if)#switchport access vlan 20    [ok]\n\nOP-Access-Switch(config-if)#no shutdown    [ok]\n\nOP-Access-Switch(config-if)#interface FastEthernet0/5    [ok]\n\nOP-Access-Switch(config-if)#switchport mode access    [ok]\n\nOP-Access-Switch(config-if)#switchport access vlan 20    [ok]\n\nOP-Access-Switch(config-if)#no shutdown    [ok]\n\nOP-Access-Switch(config-if)#interface FastEthernet0/6    [ok]\n\nOP-Access-Switch(config-if)#switchport mode access    [ok]\n\nOP-Access-Switch(config-if)#switchport access vlan 20    [ok]\n\nOP-Access-Switch(config-if)#no shutdown    [ok]\n\nOP-Access-Switch(config-if)#end    [ok]\n\nOP-Access-Switch#write memory    [ok]\nBuilding configuration...\n[OK]\n\nFinal prompt: OP-Access",
+    "host_ip:H_IT_1:['{\"device\":\"H_IT_1\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.10.2 255.255.255.240\",\"gateway 192.168.10.1\"],\"dhcp\":false,\"ip\":\"192.168.10.2\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::20C:85FF:FE4E:65A6\",\"ipv6_addresses\":[],\"gateway\":\"192.168.10.1\",\"summary\":\"H_IT_1/FastEthernet0: static, ip 192.168.10.2 255.255.255.240, gateway 192.168.10.1 \u2192 192.168.10.2/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_IT_1\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_IT_2:['{\"device\":\"H_IT_2\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.10.3 255.255.255.240\",\"gateway 192.168.10.1\"],\"dhcp\":false,\"ip\":\"192.168.10.3\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::204:9AFF:FE7D:7D36\",\"ipv6_addresses\":[],\"gateway\":\"192.168.10.1\",\"summary\":\"H_IT_2/FastEthernet0: static, ip 192.168.10.3 255.255.255.240, gateway 192.168.10.1 \u2192 192.168.10.3/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_IT_2\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_IT_3:['{\"device\":\"H_IT_3\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.10.4 255.255.255.240\",\"gateway 192.168.10.1\"],\"dhcp\":false,\"ip\":\"192.168.10.4\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::205:5EFF:FEB2:EEB2\",\"ipv6_addresses\":[],\"gateway\":\"192.168.10.1\",\"summary\":\"H_IT_3/FastEthernet0: static, ip 192.168.10.4 255.255.255.240, gateway 192.168.10.1 \u2192 192.168.10.4/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_IT_3\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_IT_4:['{\"device\":\"H_IT_4\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.10.5 255.255.255.240\",\"gateway 192.168.10.1\"],\"dhcp\":false,\"ip\":\"192.168.10.5\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::2D0:BCFF:FECB:E184\",\"ipv6_addresses\":[],\"gateway\":\"192.168.10.1\",\"summary\":\"H_IT_4/FastEthernet0: static, ip 192.168.10.5 255.255.255.240, gateway 192.168.10.1 \u2192 192.168.10.5/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_IT_4\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_IT_5:['{\"device\":\"H_IT_5\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.10.6 255.255.255.240\",\"gateway 192.168.10.1\"],\"dhcp\":false,\"ip\":\"192.168.10.6\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::204:9AFF:FE20:2238\",\"ipv6_addresses\":[],\"gateway\":\"192.168.10.1\",\"summary\":\"H_IT_5/FastEthernet0: static, ip 192.168.10.6 255.255.255.240, gateway 192.168.10.1 \u2192 192.168.10.6/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_IT_5\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_OP_1:['{\"device\":\"H_OP_1\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.20.2 255.255.255.240\",\"gateway 192.168.20.1\"],\"dhcp\":false,\"ip\":\"192.168.20.2\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::202:16FF:FE24:9B94\",\"ipv6_addresses\":[],\"gateway\":\"192.168.20.1\",\"summary\":\"H_OP_1/FastEthernet0: static, ip 192.168.20.2 255.255.255.240, gateway 192.168.20.1 \u2192 192.168.20.2/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_OP_1\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_OP_2:['{\"device\":\"H_OP_2\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.20.3 255.255.255.240\",\"gateway 192.168.20.1\"],\"dhcp\":false,\"ip\":\"192.168.20.3\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::260:5CFF:FED1:E157\",\"ipv6_addresses\":[],\"gateway\":\"192.168.20.1\",\"summary\":\"H_OP_2/FastEthernet0: static, ip 192.168.20.3 255.255.255.240, gateway 192.168.20.1 \u2192 192.168.20.3/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_OP_2\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_OP_3:['{\"device\":\"H_OP_3\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.20.4 255.255.255.240\",\"gateway 192.168.20.1\"],\"dhcp\":false,\"ip\":\"192.168.20.4\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::201:43FF:FEE9:3C7E\",\"ipv6_addresses\":[],\"gateway\":\"192.168.20.1\",\"summary\":\"H_OP_3/FastEthernet0: static, ip 192.168.20.4 255.255.255.240, gateway 192.168.20.1 \u2192 192.168.20.4/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_OP_3\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_OP_4:['{\"device\":\"H_OP_4\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.20.5 255.255.255.240\",\"gateway 192.168.20.1\"],\"dhcp\":false,\"ip\":\"192.168.20.5\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::2D0:BAFF:FEA2:97A2\",\"ipv6_addresses\":[],\"gateway\":\"192.168.20.1\",\"summary\":\"H_OP_4/FastEthernet0: static, ip 192.168.20.5 255.255.255.240, gateway 192.168.20.1 \u2192 192.168.20.5/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_OP_4\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "host_ip:H_OP_5:['{\"device\":\"H_OP_5\",\"port\":\"FastEthernet0\",\"applied\":[\"static\",\"ip 192.168.20.6 255.255.255.240\",\"gateway 192.168.20.1\"],\"dhcp\":false,\"ip\":\"192.168.20.6\",\"mask\":\"255.255.255.240\",\"ipv6\":false,\"link_local\":\"FE80::230:F2FF:FE50:3529\",\"ipv6_addresses\":[],\"gateway\":\"192.168.20.1\",\"summary\":\"H_OP_5/FastEthernet0: static, ip 192.168.20.6 255.255.255.240, gateway 192.168.20.1 \u2192 192.168.20.6/255.255.255.240\",\"verify\":\"pt_host_command(\\'H_OP_5\\', \\'ipconfig /all\\') shows the DNS too.\"}']",
+    "fast_forward={\"ok\":true,\"fast_forwarded\":true,\"simulation_mode\":false,\"summary\":\"PT's clock moved ahead: links cabled moments ago are past STP.\"}",
+    "Project saved to A:/TopoScribe AI/backend/results/packettracer_projects/pt1a201dec3b547aeda6f/pt1a201dec3b547aeda6f.pkt (59659 bytes)."
+  ],
+  "elapsed_s": 57.624
+}

@@ -3,5 +3,6 @@
   "css.lint.unknownAtRules": "ignore",
   "files.associations": {
     "**/src/app/globals.css": "tailwindcss"
-  }
+  },
+  "python.defaultInterpreterPath": "A:\\TopoScribe AI\\backend\\.venv\\Scripts\\python.exe"
 }

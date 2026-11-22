@@ -5,28 +5,29 @@ import operator
 class NetworkDesignState(TypedDict):
     # User interaction
     user_input: str                                      # Original request
-    conversation_history: Annotated[List[dict], operator.add]  # Full chat history
+    # Full chat history
+    conversation_history: Annotated[List[dict], operator.add]  
     
     # Planning phase
-    requirements_clear: bool                             # True when all info collected
-    clarifying_questions: Optional[List[str]]            # Questions to ask user
-    design_plan: Optional[dict]                          # Structured plan after clarification
+    requirements_clear: bool                            
+    clarifying_questions: Optional[List[str]]        
+    design_plan: Optional[dict]                          
     
     # Generation phases
-    topology: Optional[Topology]                         # Generated network topology
-    topology_retry_count: int                            # Topology attempts beyond the first
-    topology_source: Optional[str]                       # groq | openai_escalated | deterministic_fallback
-    topology_quality_ok: bool                            # False when rule-based checks rejected the output
-    configurations: Optional[dict]                       # Device configurations
-    validation_result: Optional[dict]                    # Validation report
+    topology: Optional[Topology]                       
+    topology_retry_count: int                            # Topology attempts after first
+    topology_source: Optional[str]                       # groq , openai_escalated ,deterministic_fallback
+    topology_quality_ok: bool                           
+    configurations: Optional[dict]                       
+    validation_result: Optional[dict]                    
     
     # Final output
-    cisco_configs: Optional[dict]                        # Per-device Cisco CLI configs
-    report: Optional[str]                                # Human-readable report
+    cisco_configs: Optional[dict]                     
+    report: Optional[str]                               
     
     # Error handling
-    errors: Annotated[List[str], operator.add]          # Accumulated errors
-    retry_count: int                                    # Number of validation->config retries
+    errors: Annotated[List[str], operator.add]         
+    retry_count: int                                  
 
     # Observability
-    agent_trace: Annotated[List[dict], operator.add]    # {agent, model, attempt, outcome} per LLM attempt
+    agent_trace: Annotated[List[dict], operator.add]   

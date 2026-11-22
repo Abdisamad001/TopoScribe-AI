@@ -1,4 +1,4 @@
-"""Optional Packet Tracer execute API (disabled by default)."""
+
 from __future__ import annotations
 
 import asyncio

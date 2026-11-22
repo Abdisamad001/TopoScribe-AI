@@ -74,7 +74,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
     prompt = _build_topology_prompt(design_plan, prior_errors)
 
     # Primary (OpenRouter Qwen): reasoning_effort="none"
-    # Escalated (OpenRouter GPT-5.5): effort from department-count heuristic
+    # Escalated (OpenRouter GPT-5.5)
     if tier == "primary":
         effort = "none"
     else:
@@ -146,7 +146,7 @@ def topology_node(state: NetworkDesignState) -> Dict[str, Any]:
             ],
         }
 
-    # Retry budget exhausted - fallback to SME layout
+    # Retry budget exhausted
     try:
         topology_dict = _fallback_topology_dict(design_plan)
         merge_vlan_metadata(design_plan, topology_dict)

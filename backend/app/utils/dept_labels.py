@@ -1,6 +1,4 @@
-"""
-Sanitize department names and topology labels so prompt fragments never become node titles.
-"""
+
 from __future__ import annotations
 
 import re

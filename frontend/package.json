@@ -6,7 +6,7 @@
     "pt-api:enable": "node ./scripts/pt-api.mjs enable",
     "pt-api:disable": "node ./scripts/pt-api.mjs disable",
     "dev": "node ./scripts/pt-api.mjs enable && next dev",
-    "build": "node ./scripts/pt-api.mjs disable && next build",
+    "build": "node ./scripts/pt-api.mjs disable && node ./scripts/run-static-build.mjs",
     "start": "next start",
     "lint": "eslint"
   },

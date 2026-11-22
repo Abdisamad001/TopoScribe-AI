@@ -1,4 +1,3 @@
-"""Deterministic IP/subnet overlap checks for the Validation Agent."""
 
 from __future__ import annotations
 
@@ -189,7 +188,7 @@ def check_ip_and_subnet_conflicts(topology, configurations: Dict[str, Any]) -> L
                 )
 
     # Management networks must be strictly disjoint from every data-plane subnet
-    # (equal or overlapping both fail). A dedicated mgmt net like 192.168.99.0/24 is OK.
+    
     for ml, mn in mgmt_nets:
         for dl, dn in data_plane:
             if mn == dn or mn.overlaps(dn):

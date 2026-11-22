@@ -5,23 +5,17 @@ from typing import Dict, Any, List, Optional, Tuple, Literal
 import json
 
 
-# HostNode.tsx uses Tailwind `w-48` (12rem = 192px at the default 16px root).
-# React Flow positions are the node's top-left, so sibling centers/left-edges
-# must be at least this wide plus a small gutter or the cards overlap.
 HOST_CARD_WIDTH_PX = 192
 HOST_GAP_MARGIN_PX = 16
 HOST_CLUSTER_GUTTER_PX = 24
 DEFAULT_COLUMN_SPACING_PX = 300
 
 # Lever 1: on the escalated (GPT-5.5) path only, use reasoning_effort="low"
-# when the plan is small enough that the controlled study showed both
-# correctness and cost savings. Above this count, leave the model default
-# (medium). Does not affect attempt 0 (Groq) or when escalation is triggered.
+
 TOPOLOGY_LOW_EFFORT_MAX_DEPARTMENTS = 5
 
 
 def _host_center_gap() -> int:
-    """Left-edge to left-edge distance that keeps two host cards from overlapping."""
     return HOST_CARD_WIDTH_PX + HOST_GAP_MARGIN_PX
 
 
@@ -32,14 +26,14 @@ def _departmental_column_spacing(max_hosts_in_cluster: int) -> int:
 
 
 def _plan_mode(design_plan: Optional[Dict[str, Any]]) -> str:
-    """Return 'flat_inventory' or 'departmental'."""
+    
     if isinstance(design_plan, dict) and design_plan.get("mode") == "flat_inventory":
         return "flat_inventory"
     return "departmental"
 
-
+#Depert on sme
 def _effective_department_count(design_plan: Optional[Dict[str, Any]]) -> int:
-    """How many department segments the SME layout should have (min 1)."""
+  
     if not isinstance(design_plan, dict):
         return 3
     raw = design_plan.get("departments")
@@ -50,7 +44,7 @@ def _effective_department_count(design_plan: Optional[Dict[str, Any]]) -> int:
 
 
 def _department_count(design_plan: Optional[Dict[str, Any]]) -> int:
-    """How many department entries are in the plan (0 if none / not a list)."""
+   
     if not isinstance(design_plan, dict):
         return 0
     raw = design_plan.get("departments")
@@ -96,7 +90,7 @@ def _expected_departmental_hosts(design_plan: Optional[Dict[str, Any]]) -> int:
 def _flat_inventory_targets(
     design_plan: Optional[Dict[str, Any]],
 ) -> Tuple[int, int, int]:
-    """Stated (routers, switches, hosts) for flat_inventory plans."""
+ 
     if not isinstance(design_plan, dict):
         return 0, 0, 0
     try:
@@ -115,7 +109,7 @@ def _flat_inventory_targets(
 
 
 def _count_roles_in_nodes(nodes: Any) -> Tuple[int, int, int]:
-    """Returns (router_count, switch_count, host_count)."""
+  
     r, s, h = 0, 0, 0
     if not isinstance(nodes, list):
         return r, s, h
@@ -222,7 +216,7 @@ def _node_vlan_department(node: Dict[str, Any]) -> Optional[str]:
 def _department_scope_items(
     topology_dict: Dict[str, Any], allowed: set
 ) -> Tuple[List[str], set]:
-    """Returns (out-of-scope descriptions, department names actually present)."""
+    
     unexpected: List[str] = []
     present: set = set()
 
@@ -441,7 +435,7 @@ def _fallback_flat_inventory_dict(design_plan: Dict[str, Any]) -> Dict[str, Any]
             }
         )
 
-    # Simple hierarchy: routers ↔ first switch (or first host), switches ↔ hosts.
+    # Design Hierarchy 
     uplink = switch_ids[0] if switch_ids else (host_ids[0] if host_ids else None)
     if uplink:
         for rid in router_ids:

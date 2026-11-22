@@ -5,13 +5,8 @@ from app.agents.topology_agent import topology_node, MAX_TOPOLOGY_RETRIES
 from app.agents.config_agent import config_node
 from app.agents.validation_agent import validation_node
 
-# Validation->config cycles allowed before the graph gives up and returns the
-# accumulated errors, instead of looping until LangGraph's recursion limit.
-MAX_VALIDATION_RETRIES = 3
 
-# ============================================================
-# CONDITIONAL ROUTING FUNCTIONS
-# ============================================================
+MAX_VALIDATION_RETRIES = 3
 
 def should_continue_planning(state: NetworkDesignState) -> str:
     if state.get("requirements_clear", False):
@@ -42,9 +37,9 @@ def should_end_or_continue(state: NetworkDesignState) -> str:
     return "config"  # Retry
 
 
-# ============================================================
+
 # BUILD THE GRAPH
-# ============================================================
+
 
 workflow = StateGraph(NetworkDesignState)
 
