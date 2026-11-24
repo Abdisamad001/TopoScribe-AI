@@ -12,9 +12,7 @@ def _setup_langwatch() -> None:
         return
     try:
         import langwatch
-        # OpenRouter uses the OpenAI SDK client → OpenAIInstrumentor covers
-        # planning (openai/gpt-5.5), primary (qwen/qwen3.8-27b), and escalation.
-        # GroqInstrumentor kept only for any residual Groq helper calls.
+     
         from openinference.instrumentation.groq import GroqInstrumentor
         from openinference.instrumentation.openai import OpenAIInstrumentor
 
@@ -53,7 +51,7 @@ def create_tables():
     try:
         Base.metadata.create_all(engine)
     except Exception as e:
-        print(f"Designs table setup skipped (database unreachable): {e}")
+        print(f"Designs table setup skipped...database unreachable: {e}")
 
 # Allow CORS for frontend
 app.add_middleware(

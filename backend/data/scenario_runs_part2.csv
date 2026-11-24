@@ -65,3 +65,8 @@ Run #,Requirements Clear?,Questions Asked?,Design Generated?,Retries,Runtime (Se
 64,Yes,0,Yes,0,26.445,Success,openrouter,0,No
 65,Yes,0,Yes,0,56.46,Success,openrouter,0,No
 66,Yes,0,Yes,0,17.761,Success,openrouter,0,No
+67,Yes,0,Yes,0,14.832,Success,openrouter,0,No
+68,No,1,No,0,9.703,Needs Clarification,,0,No
+69,Yes,0,Yes,0,14.606,Success,openrouter,0,No
+70,Yes,0,Yes,0,16.197,Success,openrouter,0,No
+71,Yes,0,Yes,0,11.274,Success,openrouter,0,No
